@@ -1,28 +1,67 @@
 .dashboard-layout {
   min-height: 100vh;
-  background: #000; // toàn bộ layout nền đen
+  background: #000;
+  display: flex;
+  flex-direction: row;
+}
 
-  .dashboard-sider {
-    // sidebar bạn đã style riêng — giữ nguyên hoặc override nhẹ
-    background: transparent;
+/* Sidebar cố định */
+.fixed-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: #000 !important;
+  z-index: 100;
+  width: 220px !important;
+  border-right: 1px solid #1f1f1f;
+  overflow: hidden;
+}
+
+/* Main layout */
+.main-layout {
+  margin-left: 220px; // tránh đè sidebar
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+/* Header */
+.dashboard-header {
+  position: fixed;
+  top: 0;
+  left: 220px; // tránh đè sidebar
+  right: 0;
+  z-index: 101;
+}
+
+/* Content */
+.dashboard-content {
+  margin-top: 64px; // tránh đè header
+  padding: 24px;
+  background: transparent;
+  min-height: calc(100vh - 64px);
+
+  .content-inner {
+    background: #111;
+    border-radius: 12px;
+    padding: 24px;
+    color: #fff;
+  }
+}
+
+/* Responsive (ẩn sidebar trên mobile nếu cần) */
+@media (max-width: 768px) {
+  .fixed-sidebar {
+    display: none;
   }
 
-  .dashboard-main {
-    background: transparent; // nền hành lang cũng đen
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+  .main-layout {
+    margin-left: 0;
+  }
 
-    .dashboard-content {
-      padding: 24px;
-      /* không set background ở đây để thấy nền đen xung quanh */
-      .content-inner {
-        background: #fff;       // khung nội dung chính vẫn trắng
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        min-height: 60vh;
-      }
-    }
+  .dashboard-header {
+    left: 0;
   }
 }

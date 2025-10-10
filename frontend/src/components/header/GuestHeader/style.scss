@@ -4,14 +4,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
+  height: 70px;
 
   .logo {
-    color: #52c41a;
-    font-weight: bold;
-    font-size: 18px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
+    cursor: pointer;
+
+    img {
+      width: 70px;
+      height: auto;
+      object-fit: contain;
+    }
   }
 
   .nav-menu {
@@ -28,6 +33,7 @@
       .ant-menu-item-selected,
       .ant-menu-item:hover {
         background: transparent !important;
+
         a {
           color: #52c41a !important;
         }
@@ -43,13 +49,14 @@
     .login-link {
       color: #52c41a;
       font-weight: 500;
+
       &:hover {
         text-decoration: underline;
       }
     }
 
     .menu-toggle {
-      font-size: 20px;
+      font-size: 24px;
       color: #52c41a;
       cursor: pointer;
     }
@@ -67,19 +74,46 @@
 
 /* Drawer */
 .mobile-drawer {
+
   .ant-drawer-header {
     background: #000;
     color: #fff;
+    border-bottom: 1px solid #222;
+
+    .ant-drawer-close {
+      color: #52c41a; 
+      font-size: 20px;
+    }
+
+    .ant-drawer-title {
+      font-size: 18px;
+      color: #52c41a;
+      font-weight: 600;
+    }
   }
+
   .ant-drawer-body {
     background: #111;
     color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding-top: 30px;
 
     .ant-menu {
       background: transparent;
-      .ant-menu-item a {
-        color: #fff;
+      text-align: center;
+
+      .ant-menu-item {
+        a {
+          color: #fff;
+          font-size: 16px;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
       }
+
       .ant-menu-item-selected a {
         color: #52c41a !important;
       }
@@ -89,24 +123,49 @@
       margin-top: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
 
       .drawer-user-info {
-        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+
         .avatar {
           background: #52c41a;
         }
+
+        span {
+          font-size: 15px;
+          color: #fff;
+          font-weight: 500;
+        }
       }
 
-      .login-link,
-      .logout-link {
+      .login-link {
         color: #52c41a;
         font-weight: 500;
         cursor: pointer;
+
         &:hover {
           text-decoration: underline;
         }
       }
+
+      .logout-link {
+        color: #ff4d4f;
+        font-weight: 600;
+        cursor: pointer;
+        transition: color 0.3s;
+
+        &:hover {
+          color: #ff7875;
+          text-decoration: underline;
+        }
+      }
     }
+
   }
 }

@@ -6,29 +6,32 @@ import "./style.scss";
 const { Header } = Layout;
 const { Text } = Typography;
 
-const DashboardHeader = () => {
+const DashboardHeader = ({ children }) => {
   const menuItems = [
     {
       key: "1",
-      label: "Profile", icon: <UserOutlined />
+      label: "Profile",
+      icon: <UserOutlined />,
     },
-    {
-      type: "divider"
-    },
+    { type: "divider" },
     {
       key: "2",
-      label: "Logout", icon: <LogoutOutlined />, danger: true
+      label: "Logout",
+      icon: <LogoutOutlined />,
+      danger: true,
     },
   ];
 
   return (
     <Header className="dashboard-header">
-      {/* Logo + Title */}
       <div className="header-left">
+        {/* Collapse Button (từ layout truyền xuống) */}
+        {children}
+
+        {/* Tiêu đề */}
         <Text className="title">Owner Dashboard</Text>
       </div>
 
-      {/* Search bar */}
       <div className="header-search">
         <Input
           placeholder="Search or type..."
@@ -37,7 +40,6 @@ const DashboardHeader = () => {
         />
       </div>
 
-      {/* Avatar dropdown */}
       <Dropdown
         menu={{
           items: menuItems,

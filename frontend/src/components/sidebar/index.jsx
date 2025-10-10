@@ -1,10 +1,11 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CarOutlined, CalendarOutlined } from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined } from "@ant-design/icons";
 import { Link, useLocation } from "react-router-dom";
+import logoFull from "../../assets/logo_main.png";
 import "./style.scss";
 
-const OwnerSidebar = ({ collapsed }) => {
+const OwnerSidebar = () => {
   const location = useLocation();
 
   const menuItems = [
@@ -22,23 +23,21 @@ const OwnerSidebar = ({ collapsed }) => {
 
   return (
     <div className="owner-sidebar">
+      {/* Logo */}
       <div className="sidebar-logo">
-        {collapsed ? (
-          <div className="logo-icon">🚗</div>
-        ) : (
-          <div className="logo-text">
-            <span className="brand">CoEV</span>
-          </div>
-        )}
+        <img src={logoFull} alt="CoEV Logo" className="logo-img" />
       </div>
 
-      <Menu
-        mode="inline"
-        theme="dark"
-        selectedKeys={[location.pathname]}
-        className="menu"
-        items={menuItems} 
-      />
+      {/* Menu */}
+      <div className="menu-wrapper">
+        <Menu
+          mode="inline"
+          theme="dark"
+          selectedKeys={[location.pathname]}
+          className="menu"
+          items={menuItems}
+        />
+      </div>
     </div>
   );
 };

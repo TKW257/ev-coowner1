@@ -1,14 +1,21 @@
 .dashboard-header {
-  background: #000; // đồng bộ với sidebar
+  position: fixed; 
+  top: 0;
+  right: 0;
+  left: 220px; 
+  height: 64px;
+  z-index: 200;
+  background: #000;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   border-bottom: 1px solid #1f1f1f;
-  height: 64px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  transition: left 0.3s ease;
+
+  &.collapsed {
+    left: 80px;
+  }
 
   .header-left {
     display: flex;
@@ -45,7 +52,7 @@
       &:hover,
       &:focus-within {
         border-color: #52c41a;
-        box-shadow: 0 0 0 2px rgba(0, 185, 107, 0.3);
+        box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.3);
       }
     }
   }
@@ -69,27 +76,25 @@
     }
   }
 
-  // 📱 Responsive
+  /* 📱 Responsive */
   @media (max-width: 768px) {
+    left: 80px;
     padding: 0 16px;
 
-    .header-left {
-      .title {
-        display: none; // ẩn chữ Dashboard
-      }
+    .header-left .title {
+      display: contents;
     }
 
     .header-search {
-      display: none; // ẩn thanh search
+      display: none;
     }
 
     .user-info .user-name {
-      display: none; // ẩn tên user
+      display: contents;
     }
   }
 }
 
-/* 🎨 Dropdown Menu Theme (for avatar menu) */
 .ant-dropdown-menu {
   background: #0f0f0f !important;
   border: 1px solid #1f1f1f;
@@ -103,19 +108,13 @@
     font-weight: 500;
     transition: all 0.3s ease;
 
-    /* Default icon color = green */
     svg {
       color: #00b96b !important;
-      transition: color 0.3s ease;
     }
 
     &:hover {
       background: rgba(0, 185, 107, 0.1) !important;
       color: #00b96b !important;
-
-      svg {
-        color: #00b96b !important;
-      }
     }
   }
 
@@ -123,20 +122,15 @@
     color: #ff4d4f !important;
 
     svg {
-      color: #ff4d4f !important; // ✅ keep red icon
+      color: #ff4d4f !important;
     }
 
     &:hover {
       background: rgba(255, 77, 79, 0.1) !important;
       color: #ff7875 !important;
-
-      svg {
-        color: #ff7875 !important; // ✅ red hover
-      }
     }
   }
 
-  /* Divider line */
   .ant-dropdown-menu-item-divider {
     background-color: #1f1f1f !important;
   }

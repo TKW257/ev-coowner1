@@ -2,15 +2,15 @@ import axiosClient from "./axiosClient";
 
 const userApi = {
 
-  getAll() {
-    const url = "/users";
-    return axiosClient.get(url);
-  },
-
   register(data) {
     const url = "/users";
     return axiosClient.post(url, data);
   },
+
+  /*login(data) {
+    const url = '/users';
+    return axiosClient.post(url, data);
+  },*/
 
   // Giả lập login (check email + password)
   async login({ email, password }) {
@@ -23,6 +23,7 @@ const userApi = {
       throw new Error("Invalid email or password");
     }
   },
+
 };
 
 export default userApi;

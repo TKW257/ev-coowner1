@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Layout, Menu, Drawer, Avatar, Dropdown, Space, Grid } from "antd";
-import { MenuOutlined, CarOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import { MenuOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../../features/userSlice";
+import logo from "../../../assets/logo_main.png";
 import "./style.scss";
 
 const { Header } = Layout;
@@ -23,44 +24,36 @@ const GuestHeader = () => {
   };
 
   const navItems = [
-    {
-      key: "home",
-      label: <NavLink to="/">Home</NavLink>
-    },
-    {
-      key: "cars",
-      label: <NavLink to="/cars">Stock Cars</NavLink>
-    },
-    {
-      key: "terms",
-      label: <NavLink to="/terms">Our Terms</NavLink>
-    },
-    {
-      key: "about",
-      label: <NavLink to="/about">About Us</NavLink>
-    },
-    {
-      key: "admin",
-      label: <NavLink to="/admin">Admin</NavLink>
-    },
-    {
-      key: "owner",
-      label: <NavLink to="/owner/mycar">Owner</NavLink>
-    },
+    { 
+      key: "home", 
+      label: <NavLink to="/">Home</NavLink> },
+    { 
+      key: "cars", 
+      label: <NavLink to="/cars">Stock Cars</NavLink> },
+    { 
+      key: "terms", 
+      label: <NavLink to="/terms">Our Terms</NavLink> },
+    { 
+      key: "about", 
+      label: <NavLink to="/about">About Us</NavLink> },
+    { 
+      key: "owner", 
+      label: <NavLink to="/owner/mycar">Owner</NavLink> },
   ];
 
   const userMenu = {
     items: [
       {
         key: "profile",
-        label: <NavLink to="/profile">Trang cá nhân</NavLink>, icon: <UserOutlined />
+        label: <NavLink to="/profile">Trang cá nhân</NavLink>,
+        icon: <UserOutlined />,
       },
-      {
-        type: "divider"
-      },
+      { type: "divider" },
       {
         key: "logout",
-        label: "Đăng xuất", icon: <LogoutOutlined />, onClick: handleLogout
+        label: <span className="logout-link">Đăng xuất</span>,
+        icon: <LogoutOutlined />,
+        onClick: handleLogout,
       },
     ],
   };
@@ -68,18 +61,17 @@ const GuestHeader = () => {
   return (
     <Header className="app-header">
 
-      <div className="logo">
-        <CarOutlined /> <span>CoEV</span>
+      {/* Logo */}
+      <div className="logo" onClick={() => navigate("/")}>
+        <img src={logo} alt="CoEV logo" />
       </div>
 
-      {/* Desktop menu */}
       {screens.md && (
         <div className="nav-menu">
           <Menu theme="dark" mode="horizontal" items={navItems} />
         </div>
       )}
 
-      {/* User / menu toggle */}
       <div className="header-right">
         {screens.md ? (
           isLoggedIn ? (
@@ -103,14 +95,16 @@ const GuestHeader = () => {
         )}
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile Drawer */}
       {!screens.md && (
         <Drawer
           title="Menu"
-          placement="right"
+          placement="top"
           onClose={() => setOpen(false)}
           open={open}
           className="mobile-drawer"
+          closable
+          height="65vh" 
         >
           <Menu mode="vertical" items={navItems} />
           <div className="drawer-user">
@@ -135,6 +129,7 @@ const GuestHeader = () => {
             )}
           </div>
         </Drawer>
+
       )}
     </Header>
   );
