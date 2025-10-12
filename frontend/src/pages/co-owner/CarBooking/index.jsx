@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Calendar, Badge, DatePicker, Button, message, Card, Row, Col, Progress, Tag, Spin, } from "antd";
+import {
+  Calendar,
+  Badge,
+  DatePicker,
+  Button,
+  Card,
+  Row,
+  Col,
+  Progress,
+  Tag,
+  Spin,
+  App,
+} from "antd";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import { useParams } from "react-router-dom";
@@ -16,20 +28,30 @@ const CarBookingPage = () => {
   const [bookings, setBookings] = useState([]);
   const [car, setCar] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { notification } = App.useApp();
 
-  // 🔹 Lấy dữ liệu xe và lịch đặt
+  const openNotification = (type, message, description) => {
+    notification[type]({
+      message,
+      description,
+      placement: "topRight",
+      duration: 3,
+    });
+  };
+
+  // 🧭 Lấy dữ liệu xe + tất cả bookings
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [carRes, bookingRes] = await Promise.all([
           vehiclesApi.getCarById(id),
-          bookingApi.getBookings(),
+          bookingApi.getAllBookings(),
         ]);
         setCar(carRes);
-        setBookings(bookingRes || []);
+        setBookings(bookingRes.data || bookingRes || []); // 👈 đảm bảo bookings là mảng
       } catch (err) {
         console.error("❌ Lỗi khi tải dữ liệu:", err);
-        message.error("Không thể tải dữ liệu xe hoặc lịch đặt!");
+        openNotification("error", "Lỗi tải dữ liệu", "Không thể tải xe hoặc lịch đặt!");
       } finally {
         setLoading(false);
       }
@@ -37,27 +59,38 @@ const CarBookingPage = () => {
     fetchData();
   }, [id]);
 
-  // 🔹 Lấy danh sách lịch đã đặt theo xe
-  const getListData = (value) =>
-    bookings
-      .filter(
-        (r) =>
-          String(r.vehicle_id) === String(id) &&
-          dayjs(value).isBetween(dayjs(r.start_time), dayjs(r.end_time), "day", "[]")
-      )
-      .map((r) => ({
-        type: r.status === "success" ? "success" : "warning",
-        content: r.name || "Đã đặt",
-        id: r.id,
-      }));
+  // 🟩 Lấy trạng thái ngày trong Calendar
+  const getListData = (value) => {
+    const list = [];
 
+    bookings.forEach((r) => {
+      if (String(r.vehicle_id) !== String(id)) return;
+      const isInRange = dayjs(value).isBetween(
+        dayjs(r.start_time),
+        dayjs(r.end_time),
+        "day",
+        "[]"
+      );
+      if (isInRange) {
+        if (r.status === "success" || r.status === "confirmed")
+          list.push({ type: "error" });
+        else if (r.status === "pending")
+          list.push({ type: "warning" });
+      }
+    });
+
+    if (list.length === 0) list.push({ type: "success" }); // ngày trống
+    return list;
+  };
+
+  // 🗓️ Custom render cho Calendar
   const dateCellRender = (value) => {
     const listData = getListData(value);
     return (
       <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-        {listData.map((item) => (
-          <li key={item.id}>
-            <Badge status={item.type} text={item.content} />
+        {listData.map((item, idx) => (
+          <li key={idx}>
+            <Badge status={item.type} />
           </li>
         ))}
       </ul>
@@ -67,15 +100,38 @@ const CarBookingPage = () => {
   const cellRender = (current, info) =>
     info.type === "date" ? dateCellRender(current) : info.originNode;
 
-  // 🔹 Xử lý đặt lịch
+  // 🚗 Hàm đặt xe
   const handleBook = async () => {
     if (!range || range.length !== 2) {
-      message.warning("Vui lòng chọn khoảng ngày hợp lệ!");
+      openNotification("warning", "Khoảng ngày không hợp lệ", "Vui lòng chọn khoảng ngày hợp lệ!");
+      return;
+    }
+
+    if (car.status !== "available") {
+      openNotification("warning", "Xe không sẵn sàng", "Xe hiện không khả dụng để đặt!");
       return;
     }
 
     const start = range[0].startOf("day");
     const end = range[1].endOf("day");
+
+    // ⚠️ Kiểm tra trùng lịch với tất cả bookings hiện có
+    const isOverlap = bookings.some(
+      (b) =>
+        String(b.vehicle_id) === String(id) &&
+        b.status !== "cancelled" &&
+        dayjs(start).isBefore(dayjs(b.end_time)) &&
+        dayjs(end).isAfter(dayjs(b.start_time))
+    );
+
+    if (isOverlap) {
+      openNotification(
+        "warning",
+        "Khoảng thời gian trùng",
+        "Khoảng thời gian này đã có người đặt xe!"
+      );
+      return;
+    }
 
     const newBooking = {
       vehicle_id: parseInt(id),
@@ -83,21 +139,22 @@ const CarBookingPage = () => {
       image: car?.imageUrl || "",
       start_time: start.toISOString(),
       end_time: end.toISOString(),
-      status: "success",
+      status: "pending",
     };
 
     try {
       await bookingApi.createBooking(newBooking);
-      message.success("✅ Đặt lịch thành công!");
-      const updated = await bookingApi.getBookings();
-      setBookings(updated || []);
+      openNotification("success", "Thành công", "Đặt lịch xe thành công!");
+      const updated = await bookingApi.getAllBookings();
+      setBookings(updated.data || updated || []);
+      setRange([]);
     } catch (err) {
       console.error("❌ Lỗi khi đặt lịch:", err);
-      message.error("Không thể đặt lịch!");
+      openNotification("error", "Lỗi đặt lịch", "Không thể đặt lịch. Vui lòng thử lại!");
     }
   };
 
-  // 🔹 Loading
+  // 🌀 Loading UI
   if (loading)
     return (
       <div style={{ padding: 40, textAlign: "center" }}>
@@ -112,18 +169,10 @@ const CarBookingPage = () => {
       </div>
     );
 
-  // 🔹 Giao diện chính
+  // 🚀 Giao diện chính
   return (
     <div style={{ padding: 24 }}>
-      <Card
-        bordered={false}
-        style={{
-          borderRadius: 16,
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          background: "#fafafa",
-        }}
-      >
-        {/* Phần đầu: thông tin xe + pin */}
+      <Card bordered={false} style={{ borderRadius: 16, background: "#fafafa" }}>
         <Row gutter={[24, 16]} align="middle" style={{ marginBottom: 16 }}>
           <Col xs={24} md={8}>
             <img
@@ -147,7 +196,7 @@ const CarBookingPage = () => {
             </p>
 
             <Tag color={car.status === "available" ? "green" : "orange"}>
-              {car.status === "available" ? "Sẵn sàng" : "Đang được đặt"}
+              {car.status === "available" ? "Sẵn sàng" : "Không khả dụng"}
             </Tag>
 
             <div style={{ marginTop: 12 }}>
@@ -168,8 +217,10 @@ const CarBookingPage = () => {
             <div style={{ marginTop: 12 }}>
               <RangePicker
                 onChange={setRange}
+                value={range}
                 format="DD/MM/YYYY"
                 placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
+                disabled={car.status !== "available"}
               />
               <Button
                 type="primary"
@@ -184,7 +235,12 @@ const CarBookingPage = () => {
           </Col>
         </Row>
 
-        {/* Lịch đặt xe */}
+        <div style={{ marginBottom: 12 }}>
+          <Tag color="green">Ngày trống</Tag>
+          <Tag color="orange">Đang chờ xác nhận</Tag>
+          <Tag color="red">Đã được đặt</Tag>
+        </div>
+
         <Calendar cellRender={cellRender} />
       </Card>
     </div>

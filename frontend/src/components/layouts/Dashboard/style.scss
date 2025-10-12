@@ -5,7 +5,6 @@
   flex-direction: row;
 }
 
-/* Sidebar cố định */
 .fixed-sidebar {
   position: fixed;
   left: 0;
@@ -18,40 +17,35 @@
   overflow: hidden;
 }
 
-/* Main layout */
 .main-layout {
-  margin-left: 220px; // tránh đè sidebar
+  margin-left: 220px; 
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: #000;
 }
 
-/* Header */
 .dashboard-header {
   position: fixed;
   top: 0;
-  left: 220px; // tránh đè sidebar
-  right: 0;
+  left: 220px;
   z-index: 101;
 }
 
-/* Content */
 .dashboard-content {
-  margin-top: 64px; // tránh đè header
+  margin-top: 40px; 
   padding: 24px;
-  background: transparent;
+  background: #000;
   min-height: calc(100vh - 64px);
 
   .content-inner {
-    background: #111;
-    border-radius: 12px;
-    padding: 24px;
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
     color: #fff;
   }
 }
 
-/* Responsive (ẩn sidebar trên mobile nếu cần) */
 @media (max-width: 768px) {
   .fixed-sidebar {
     display: none;

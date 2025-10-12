@@ -18,14 +18,19 @@ axiosClient.interceptors.request.use(async (config) => {
 });
 
 // Response Interceptor: trả luôn data hoặc reject lỗi
-axiosClient.interceptors.response.use((response) => {
-  if (response && response.data) {
-    return response.data;
+axiosClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem(StorageKeys.TOKEN);
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
-
-  return response;
-}, (error) => {
-  throw error;
+  return config;
 });
+
+axiosClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    throw error;
+  }
+);
 
 export default axiosClient;

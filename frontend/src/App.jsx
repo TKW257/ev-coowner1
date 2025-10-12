@@ -1,18 +1,14 @@
-// src/App.jsx
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { App as AntdApp } from "antd";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
-// guest pages
 import GuestPage from "./pages/guest";
 import RegisterPage from "./pages/guest/auth/register";
 import LoginPage from "./pages/guest/auth/login";
-
-// owner pages
 import MyCar from "./pages/co-owner/MyCar";
 import CarBooking from "./pages/co-owner/CarBooking";
-
-// layout
+import BookingManage from "./pages/admin/BookingManagement";
 import DashboardLayout from "./components/layouts/Dashboard";
-//import GuesrLayout from "./components/layouts/GuestPage";
 
 const router = createBrowserRouter([
   {
@@ -27,30 +23,36 @@ const router = createBrowserRouter([
     path: "/login",
     element: <LoginPage />,
   },
-
   {
     path: "/owner",
-    element: <DashboardLayout />, // layout duy nhất
+    element: (
+      <ProtectedRoute allowedRoles={["OWNER"]}>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
     children: [
-      {
-        path: "mycar",
-        element: <MyCar />
-      },
-      {
-        path: "carbooking",
-        element: <CarBooking />,
-      },
-      {
-        path: "carbooking/:id",
-        element: <CarBooking />,
-      },
-
+      { path: "mycar", element: <MyCar /> },
+      { path: "carbooking", element: <CarBooking /> },
+      { path: "carbooking/:id", element: <CarBooking /> },
     ],
+  },
+  {
+    path: "/admin",
+    element: (
+      <ProtectedRoute allowedRoles={["ADMIN"]}>
+        <DashboardLayout />
+      </ProtectedRoute>
+    ),
+    children: [{ path: "bookingmanage", element: <BookingManage /> }],
   },
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <AntdApp>
+      <RouterProvider router={router} />
+    </AntdApp>
+  );
 }
 
 export default App;

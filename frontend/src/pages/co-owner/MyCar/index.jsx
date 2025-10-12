@@ -1,48 +1,65 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Progress, Tag, Typography, Button, Spin, message } from "antd";
+import { Card, Row, Col, Progress, Tag, Typography, Button, message } from "antd";
 import { ThunderboltOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";  
+import { useSelector } from "react-redux";      
 import vehiclesApi from "../../../api/vehiclesApi";
 
 const { Text } = Typography;
 
-export default function MyCarsPage() {
+function MyCars() {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentCar, setCurrentCar] = useState(null);
   const navigate = useNavigate();
+  const currentUser = useSelector((state) => state.user.current);
+  const chosenCar = cars.find((car) => car.id === currentCar);
 
-  useEffect(() => {
-    const fetchCars = async () => {
-      try {
-        const res = await vehiclesApi.getCars();
-        setCars(res);
-        setCurrentCar(res[0]?.id || null);
-      } catch (error) {
-        console.error("Failed to fetch cars:", error);
-        message.error("Không thể tải danh sách xe");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCars();
-  }, []);
-
-  if (loading) return <Spin tip="Đang tải xe..." />;
-
-  const current = cars.find((car) => car.id === currentCar);
-
-  // 🔹 Xử lý điều hướng tới trang đặt xe (gửi ID qua URL + state)
   const handleBookCar = (car) => {
     navigate(`/owner/carbooking/${car.id}`, { state: { car } });
   };
 
+  useEffect(() => {
+    if (!currentUser?.id) {
+      message.error("Không tìm thấy thông tin người dùng! (chưa login?)");
+      setLoading(false);
+      return;
+    }
+
+    const fetchUserCars = async () => {
+      try {
+        // 🔹 Mock API call (hiện tại gọi mock)
+        const res = await vehiclesApi.getCarsByUser(currentUser.id);
+
+        // Giả sử mock API trả về mảng [{id, brand, model, ...}]
+        setCars(res || []);
+        setCurrentCar(res?.[0]?.id || null);
+      } catch (error) {
+        console.error("❌ Lỗi khi tải danh sách xe:", error);
+        message.error("Không thể tải danh sách xe của bạn");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserCars();
+  }, [currentUser]);
+
+  if (loading) return <p style={{ padding: 24 }}>⏳ Đang tải dữ liệu xe của bạn...</p>;
+
+  if (!cars.length)
+    return (
+      <p style={{ padding: 24, textAlign: "center" }}>
+        🚗 Bạn chưa có xe nào được đăng ký.
+      </p>
+    );
+
   return (
     <div style={{ padding: 24 }}>
-      {/* Thông tin xe hiện tại */}
-      {current && (
+      {/* 🔹 Xe hiện tại */}
+      {chosenCar && (
         <Card
-          bordered
+          variant="outlined"
           style={{
             marginBottom: 24,
             background: "#fafafa",
@@ -52,45 +69,49 @@ export default function MyCarsPage() {
           <Row gutter={16} align="middle">
             <Col xs={24} sm={10} md={8}>
               <img
-                src={current.imageUrl}
-                alt={current.model}
+                src={chosenCar.imageUrl || "/images/default-car.jpg"}
+                alt={chosenCar.model}
                 style={{ width: "100%", borderRadius: 10, objectFit: "cover" }}
               />
             </Col>
             <Col xs={24} sm={14} md={16}>
               <Text strong style={{ fontSize: 18 }}>
-                {current.brand} {current.model}
+                {chosenCar.brand} {chosenCar.model}
               </Text>
               <br />
               <Text type="secondary">
-                Biển số: {current.plateNumber} • Năm: {current.year}
+                Biển số: {chosenCar.plateNumber || "—"} • Năm: {chosenCar.year || "?"}
               </Text>
               <div style={{ marginTop: 12 }}>
-                <Tag color={current.status === "available" ? "green" : "orange"}>
-                  {current.status}
+                <Tag color={chosenCar.status === "available" ? "green" : "orange"}>
+                  {chosenCar.status || "unknown"}
                 </Tag>
               </div>
               <div style={{ marginTop: 16 }}>
                 <Progress
-                  percent={(current.batteryCapacityKwh / 100) * 100}
+                  percent={Math.min(
+                    (chosenCar.batteryCapacityKwh || 0) / 1, // mock hiển thị thanh pin
+                    100
+                  )}
                   size="small"
                   strokeColor="#1677ff"
                   showInfo={false}
                 />
                 <Text type="secondary">
-                  ⚡ Dung lượng pin: {current.batteryCapacityKwh} kWh
+                  ⚡ Dung lượng pin: {chosenCar.batteryCapacityKwh || "?"} kWh
                 </Text>
                 <br />
                 <Text type="secondary">
-                  💰 Chi phí: {current.operatingCostPerDay}₫ / ngày • {current.operatingCostPerKm}₫ / km
+                  💰 Chi phí: {chosenCar.operatingCostPerDay || 0}₫ / ngày •{" "}
+                  {chosenCar.operatingCostPerKm || 0}₫ / km
                 </Text>
               </div>
               <Button
                 type="primary"
                 icon={<ThunderboltOutlined />}
                 style={{ marginTop: 16 }}
-                onClick={() => handleBookCar(current)}
-                disabled={current.status !== "available"}
+                onClick={() => handleBookCar(chosenCar)}
+                disabled={chosenCar.status !== "available"}
               >
                 Đặt xe
               </Button>
@@ -99,12 +120,13 @@ export default function MyCarsPage() {
         </Card>
       )}
 
-      {/* Danh sách xe khác */}
+      {/* 🔹 Danh sách xe khác */}
       <Row gutter={[16, 16]}>
         {cars.map((car) => (
           <Col xs={24} sm={12} md={8} key={car.id}>
             <Card
               hoverable
+              variant="outlined"
               onClick={() => setCurrentCar(car.id)}
               style={{
                 border:
@@ -115,7 +137,7 @@ export default function MyCarsPage() {
               }}
               cover={
                 <img
-                  src={car.imageUrl}
+                  src={car.imageUrl || "/images/default-car.jpg"}
                   alt={car.model}
                   style={{
                     height: 160,
@@ -140,17 +162,6 @@ export default function MyCarsPage() {
                   </Tag>
                 )}
               </div>
-              <Button
-                type="link"
-                size="small"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleBookCar(car);
-                }}
-                disabled={car.status !== "available"}
-              >
-                Đặt xe
-              </Button>
             </Card>
           </Col>
         ))}
@@ -158,3 +169,5 @@ export default function MyCarsPage() {
     </div>
   );
 }
+
+export default MyCars;

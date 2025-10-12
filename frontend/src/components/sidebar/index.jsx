@@ -1,30 +1,49 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CalendarOutlined } from "@ant-design/icons";
-import { Link, useLocation } from "react-router-dom";
+import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, } from "@ant-design/icons";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
 import "./style.scss";
 
-const OwnerSidebar = () => {
+const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const menuItems = [
-    {
-      key: "/owner/mycar",
-      icon: <HomeOutlined />,
-      label: <Link to="/owner/mycar">Dashboard</Link>,
-    },
-    {
-      key: "/owner/carbooking",
-      icon: <CalendarOutlined />,
-      label: <Link to="/owner/carbooking">Book Cars</Link>,
-    },
-  ];
+  // 🧠 Lấy role từ localStorage
+  const currentUser = useSelector((state) => state.user.current);
+  const role = currentUser.role || "OWNER";
+
+  let menuItems = [];
+
+  // 🧩 Dùng if/else để gán menu theo role
+  if (role === "ADMIN") {
+    menuItems = [
+      {
+        key: "/admin/bookingmanage",
+        icon: <BookOutlined />,
+        label: <Link to="/admin/bookingmanage"> Bookings</Link>,
+      },
+    ];
+  } else if (role === "OWNER") {
+    menuItems = [
+      {
+        key: "/owner/mycar",
+        icon: <HomeOutlined />,
+        label: <Link to="/owner/mycar">My Car</Link>,
+      },
+      {
+        key: "/owner/carbooking",
+        icon: <CalendarOutlined />,
+        label: <Link to="/owner/carbooking">Book Cars</Link>,
+      },
+    ];
+  }
 
   return (
     <div className="owner-sidebar">
       {/* Logo */}
-      <div className="sidebar-logo">
+      <div className="sidebar-logo" onClick={() => navigate("/")}>
         <img src={logoFull} alt="CoEV Logo" className="logo-img" />
       </div>
 
@@ -42,4 +61,4 @@ const OwnerSidebar = () => {
   );
 };
 
-export default OwnerSidebar;
+export default Sidebar;

@@ -1,16 +1,26 @@
 import axiosClient from "./axiosClient";
 
 const userApi = {
+  /*
+  register(data) {
+    const url = '/api/users/register';
+    return axiosClient.post(url, data);
+  },
 
+  login(data) {
+    const url = '/api/users/auth';
+    return axiosClient.post(url, data);
+  },
+
+  getProfile() {
+    const url = '/api/users/me';
+    return axiosClient.get(url);
+  },
+  */
   register(data) {
     const url = "/users";
     return axiosClient.post(url, data);
   },
-
-  /*login(data) {
-    const url = '/users';
-    return axiosClient.post(url, data);
-  },*/
 
   // Giả lập login (check email + password)
   async login({ email, password }) {

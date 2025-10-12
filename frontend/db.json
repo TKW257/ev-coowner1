@@ -1,23 +1,28 @@
 {
   "users": [
     {
-      "user_id": 1,
-      "full_name": "John Doe",
+      "id": "1",
+      "full_name": "Jane Doe",
       "email": "john@example.com",
       "phone": "0901234567",
       "password": "123456",
-      "id": "3ac6"
+      "role": "OWNER"
     },
     {
-      "id": "4dec",
-      "name": "phu",
+      "id": "2",
+      "full_name": "Phu Nguyen",
       "email": "test@gmail.com",
-      "password": "123456"
+      "phone": "0901234567",
+      "password": "123456",
+      "role": "OWNER"
     },
     {
-      "id": "e514",
-      "email": "john@example.com",
-      "password": "123456"
+      "id": "3",
+      "full_name": "Jack Doe",
+      "email": "jahn@example.com",
+      "phone": "0901234567",
+      "password": "123456",
+      "role": "ADMIN"
     }
   ],
   "vehicles": [
@@ -34,41 +39,66 @@
       "description": "A modern electric car with autopilot features.",
       "imageUrl": "https://tinbanxe.vn/uploads/tinbanxe/vinfast-vf3-mau-bac-1_1.jpg",
       "status": "available",
-      "ownerId": 1
+      "userId": "1"
     },
     {
       "id": "2",
       "brand": "MayBach",
-      "model": "Model 3",
-      "plateNumber": "51H-123.45",
-      "color": "White",
-      "year": 2023,
-      "batteryCapacityKwh": 75,
-      "operatingCostPerDay": 1000,
-      "operatingCostPerKm": 5,
-      "description": "A modern electric car with autopilot features.",
+      "model": "Model S",
+      "plateNumber": "60A-456.78",
+      "color": "Black",
+      "year": 2024,
+      "batteryCapacityKwh": 100,
+      "operatingCostPerDay": 1200,
+      "operatingCostPerKm": 6,
+      "description": "Luxury electric car with high performance.",
       "imageUrl": "https://bravigo.vn/images/2023/07/so-sanh-vinfast-vf3-vs-wuling-hongguang-miniev-3-1024x683.jpg",
       "status": "available",
-      "ownerId": 1
+      "userId": "2"
     }
   ],
   "bookings": [
     {
-      "booking_id": 1,
-      "vehicle_id": 1,
-      "user_id": 1,
-      "start_time": "2025-06-01T08:00:00Z",
-      "end_time": "2025-06-02T08:00:00Z",
-      "id": "a61e"
+      "id": "1",
+      "bookingId": 1,
+      "vehicleId": 1,
+      "vehicleName": "Tesla Model 3",
+      "userName": "Jane Doe",
+      "bookingStatus": "CONFIRMED",
+      "priorityScore": 85.5,
+      "startTime": "2025-06-01T08:00:00Z",
+      "endTime": "2025-06-02T08:00:00Z",
+      "createdAt": "2025-05-30T10:00:00Z"
     },
     {
-      "id": "13fc",
-      "vehicle_id": 2,
+      "id": "2",
+      "bookingId": 2,
+      "vehicleId": 2,
+      "vehicleName": "Maybach Model S",
+      "userName": "Phu Nguyen",
+      "bookingStatus": "PENDING",
+      "priorityScore": 72.3,
+      "startTime": "2025-07-01T08:00:00Z",
+      "endTime": "2025-07-05T08:00:00Z",
+      "createdAt": "2025-06-20T10:00:00Z"
+    },
+    {
+      "id": "35ca",
+      "vehicle_id": 1,
       "name": "Model 3",
-      "image": "https://bravigo.vn/images/2023/07/so-sanh-vinfast-vf3-vs-wuling-hongguang-miniev-3-1024x683.jpg",
-      "start_time": "2025-10-15T17:00:00.000Z",
-      "end_time": "2025-10-20T16:59:59.999Z",
+      "image": "https://tinbanxe.vn/uploads/tinbanxe/vinfast-vf3-mau-bac-1_1.jpg",
+      "start_time": "2025-10-05T17:00:00.000Z",
+      "end_time": "2025-10-08T16:59:59.999Z",
       "status": "success"
+    },
+    {
+      "id": "ec70",
+      "vehicle_id": 2,
+      "name": "Model S",
+      "image": "https://bravigo.vn/images/2023/07/so-sanh-vinfast-vf3-vs-wuling-hongguang-miniev-3-1024x683.jpg",
+      "start_time": "2025-10-06T17:00:00.000Z",
+      "end_time": "2025-10-09T16:59:59.999Z",
+      "status": "pending"
     }
   ]
 }

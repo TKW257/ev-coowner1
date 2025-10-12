@@ -10,7 +10,7 @@ const { Sider, Content } = Layout;
 const DashboardLayout = () => {
   return (
     <Layout className="dashboard-layout">
-      {/* Sidebar cố định */}
+
       <Sider
         width={220}
         className="fixed-sidebar"
@@ -19,7 +19,6 @@ const DashboardLayout = () => {
         <OwnerSidebar />
       </Sider>
 
-      {/* Main layout */}
       <Layout className="main-layout">
         <HeaderBar />
         <Content className="dashboard-content">

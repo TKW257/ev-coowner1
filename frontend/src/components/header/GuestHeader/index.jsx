@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Layout, Menu, Drawer, Avatar, Dropdown, Space, Grid } from "antd";
-import { MenuOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import { MenuOutlined, UserOutlined } from "@ant-design/icons";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../../features/userSlice";
 import logo from "../../../assets/logo_main.png";
@@ -27,7 +27,7 @@ const GuestHeader = () => {
     { 
       key: "home", 
       label: <NavLink to="/">Home</NavLink> },
-    { 
+    {
       key: "cars", 
       label: <NavLink to="/cars">Stock Cars</NavLink> },
     { 
@@ -52,7 +52,6 @@ const GuestHeader = () => {
       {
         key: "logout",
         label: <span className="logout-link">Đăng xuất</span>,
-        icon: <LogoutOutlined />,
         onClick: handleLogout,
       },
     ],
@@ -61,7 +60,6 @@ const GuestHeader = () => {
   return (
     <Header className="app-header">
 
-      {/* Logo */}
       <div className="logo" onClick={() => navigate("/")}>
         <img src={logo} alt="CoEV logo" />
       </div>
@@ -75,7 +73,12 @@ const GuestHeader = () => {
       <div className="header-right">
         {screens.md ? (
           isLoggedIn ? (
-            <Dropdown menu={userMenu} placement="bottomRight">
+            <Dropdown
+              menu={userMenu}
+              placement="bottomRight"
+              overlayClassName="user-dropdown"
+              arrow={{ pointAtCenter: true }}
+            >
               <Space className="user-info">
                 <Avatar
                   className="avatar"
@@ -97,6 +100,7 @@ const GuestHeader = () => {
 
       {/* Mobile Drawer */}
       {!screens.md && (
+
         <Drawer
           title="Menu"
           placement="top"
@@ -104,7 +108,7 @@ const GuestHeader = () => {
           open={open}
           className="mobile-drawer"
           closable
-          height="65vh" 
+          height="65vh"
         >
           <Menu mode="vertical" items={navItems} />
           <div className="drawer-user">
