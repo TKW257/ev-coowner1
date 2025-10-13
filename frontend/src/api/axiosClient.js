@@ -2,7 +2,7 @@ import axios from "axios";
 import StorageKeys from "../constants/storage-key";
 
 const axiosClient = axios.create({
-  baseURL: "https://vallate-enzootically-sterling.ngrok-free.dev/api",
+  baseURL: "http://localhost:3000",
   headers: {
     "Content-Type": "application/json"
   },

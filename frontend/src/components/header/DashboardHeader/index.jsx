@@ -16,8 +16,8 @@ const DashboardHeader = ({ children }) => {
   const currentUser = useSelector((state) => state.user.current);
   const isLoggedIn = Boolean(currentUser && Object.keys(currentUser).length > 0);
 
-  const role = currentUser?.role || "USER";
-  const headerTitle = role === "STAFF" ? "Admin Dashboard" : "Owner Dashboard";
+  const role = currentUser?.role || "OWNER";
+  const headerTitle = role === "ADMIN" ? "Admin Dashboard" : "Owner Dashboard";
 
   const handleLogout = () => {
     dispatch(logout());
@@ -71,7 +71,7 @@ const DashboardHeader = ({ children }) => {
                 icon={!currentUser?.image && <UserOutlined />}
               />
               <span className="username">
-                {currentUser?.fullName || "Người dùng"}
+                {currentUser?.full_name || "Người dùng"}
               </span>
             </Space>
           </Dropdown>

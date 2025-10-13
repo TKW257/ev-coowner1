@@ -48,7 +48,7 @@ function Register() {
               {/* Full Name */}
               <Form.Item
                 label={<span style={{ color: "white" }}>Full Name</span>}
-                name="fullName"
+                name="name"
                 rules={[{ required: true, message: "Please enter your name!" }]}
               >
                 <Input placeholder="Enter full name" />
