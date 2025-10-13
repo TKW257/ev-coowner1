@@ -1,6 +1,12 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  CalendarOutlined,
+  BookOutlined,
+  DashboardOutlined,
+  FileAddOutlined,
+} from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -10,19 +16,29 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 🧠 Lấy role từ localStorage
-  const currentUser = useSelector((state) => state.user.current);
+  // 🧠 Lấy role từ redux hoặc localStorage
+  const currentUser = useSelector((state) => state.user.current) || {};
   const role = currentUser.role || "OWNER";
 
   let menuItems = [];
 
   // 🧩 Dùng if/else để gán menu theo role
-  if (role === "ADMIN") {
+  if (role === "ADMIN" || role === "STAFF") {
     menuItems = [
       {
         key: "/admin/bookingmanage",
         icon: <BookOutlined />,
-        label: <Link to="/admin/bookingmanage"> Bookings</Link>,
+        label: <Link to="/admin/bookingmanage">Booking Management</Link>,
+      },
+      {
+        key: "/admin/createvote",
+        icon: <FileAddOutlined />,
+        label: <Link to="/admin/createvote">Create Vote</Link>,
+      },
+      {
+        key: "/admin/viewvote",
+        icon: <FileAddOutlined />,
+        label: <Link to="/admin/viewvote">View Vote</Link>,
       },
     ];
   } else if (role === "OWNER") {
@@ -36,6 +52,11 @@ const Sidebar = () => {
         key: "/owner/carbooking",
         icon: <CalendarOutlined />,
         label: <Link to="/owner/carbooking">Book Cars</Link>,
+      },
+      {
+        key: "/owner/vote",
+        icon: <DashboardOutlined />,
+        label: <Link to="/owner/vote">Vote</Link>,
       },
     ];
   }
