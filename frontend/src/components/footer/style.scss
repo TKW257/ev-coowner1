@@ -1,0 +1,41 @@
+.app-footer {
+  background: #000; 
+  color: #fff;
+  padding: 24px 0;
+  text-align: center;
+
+  .footer-logo {
+    img {
+      width: 70px; 
+      height: auto;
+      object-fit: contain;
+    }
+  }
+
+  .footer-links {
+    a {
+      color: #fff;
+      margin: 0 8px;
+      text-decoration: none;
+
+      &:hover {
+        color: #52c41a; 
+      }
+    }
+  }
+
+  .footer-contact {
+    color: #aaa;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .footer-copy {
+    margin-top: 16px;
+    font-size: 13px;
+    color: #666;
+  }
+}
