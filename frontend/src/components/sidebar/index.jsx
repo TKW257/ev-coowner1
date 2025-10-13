@@ -7,6 +7,7 @@ import {
   DashboardOutlined,
   FileAddOutlined,
 } from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -18,12 +19,15 @@ const Sidebar = () => {
 
   // 🧠 Lấy role từ redux hoặc localStorage
   const currentUser = useSelector((state) => state.user.current) || {};
+  // 🧠 Lấy role từ localStorage
+  const currentUser = useSelector((state) => state.user.current);
   const role = currentUser.role || "OWNER";
 
   let menuItems = [];
 
   // 🧩 Dùng if/else để gán menu theo role
   if (role === "ADMIN" || role === "STAFF") {
+  if (role === "ADMIN") {
     menuItems = [
       {
         key: "/admin/bookingmanage",
@@ -39,6 +43,7 @@ const Sidebar = () => {
         key: "/admin/viewvote",
         icon: <FileAddOutlined />,
         label: <Link to="/admin/viewvote">View Vote</Link>,
+        label: <Link to="/admin/bookingmanage"> Bookings</Link>,
       },
     ];
   } else if (role === "OWNER") {

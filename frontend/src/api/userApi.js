@@ -33,7 +33,6 @@ const userApi = {
       throw new Error("Invalid email or password");
     }
   },
-
 };
 
 export default userApi;

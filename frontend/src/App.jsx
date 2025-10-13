@@ -2,23 +2,24 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { App as AntdApp } from "antd";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
+// --- Guest pages ---
 import GuestPage from "./pages/guest";
 import RegisterPage from "./pages/guest/auth/register";
 import LoginPage from "./pages/guest/auth/login";
 
-// 👇 Co-owner
+// --- Co-owner pages ---
 import MyCar from "./pages/co-owner/MyCar";
 import CarBooking from "./pages/co-owner/CarBooking";
-import VoteDetail from "./pages/co-owner/vote/VoteDetail";
 import VoteList from "./pages/co-owner/vote/VoteList";
-import VoteListAdmin from "./pages/admin/vote/VoteListAdmin";
+import VoteDetail from "./pages/co-owner/vote/VoteDetail";
 
-// 👇 Admin / Staff
+// --- Admin / Staff pages ---
 import AdminBookingManage from "./pages/admin/BookingManagement";
 import VoteCreate from "./pages/admin/vote/VoteCreate";
+import VoteListAdmin from "./pages/admin/vote/VoteListAdmin";
 import VoteDetailAdmin from "./pages/admin/vote/VoteDetailAdmin";
 
-// Layout
+// --- Layout ---
 import DashboardLayout from "./components/layouts/Dashboard";
 
 const router = createBrowserRouter([
@@ -53,7 +54,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // --- Admin/Staff routes ---
+  // --- Admin / Staff routes ---
   {
     path: "/admin",
     element: (
@@ -63,7 +64,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: "createvote", element: <VoteCreate /> },
-      { path: "bookingmanage", element: <AdminBookingManage /> }, // ✅ thêm route này
+      { path: "bookingmanage", element: <AdminBookingManage /> },
       { path: "vote/:id", element: <VoteDetailAdmin /> },
       { path: "viewvote", element: <VoteListAdmin /> },
     ],
