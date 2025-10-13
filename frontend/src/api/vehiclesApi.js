@@ -38,6 +38,8 @@ const vehiclesApi = {
   getCarById(id) {
     return axiosClient.get(`/vehicles/${id}`);
   },
+
+  getAllVehicles: () => axiosClient.get("/vehicles"),
 };
 
 export default vehiclesApi;
