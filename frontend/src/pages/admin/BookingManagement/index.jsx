@@ -1,37 +1,62 @@
 // src/pages/admin/ManageBookings.jsx
 import React, { useState, useEffect } from "react";
 import { Table, Tag, Space, Button, message } from "antd";
+import booking from "../../../api/bookingApi"; // import API thật
 
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Mock data trực tiếp trong component
-  const bookingsMock = [
-    { id: 1, vehicle: { name: "Tesla Model 3" }, user: { full_name: "Phu Nguyen" }, startDate: "2025-10-15", endDate: "2025-10-20", status: "confirmed" },
-    { id: 2, vehicle: { name: "Nissan Leaf" }, user: { full_name: "Jane Doe" }, startDate: "2025-11-01", endDate: "2025-11-05", status: "pending" },
-    { id: 3, vehicle: { name: "BMW iX" }, user: { full_name: "John Smith" }, startDate: "2025-12-05", endDate: "2025-12-10", status: "confirmed" },
-    { id: 4, vehicle: { name: "Hyundai Ioniq 5" }, user: { full_name: "Alice Nguyen" }, startDate: "2025-12-12", endDate: "2025-12-15", status: "pending" },
-    { id: 5, vehicle: { name: "Chevrolet Bolt" }, user: { full_name: "Bob Tran" }, startDate: "2025-11-20", endDate: "2025-11-25", status: "confirmed" },
-  ];
-
-  // Lấy danh sách booking khi mount component (mock)
   useEffect(() => {
     fetchBookings();
   }, []);
 
+  // Lấy danh sách booking từ backend, an toàn với undefined
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      // Giả lập call API bằng Promise
-      const data = await new Promise((resolve) => {
-        setTimeout(() => resolve(bookingsMock), 300);
-      });
-      setBookings(data);
-    } catch {
-      message.error("Không tải được booking!");
+      const res = await booking.getAllBookings();
+      // Kiểm tra res.data có tồn tại không
+      const data = res?.data || [];
+      const mapped = data.map((b) => ({
+        id: b.id,
+        vehicle: b.vehicle || { name: "Không xác định" },
+        user: b.user || { full_name: "Không xác định" },
+        startDate: b.startTime ? b.startTime.split("T")[0] : "",
+        endDate: b.endTime ? b.endTime.split("T")[0] : "",
+        status: b.status || "pending",
+      }));
+      setBookings(mapped);
+    } catch (err) {
+      console.error(err);
+      message.error("Không tải được booking từ server!");
+      setBookings([]); // đảm bảo luôn là mảng
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Xác nhận booking
+  const handleConfirm = async (id) => {
+    try {
+      await booking.updateStatus(id, "confirmed");
+      message.success("Xác nhận booking thành công");
+      fetchBookings();
+    } catch (err) {
+      console.error(err);
+      message.error("Không xác nhận được booking");
+    }
+  };
+
+  // Hủy booking
+  const handleCancel = async (id) => {
+    try {
+      await booking.cancelBooking(id);
+      message.success("Hủy booking thành công");
+      fetchBookings();
+    } catch (err) {
+      console.error(err);
+      message.error("Không hủy được booking");
     }
   };
 
@@ -39,15 +64,13 @@ const ManageBookings = () => {
     { title: "ID", dataIndex: "id", key: "id" },
     {
       title: "Xe",
-      dataIndex: "vehicle",
+      dataIndex: ["vehicle", "name"],
       key: "vehicle",
-      render: (vehicle) => vehicle.name,
     },
     {
       title: "Người đặt",
-      dataIndex: "user",
+      dataIndex: ["user", "full_name"],
       key: "user",
-      render: (user) => user.full_name,
     },
     { title: "Ngày bắt đầu", dataIndex: "startDate", key: "startDate" },
     { title: "Ngày kết thúc", dataIndex: "endDate", key: "endDate" },
@@ -64,12 +87,18 @@ const ManageBookings = () => {
     {
       title: "Hành động",
       key: "action",
-      render: () => (
+      render: (_, record) => (
         <Space>
-          <Button type="primary" size="small">
-            Xác nhận
-          </Button>
-          <Button danger size="small">
+          {record.status !== "confirmed" && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => handleConfirm(record.id)}
+            >
+              Xác nhận
+            </Button>
+          )}
+          <Button danger size="small" onClick={() => handleCancel(record.id)}>
             Hủy
           </Button>
         </Space>
@@ -83,6 +112,8 @@ const ManageBookings = () => {
       columns={columns}
       dataSource={bookings}
       loading={loading}
+      bordered
+      pagination={{ pageSize: 10 }}
     />
   );
 };

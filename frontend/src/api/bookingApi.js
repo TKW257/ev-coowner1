@@ -2,42 +2,34 @@ import axiosClient from "./axiosClient";
 
 const bookingApi = {
 
+  // USER API
+  createBooking(data) {
+    return axiosClient.post("/bookings/createBooking", data);
+  },
+
+  getMyBookings() {
+    return axiosClient.get("/bookings/my");
+  },
+
+  cancelBooking(id) {
+    return axiosClient.delete("/bookings/" + id); //chưa
+  },
+
+  // STAFF API
+  getAllBookings() {
+    return axiosClient.get("/bookings/viewAllBooking");
+  },
+
+  updateStatus(id, status) {
+    return axiosClient.put("/bookings/" + id + "/status?status=" + status);
+  },
+
   /*
-    createBooking(data) {
-      return axiosClient.post("/bookings", data);
-    },
-  
-    getMyBookings() {
-      return axiosClient.get("/bookings/my");
-    },
-  
-    cancelBooking(id) {
-      return axiosClient.delete(`/bookings/${id}`);
-    },
-  
-    // ✅ STAFF
-    getAllBookings() {
-      return axiosClient.get("/bookings");
-    },
-  
-    updateStatus(id, status) {
-      return axiosClient.put(`/bookings/${id}/status?status=${status}`);
-    },
-  
-    getBookingById(id) {
-      return axiosClient.get(`/bookings/${id}`);
-    },
+    getBookingById: function(id) {
+      return axiosClient.get("/api/bookings/" + id);
+    }
   */
 
-  getAllBookings: () => axiosClient.get("/bookings"),
-
-  getBookingById: (id) => axiosClient.get(`/bookings/${id}`),
-
-  createBooking: (data) => axiosClient.post("/bookings", data),
-
-  updateBooking: (id, data) => axiosClient.patch(`/bookings/${id}`, data),
-
-  deleteBooking: (id) => axiosClient.delete(`/bookings/${id}`),
 };
 
 export default bookingApi;

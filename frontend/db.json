@@ -74,29 +74,10 @@
   ],
   "bookings": [
     {
-      "id": "d26d",
+      "id": "f5c0",
       "vehicle_id": 1,
       "name": "Model 3",
-      "image": "https://tinbanxe.vn/uploads/tinbanxe/vinfast-vf3-mau-bac-1_1.jpg",
-      "start_time": "2025-10-13T17:00:00.000Z",
-      "end_time": "2025-10-16T16:59:59.999Z",
-      "status": "pending"
-    },
-    {
-      "id": "2caa",
-      "vehicle_id": 1,
-      "name": "Model 3",
-      "image": "https://tinbanxe.vn/uploads/tinbanxe/vinfast-vf3-mau-bac-1_1.jpg",
-      "start_time": "2025-09-30T17:00:00.000Z",
-      "end_time": "2025-10-03T16:59:59.999Z",
-      "status": "pending"
-    },
-    {
-      "id": "0e21",
-      "vehicle_id": 1,
-      "name": "Model 3",
-      "image": "https://tinbanxe.vn/uploads/tinbanxe/vinfast-vf3-mau-bac-1_1.jpg",
-      "start_time": "2025-10-07T17:00:00.000Z",
+      "start_time": "2025-10-06T17:00:00.000Z",
       "end_time": "2025-10-09T16:59:59.999Z",
       "status": "pending"
     }
