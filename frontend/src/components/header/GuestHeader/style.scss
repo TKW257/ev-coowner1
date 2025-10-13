@@ -4,14 +4,19 @@
   justify-content: space-between;
   align-items: center;
   padding: 0 24px;
+  height: 70px;
 
   .logo {
-    color: #52c41a;
-    font-weight: bold;
-    font-size: 18px;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
+    cursor: pointer;
+
+    img {
+      width: 70px;
+      height: auto;
+      object-fit: contain;
+    }
   }
 
   .nav-menu {
@@ -28,6 +33,7 @@
       .ant-menu-item-selected,
       .ant-menu-item:hover {
         background: transparent !important;
+
         a {
           color: #52c41a !important;
         }
@@ -43,13 +49,14 @@
     .login-link {
       color: #52c41a;
       font-weight: 500;
+
       &:hover {
         text-decoration: underline;
       }
     }
 
     .menu-toggle {
-      font-size: 20px;
+      font-size: 24px;
       color: #52c41a;
       cursor: pointer;
     }
@@ -57,29 +64,94 @@
     .user-info {
       color: #fff;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      transition: all 0.25s ease;
 
       .avatar {
-        background: #3CB371;
+        background: #3cb371;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+      }
+
+      span {
+        font-weight: 500;
+        color: #fff;
+      }
+
+      &:hover {
+        background: rgba(82, 196, 26, 0.1);
+        transform: translateY(-1px);
+
+        .avatar {
+          box-shadow: 0 0 8px rgba(82, 196, 26, 0.4);
+          transform: scale(1.05);
+        }
       }
     }
   }
 }
 
-/* Drawer */
+.user-dropdown {
+  .ant-dropdown-menu-item {
+    font-size: 14px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ant-dropdown-menu-item:hover {
+    background: rgba(82, 196, 26, 0.1);
+  }
+
+  .logout-link {
+    color: #ff4d4f !important;
+    font-weight: 500;
+  }
+  
+}
+
 .mobile-drawer {
   .ant-drawer-header {
     background: #000;
     color: #fff;
+    border-bottom: 1px solid #222;
+
+    .ant-drawer-close {
+      color: #52c41a;
+      font-size: 20px;
+    }
+
+    .ant-drawer-title {
+      font-size: 18px;
+      color: #52c41a;
+      font-weight: 600;
+    }
   }
+
   .ant-drawer-body {
     background: #111;
     color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding-top: 30px;
 
     .ant-menu {
       background: transparent;
+      text-align: center;
+
       .ant-menu-item a {
         color: #fff;
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
+
       .ant-menu-item-selected a {
         color: #52c41a !important;
       }
@@ -89,21 +161,52 @@
       margin-top: 20px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
 
       .drawer-user-info {
-        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+
         .avatar {
           background: #52c41a;
         }
+
+        span {
+          font-size: 15px;
+          color: #fff;
+          font-weight: 500;
+        }
       }
 
-      .login-link,
-      .logout-link {
+      .login-link {
         color: #52c41a;
         font-weight: 500;
         cursor: pointer;
+
         &:hover {
+          text-decoration: underline;
+        }
+      }
+
+      .logout-link {
+        color: #ff4d4f;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: color 0.3s;
+
+        .logout-icon {
+          color: #ff4d4f;
+        }
+
+        &:hover {
+          color: #ff7875;
           text-decoration: underline;
         }
       }

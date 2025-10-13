@@ -1,15 +1,42 @@
-import axiosClient from './axiosClient';
+import axiosClient from "./axiosClient";
 
 const vehiclesApi = {
 
-  getCars: (params) => {
-    const url = '/vehicles';
-    return axiosClient.get(url, { params });
+  /*
+  getAll() {
+      return axiosClient.get("/vehicles");
+    },
+  
+    getById(id) {
+      return axiosClient.get(`/vehicles/${id}`);
+    },
+  
+    create(data) {
+      return axiosClient.post("/vehicles", data);
+    },
+  
+    update(id, data) {
+      return axiosClient.put(`/vehicles/${id}`, data);
+    },
+  
+    delete(id) {
+      return axiosClient.delete(`/vehicles/${id}`);
+    },
+  };
+  */
+
+
+  getCarsByUser(userId) {
+    return axiosClient.get(`/vehicles?userId=${userId}`);
   },
 
-  getCarById: (id) => {
-    const url = `/vehicles/${id}`;
-    return axiosClient.get(url);
+  getCars() {
+    return axiosClient.get("/vehicles");
+  },
+
+  // ✅ Thêm hàm này để lấy xe theo id
+  getCarById(id) {
+    return axiosClient.get(`/vehicles/${id}`);
   },
 };
 

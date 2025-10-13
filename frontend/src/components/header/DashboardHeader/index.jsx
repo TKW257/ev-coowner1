@@ -1,34 +1,53 @@
 import React from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { Layout, Input, Avatar, Dropdown, Space, Typography } from "antd";
-import { SearchOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import { SearchOutlined, UserOutlined } from "@ant-design/icons";
+import { logout } from "../../../features/userSlice";
+import { useNavigate } from "react-router-dom";
 import "./style.scss";
 
 const { Header } = Layout;
 const { Text } = Typography;
 
-const DashboardHeader = () => {
-  const menuItems = [
-    {
-      key: "1",
-      label: "Profile", icon: <UserOutlined />
-    },
-    {
-      type: "divider"
-    },
-    {
-      key: "2",
-      label: "Logout", icon: <LogoutOutlined />, danger: true
-    },
-  ];
+const DashboardHeader = ({ children }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const currentUser = useSelector((state) => state.user.current);
+  const isLoggedIn = Boolean(currentUser && Object.keys(currentUser).length > 0);
+
+  const role = currentUser?.role || "OWNER";
+  const headerTitle = role === "ADMIN" ? "Admin Dashboard" : "Owner Dashboard";
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate("/login");
+  };
+
+  const userMenu = {
+    items: [
+      {
+        key: "profile",
+        label: <span>Trang cá nhân</span>,
+        icon: <UserOutlined />,
+        onClick: () => navigate("/profile"),
+      },
+      { type: "divider" },
+      {
+        key: "logout",
+        label: <span className="logout-link">Đăng xuất</span>,
+        onClick: handleLogout,
+      },
+    ],
+  };
 
   return (
     <Header className="dashboard-header">
-      {/* Logo + Title */}
       <div className="header-left">
-        <Text className="title">Owner Dashboard</Text>
+        {children}
+        <Text className="title">{headerTitle}</Text>
       </div>
 
-      {/* Search bar */}
       <div className="header-search">
         <Input
           placeholder="Search or type..."
@@ -37,24 +56,34 @@ const DashboardHeader = () => {
         />
       </div>
 
-      {/* Avatar dropdown */}
-      <Dropdown
-        menu={{
-          items: menuItems,
-          style: { background: "#141414", color: "#fff" },
-        }}
-        placement="bottomRight"
-        arrow
-      >
-        <Space className="user-info">
-          <Avatar
-            size="large"
-            src="https://www.giantbomb.com/a/uploads/square_small/16/164924/2809352-4830305850-latest"
-            alt="user"
-          />
-          <Text className="user-name">Jane Doe</Text>
-        </Space>
-      </Dropdown>
+      <div className="header-right">
+        {isLoggedIn ? (
+          <Dropdown
+            menu={userMenu}
+            placement="bottomRight"
+            overlayClassName="user-dropdown"
+            arrow={{ pointAtCenter: true }}
+          >
+            <Space className="user-info">
+              <Avatar
+                className="avatar"
+                src={currentUser?.image || null}
+                icon={!currentUser?.image && <UserOutlined />}
+              />
+              <span className="username">
+                {currentUser?.full_name || "Người dùng"}
+              </span>
+            </Space>
+          </Dropdown>
+        ) : (
+          <span
+            className="login-link"
+            onClick={() => navigate("/login")}
+          >
+            Sign In
+          </span>
+        )}
+      </div>
     </Header>
   );
 };

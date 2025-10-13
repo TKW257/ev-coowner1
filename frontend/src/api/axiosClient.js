@@ -17,15 +17,11 @@ axiosClient.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Response Interceptor: trả luôn data hoặc reject lỗi
-axiosClient.interceptors.response.use((response) => {
-  if (response && response.data) {
-    return response.data;
+axiosClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    throw error;
   }
-
-  return response;
-}, (error) => {
-  throw error;
-});
+);
 
 export default axiosClient;

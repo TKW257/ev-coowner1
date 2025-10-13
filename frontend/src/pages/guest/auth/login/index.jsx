@@ -14,11 +14,16 @@ function LoginPage() {
 
   const handleSubmit = async (values) => {
     try {
-      //values.name = values.email;
       const actionResult = await dispatch(login(values));
       const user = unwrapResult(actionResult);
 
-      navigate("/");
+      if (user.role === "ADMIN") {
+        navigate("/admin/bookingmanage");
+      } else if (user.role === "OWNER") {
+        navigate("/owner/mycar");
+      } else {
+        navigate("/");
+      }
 
       console.log("Logged in user:", user);
     } catch (error) {
@@ -32,11 +37,10 @@ function LoginPage() {
         <div className="login-form-box">
           <div style={{ textAlign: "center", marginBottom: 20 }}>
             <Text style={{ color: "#bbb" }}>
-              Welcome back 
+              Welcome back
             </Text>
           </div>
 
-          {/* Ant Design Form */}
           <Form layout="vertical" onFinish={handleSubmit}>
             <Form.Item
               label={<span style={{ color: "white" }}>Email</span>}
@@ -68,7 +72,6 @@ function LoginPage() {
 
           <Divider style={{ borderColor: "#444" }} />
 
-          {/* Links */}
           <div style={{ textAlign: "center" }}>
             <Text style={{ color: "#bbb" }}>
               Don’t have an account?{" "}
