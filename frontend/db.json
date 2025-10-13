@@ -9,7 +9,7 @@
       "role": "OWNER"
     },
     {
-      "id": "2",
+      "id": "1",
       "full_name": "Phu Nguyen",
       "email": "test@gmail.com",
       "phone": "0901234567",
@@ -55,6 +55,21 @@
       "imageUrl": "https://bravigo.vn/images/2023/07/so-sanh-vinfast-vf3-vs-wuling-hongguang-miniev-3-1024x683.jpg",
       "status": "available",
       "userId": "2"
+    },
+    {
+      "id": "2",
+      "brand": "MayBach",
+      "model": "Model S",
+      "plateNumber": "60A-456.78",
+      "color": "Black",
+      "year": 2024,
+      "batteryCapacityKwh": 100,
+      "operatingCostPerDay": 1200,
+      "operatingCostPerKm": 6,
+      "description": "Luxury electric car with high performance.",
+      "imageUrl": "https://bravigo.vn/images/2023/07/so-sanh-vinfast-vf3-vs-wuling-hongguang-miniev-3-1024x683.jpg",
+      "status": "available",
+      "userId": ""
     }
   ],
   "bookings": [
