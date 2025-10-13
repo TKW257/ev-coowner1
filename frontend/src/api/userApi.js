@@ -34,6 +34,8 @@ const userApi = {
     }
   },
 
+  getAllUsers: () => axiosClient.get("/users"),
+
 };
 
 export default userApi;

@@ -74,31 +74,62 @@
   ],
   "bookings": [
     {
-      "id": "d26d",
-      "vehicle_id": 1,
-      "name": "Model 3",
-      "image": "https://tinbanxe.vn/uploads/tinbanxe/vinfast-vf3-mau-bac-1_1.jpg",
-      "start_time": "2025-10-13T17:00:00.000Z",
-      "end_time": "2025-10-16T16:59:59.999Z",
-      "status": "pending"
-    },
-    {
-      "id": "2caa",
-      "vehicle_id": 1,
-      "name": "Model 3",
-      "image": "https://tinbanxe.vn/uploads/tinbanxe/vinfast-vf3-mau-bac-1_1.jpg",
-      "start_time": "2025-09-30T17:00:00.000Z",
-      "end_time": "2025-10-03T16:59:59.999Z",
-      "status": "pending"
-    },
-    {
-      "id": "0e21",
-      "vehicle_id": 1,
-      "name": "Model 3",
+      "id": "1",
+      "bookingId": 1,
+      "vehicleId": 1,
+      "vehicleName": "Tesla Model 3",
+      "userName": "Jane Doe",
+      "bookingStatus": "CONFIRMED",
+      "priorityScore": 85.5,
+      "startTime": "2025-06-01T08:00:00Z",
+      "endTime": "2025-06-02T08:00:00Z",
+      "createdAt": "2025-05-30T10:00:00Z",
+      "vehicle_id": "2",
+      "name": "Model S",
       "image": "https://bravigo.vn/images/2023/07/so-sanh-vinfast-vf3-vs-wuling-hongguang-miniev-3-1024x683.jpg",
-      "start_time": "2025-10-15T17:00:00.000Z",
-      "end_time": "2025-10-20T16:59:59.999Z",
-      "status": "success"
+      "start_time": "2025-10-13T02:28:04.264Z",
+      "end_time": "2025-10-13T02:28:04.264Z",
+      "status": "pending",
+      "userId": "1"
+    },
+    {
+      "id": "2",
+      "bookingId": 2,
+      "vehicleId": 2,
+      "vehicleName": "Maybach Model S",
+      "userName": "Phu Nguyen",
+      "bookingStatus": "PENDING",
+      "priorityScore": 72.3,
+      "startTime": "2025-07-01T08:00:00Z",
+      "endTime": "2025-07-05T08:00:00Z",
+      "createdAt": "2025-06-20T10:00:00Z",
+      "vehicle_id": "1",
+      "name": "Model 3",
+      "image": "https://tinbanxe.vn/uploads/tinbanxe/vinfast-vf3-mau-bac-1_1.jpg",
+      "start_time": "2025-10-13T02:28:40.539Z",
+      "end_time": "2025-10-13T02:28:40.539Z",
+      "status": "pending",
+      "userId": "2"
+    },
+    {
+      "id": "35ca",
+      "vehicle_id": "2",
+      "name": "Model S",
+      "image": "https://bravigo.vn/images/2023/07/so-sanh-vinfast-vf3-vs-wuling-hongguang-miniev-3-1024x683.jpg",
+      "start_time": "2025-10-05T17:00:00.000Z",
+      "end_time": "2025-10-08T16:59:59.999Z",
+      "status": "success",
+      "userId": "2"
+    },
+    {
+      "id": "ec70",
+      "vehicle_id": "2",
+      "name": "Model S",
+      "image": "https://bravigo.vn/images/2023/07/so-sanh-vinfast-vf3-vs-wuling-hongguang-miniev-3-1024x683.jpg",
+      "start_time": "2025-10-06T17:00:00.000Z",
+      "end_time": "2025-10-09T16:59:59.999Z",
+      "status": "pending",
+      "userId": "3"
     }
   ]
 }
