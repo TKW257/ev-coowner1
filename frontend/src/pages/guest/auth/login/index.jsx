@@ -17,9 +17,9 @@ function LoginPage() {
       const actionResult = await dispatch(login(values));
       const user = unwrapResult(actionResult);
 
-      if (user.role === "ADMIN") {
+      if (user.role === "STAFF") {
         navigate("/admin/bookingmanage");
-      } else if (user.role === "OWNER") {
+      } else if (user.role === "USER") {
         navigate("/owner/mycar");
       } else {
         navigate("/");
