@@ -1,6 +1,7 @@
 import axiosClient from "./axiosClient";
 
 const vehiclesApi = {
+
   /*
   getAll() {
       return axiosClient.get("/vehicles");
@@ -24,6 +25,7 @@ const vehiclesApi = {
   };
   */
 
+
   getCarsByUser(userId) {
     return axiosClient.get(`/vehicles?userId=${userId}`);
   },
@@ -36,13 +38,6 @@ const vehiclesApi = {
   getCarById(id) {
     return axiosClient.get(`/vehicles/${id}`);
   },
-
-  // ✅ Thêm hàm này để lấy xe theo id
-  getCarById(id) {
-    return axiosClient.get(`/vehicles/${id}`);
-  },
-
-  getAllVehicles: () => axiosClient.get("/vehicles"),
 };
 
 export default vehiclesApi;

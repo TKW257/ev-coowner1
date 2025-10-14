@@ -85,7 +85,7 @@ const GuestHeader = () => {
                   src={currentUser?.image || null}
                   icon={!currentUser?.image && <UserOutlined />}
                 />
-                <span>{currentUser?.full_name || "Người dùng"}</span>
+                <span>{currentUser?.fullName || "Người dùng"}</span>
               </Space>
             </Dropdown>
           ) : (
@@ -120,7 +120,7 @@ const GuestHeader = () => {
                     src={currentUser?.image || null}
                     icon={!currentUser?.image && <UserOutlined />}
                   />
-                  <span>{currentUser?.full_name || "Người dùng"}</span>
+                  <span>{currentUser?.fullName || "Người dùng"}</span>
                 </Space>
                 <a className="logout-link" onClick={handleLogout}>
                   Logout
