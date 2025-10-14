@@ -17,15 +17,6 @@ axiosClient.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Response Interceptor: trả luôn data hoặc reject lỗi
-axiosClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem(StorageKeys.TOKEN);
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 axiosClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
