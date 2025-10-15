@@ -11,11 +11,7 @@ const DashboardLayout = () => {
   return (
     <Layout className="dashboard-layout">
 
-      <Sider
-        width={220}
-        className="fixed-sidebar"
-        trigger={null}
-      >
+      <Sider width={220} className="fixed-sidebar" trigger={null} >
         <OwnerSidebar />
       </Sider>
 
@@ -27,6 +23,7 @@ const DashboardLayout = () => {
           </div>
         </Content>
       </Layout>
+      
     </Layout>
   );
 };

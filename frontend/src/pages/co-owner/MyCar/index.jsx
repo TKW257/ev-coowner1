@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Progress, Tag, Typography, Button, message } from "antd";
 import { ThunderboltOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";  
-import { useSelector } from "react-redux";      
-import vehiclesApi from "../../../api/vehiclesApi";
+import { useNavigate } from "react-router-dom";
 
 const { Text } = Typography;
 
@@ -12,7 +10,50 @@ function MyCars() {
   const [loading, setLoading] = useState(true);
   const [currentCar, setCurrentCar] = useState(null);
   const navigate = useNavigate();
-  const currentUser = useSelector((state) => state.user.current);
+
+  // 🔹 Giả lập currentUser
+  const currentUser = { id: 1, name: "Nguyen Van A" };
+
+  // 🔹 Dữ liệu mock
+  const mockCars = [
+    {
+      id: 1,
+      brand: "Tesla",
+      model: "Model 3",
+      year: 2023,
+      plateNumber: "ABC-123",
+      status: "available",
+      batteryCapacityKwh: 75,
+      operatingCostPerDay: 120000,
+      operatingCostPerKm: 2000,
+      imageUrl: "https://tesla-cdn.thron.com/delivery/public/image/tesla/3.jpg",
+    },
+    {
+      id: 2,
+      brand: "Nissan",
+      model: "Leaf",
+      year: 2022,
+      plateNumber: "XYZ-456",
+      status: "rented",
+      batteryCapacityKwh: 40,
+      operatingCostPerDay: 90000,
+      operatingCostPerKm: 1800,
+      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Nissan_Leaf_2022.jpg/320px-Nissan_Leaf_2022.jpg",
+    },
+    {
+      id: 3,
+      brand: "BMW",
+      model: "i3",
+      year: 2021,
+      plateNumber: "DEF-789",
+      status: "available",
+      batteryCapacityKwh: 42,
+      operatingCostPerDay: 100000,
+      operatingCostPerKm: 1900,
+      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/BMW_i3_2017_IMG_0741.jpg/320px-BMW_i3_2017_IMG_0741.jpg",
+    },
+  ];
+
   const chosenCar = cars.find((car) => car.id === currentCar);
 
   const handleBookCar = (car) => {
@@ -26,14 +67,12 @@ function MyCars() {
       return;
     }
 
+    // 🔹 Sử dụng mock data
     const fetchUserCars = async () => {
       try {
-        // 🔹 Mock API call (hiện tại gọi mock)
-        const res = await vehiclesApi.getCarsByUser(currentUser.id);
-
-        // Giả sử mock API trả về mảng [{id, brand, model, ...}]
-        setCars(res || []);
-        setCurrentCar(res?.[0]?.id || null);
+        await new Promise((resolve) => setTimeout(resolve, 500)); // giả lập delay
+        setCars(mockCars);
+        setCurrentCar(mockCars[0]?.id || null);
       } catch (error) {
         console.error("❌ Lỗi khi tải danh sách xe:", error);
         message.error("Không thể tải danh sách xe của bạn");
@@ -43,16 +82,9 @@ function MyCars() {
     };
 
     fetchUserCars();
-  }, [currentUser]);
+  }, []);
 
   if (loading) return <p style={{ padding: 24 }}>⏳ Đang tải dữ liệu xe của bạn...</p>;
-
-  if (!cars.length)
-    return (
-      <p style={{ padding: 24, textAlign: "center" }}>
-        🚗 Bạn chưa có xe nào được đăng ký.
-      </p>
-    );
 
   return (
     <div style={{ padding: 24 }}>
@@ -60,11 +92,7 @@ function MyCars() {
       {chosenCar && (
         <Card
           variant="outlined"
-          style={{
-            marginBottom: 24,
-            background: "#fafafa",
-            borderRadius: 12,
-          }}
+          style={{ marginBottom: 24, background: "#fafafa", borderRadius: 12 }}
         >
           <Row gutter={16} align="middle">
             <Col xs={24} sm={10} md={8}>
@@ -89,10 +117,7 @@ function MyCars() {
               </div>
               <div style={{ marginTop: 16 }}>
                 <Progress
-                  percent={Math.min(
-                    (chosenCar.batteryCapacityKwh || 0) / 1, // mock hiển thị thanh pin
-                    100
-                  )}
+                  percent={Math.min(chosenCar.batteryCapacityKwh || 0, 100)}
                   size="small"
                   strokeColor="#1677ff"
                   showInfo={false}
@@ -129,21 +154,14 @@ function MyCars() {
               variant="outlined"
               onClick={() => setCurrentCar(car.id)}
               style={{
-                border:
-                  car.id === currentCar
-                    ? "2px solid #1677ff"
-                    : "1px solid #f0f0f0",
+                border: car.id === currentCar ? "2px solid #1677ff" : "1px solid #f0f0f0",
                 borderRadius: 10,
               }}
               cover={
                 <img
                   src={car.imageUrl || "/images/default-car.jpg"}
                   alt={car.model}
-                  style={{
-                    height: 160,
-                    objectFit: "cover",
-                    borderRadius: "10px 10px 0 0",
-                  }}
+                  style={{ height: 160, objectFit: "cover", borderRadius: "10px 10px 0 0" }}
                 />
               }
             >
