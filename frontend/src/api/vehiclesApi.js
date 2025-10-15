@@ -2,6 +2,7 @@ import axiosClient from "./axiosClient";
 
 const vehiclesApi = {
 
+<<<<<<< Updated upstream
   getCars() {
     return axiosClient.get("/vehicles");
   },
@@ -22,6 +23,17 @@ const vehiclesApi = {
     return axiosClient.delete(`/vehicles/${id}`);
   },
 
+=======
+  getTop4Vehicles() {
+    return axiosClient.get("/vehicles/top4");
+  },
+
+  getAllVehicles() {
+    return axiosClient.get("/vehicles/viewAllVehicle");
+  },
+
+
+>>>>>>> Stashed changes
 };
 
 export default vehiclesApi;
