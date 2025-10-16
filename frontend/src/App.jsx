@@ -2,15 +2,23 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { App as AntdApp } from "antd";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
-import GuestPage from "./pages/guest";
 import RegisterPage from "./pages/guest/auth/register";
 import LoginPage from "./pages/guest/auth/login";
+import HomePage from "./pages/guest/Home/HomePage"
+
 import MyCar from "./pages/co-owner/MyCar";
 import CarBooking from "./pages/co-owner/CarBooking";
 import BookingManage from "./pages/admin/BookingManagement";
 import DashboardLayout from "./components/layouts/Dashboard";
 
+import GuestLayout from "./components/layouts/GuestLayout";
+import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
+import OurTerms from "./pages/guest/Home/OurTerms";
+
+import TestVehicles from "./test";
+
 const router = createBrowserRouter([
+  { path: "/test", element: <TestVehicles /> },
   {
     path: "/",
     element: <GuestPage />,
@@ -26,9 +34,9 @@ const router = createBrowserRouter([
   {
     path: "/owner",
     element: (
-      <ProtectedRoute allowedRoles={["OWNER"]}>
-        <DashboardLayout />
-      </ProtectedRoute>
+      //<ProtectedRoute allowedRoles={["USER"]}>
+      <DashboardLayout />
+      //</ProtectedRoute>
     ),
     children: [
       { path: "mycar", element: <MyCar /> },
@@ -39,9 +47,9 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      <ProtectedRoute allowedRoles={["ADMIN"]}>
-        <DashboardLayout />
-      </ProtectedRoute>
+      //<ProtectedRoute allowedRoles={["STAFF"]}>
+      <DashboardLayout />
+      //</ProtectedRoute>
     ),
     children: [{ path: "bookingmanage", element: <BookingManage /> }],
   },

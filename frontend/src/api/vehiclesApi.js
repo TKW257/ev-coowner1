@@ -1,6 +1,7 @@
 import axiosClient from "./axiosClient";
 
 const vehiclesApi = {
+<<<<<<< HEAD
 
   /*
   getAll() {
@@ -40,6 +41,14 @@ const vehiclesApi = {
   },
 
   getAllVehicles: () => axiosClient.get("/vehicles"),
+=======
+  getAllVehicles() {
+    return axiosClient.get("/vehicles/viewAllVehicle");
+  },
+  getTop4Vehicles() {
+    return axiosClient.get("/vehicles/top4");
+  },
+>>>>>>> f97cf661 (up)
 };
 
 export default vehiclesApi;
