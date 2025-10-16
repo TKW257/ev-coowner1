@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Layout, Input, Avatar, Dropdown, Space, Typography } from "antd";
-import { SearchOutlined, UserOutlined } from "@ant-design/icons";
+import { SearchOutlined, UserOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { logout } from "../../../features/userSlice";
 import { useNavigate } from "react-router-dom";
 import "./style.scss";
@@ -16,12 +16,18 @@ const DashboardHeader = ({ children }) => {
   const currentUser = useSelector((state) => state.user.current);
   const isLoggedIn = Boolean(currentUser && Object.keys(currentUser).length > 0);
 
-  const role = currentUser?.role || "OWNER";
-  const headerTitle = role === "ADMIN" ? "Admin Dashboard" : "Owner Dashboard";
+  const role = currentUser?.role || "USER";
+  const headerTitle = role === "STAFF" ? "Admin Dashboard" : "Owner Dashboard";
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
+  };
+
+  const handleGoToDashboard = () => {
+    if (role === "STAFF") navigate("/admin");
+    else if (role === "USER") navigate("/owner/mycar");
+    else navigate("/user/dashboard");
   };
 
   const userMenu = {
@@ -31,6 +37,12 @@ const DashboardHeader = ({ children }) => {
         label: <span>Trang cá nhân</span>,
         icon: <UserOutlined />,
         onClick: () => navigate("/profile"),
+      },
+      {
+        key: "dashboard",
+        label: <span> Dashboard</span>,
+        icon: <DatabaseOutlined />,
+        onClick: handleGoToDashboard,
       },
       { type: "divider" },
       {
@@ -71,7 +83,7 @@ const DashboardHeader = ({ children }) => {
                 icon={!currentUser?.image && <UserOutlined />}
               />
               <span className="username">
-                {currentUser?.full_name || "Người dùng"}
+                {currentUser?.fullName || "Người dùng"}
               </span>
             </Space>
           </Dropdown>

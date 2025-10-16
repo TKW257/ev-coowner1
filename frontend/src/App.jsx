@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { App as AntdApp } from "antd";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -21,15 +21,14 @@ const router = createBrowserRouter([
   { path: "/test", element: <TestVehicles /> },
   {
     path: "/",
-    element: <GuestPage />,
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
+    element: <GuestLayout />,
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: "guest/login", element: <LoginPage /> },
+      { path: "guest/register", element: <RegisterPage /> },
+      { path: "guest/aboutus", element: <WhyChooseUs /> },
+      { path: "guest/terms", element: <OurTerms /> },
+    ],
   },
   {
     path: "/owner",
@@ -52,6 +51,11 @@ const router = createBrowserRouter([
       //</ProtectedRoute>
     ),
     children: [{ path: "bookingmanage", element: <BookingManage /> }],
+  },
+
+  {
+    path: "*",
+    element: <Navigate to="/" replace />,
   },
 ]);
 

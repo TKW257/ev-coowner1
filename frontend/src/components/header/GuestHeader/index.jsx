@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Layout, Menu, Drawer, Avatar, Dropdown, Space, Grid } from "antd";
-import { MenuOutlined, UserOutlined } from "@ant-design/icons";
+import { MenuOutlined, UserOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { NavLink, useNavigate } from "react-router-dom";
 import { logout } from "../../../features/userSlice";
 import logo from "../../../assets/logo_main.png";
@@ -16,6 +16,7 @@ const GuestHeader = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentUser = useSelector((state) => state.user.current);
+  const role = currentUser?.role || "USER";
   const isLoggedIn = Boolean(currentUser && Object.keys(currentUser).length > 0);
 
   const handleLogout = () => {
@@ -23,22 +24,29 @@ const GuestHeader = () => {
     navigate("/login");
   };
 
+  const handleGoToDashboard = () => {
+    if (role === "STAFF") navigate("/admin");
+    else if (role === "USER") navigate("/owner/mycar");
+    else navigate("/user/dashboard");
+  };
+
   const navItems = [
-    { 
-      key: "home", 
-      label: <NavLink to="/">Home</NavLink> },
     {
-      key: "cars", 
-      label: <NavLink to="/cars">Stock Cars</NavLink> },
-    { 
-      key: "terms", 
-      label: <NavLink to="/terms">Our Terms</NavLink> },
-    { 
-      key: "about", 
-      label: <NavLink to="/about">About Us</NavLink> },
-    { 
-      key: "owner", 
-      label: <NavLink to="/owner/mycar">Owner</NavLink> },
+      key: "home",
+      label: <NavLink to="/">Home</NavLink>
+    },
+    {
+      key: "cars",
+      label: <NavLink to="/cars">Stock Cars</NavLink>
+    },
+    {
+      key: "terms",
+      label: <NavLink to="/guest/terms">Our Terms</NavLink>
+    },
+    {
+      key: "about",
+      label: <NavLink to="/guest/aboutus">About Us</NavLink>
+    },
   ];
 
   const userMenu = {
@@ -47,6 +55,12 @@ const GuestHeader = () => {
         key: "profile",
         label: <NavLink to="/profile">Trang cá nhân</NavLink>,
         icon: <UserOutlined />,
+      },
+      {
+        key: "dashboard",
+        label: <span> Dashboard</span>,
+        icon: <DatabaseOutlined />,
+        onClick: handleGoToDashboard,
       },
       { type: "divider" },
       {
@@ -85,11 +99,11 @@ const GuestHeader = () => {
                   src={currentUser?.image || null}
                   icon={!currentUser?.image && <UserOutlined />}
                 />
-                <span>{currentUser?.full_name || "Người dùng"}</span>
+                <span>{currentUser?.fullName || "Người dùng"}</span>
               </Space>
             </Dropdown>
           ) : (
-            <NavLink to="/login" className="login-link">
+            <NavLink to="/guest/login" className="login-link">
               Sign In
             </NavLink>
           )
@@ -120,14 +134,14 @@ const GuestHeader = () => {
                     src={currentUser?.image || null}
                     icon={!currentUser?.image && <UserOutlined />}
                   />
-                  <span>{currentUser?.full_name || "Người dùng"}</span>
+                  <span>{currentUser?.fullName || "Người dùng"}</span>
                 </Space>
                 <a className="logout-link" onClick={handleLogout}>
                   Logout
                 </a>
               </>
             ) : (
-              <NavLink to="/login" className="login-link">
+              <NavLink to="/guest/login" className="login-link">
                 Sign In
               </NavLink>
             )}

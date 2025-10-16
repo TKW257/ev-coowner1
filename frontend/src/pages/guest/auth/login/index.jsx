@@ -17,9 +17,9 @@ function LoginPage() {
       const actionResult = await dispatch(login(values));
       const user = unwrapResult(actionResult);
 
-      if (user.role === "ADMIN") {
+      if (user.role === "STAFF") {
         navigate("/admin/bookingmanage");
-      } else if (user.role === "OWNER") {
+      } else if (user.role === "USER") {
         navigate("/owner/mycar");
       } else {
         navigate("/");
@@ -35,15 +35,13 @@ function LoginPage() {
     <div className="login-container">
       <div className="login-right">
         <div className="login-form-box">
-          <div style={{ textAlign: "center", marginBottom: 20 }}>
-            <Text style={{ color: "#bbb" }}>
-              Welcome back
-            </Text>
+          <div className="login-header">
+            <Text className="login-subtitle">Welcome back</Text>
           </div>
 
           <Form layout="vertical" onFinish={handleSubmit}>
             <Form.Item
-              label={<span style={{ color: "white" }}>Email</span>}
+              label={<span className="login-label">Email</span>}
               name="email"
               rules={[{ required: true, message: "Please enter your email!" }]}
             >
@@ -51,7 +49,7 @@ function LoginPage() {
             </Form.Item>
 
             <Form.Item
-              label={<span style={{ color: "white" }}>Password</span>}
+              label={<span className="login-label">Password</span>}
               name="password"
               rules={[{ required: true, message: "Please enter your password!" }]}
             >
@@ -63,19 +61,19 @@ function LoginPage() {
                 type="primary"
                 htmlType="submit"
                 block
-                style={{ backgroundColor: "#3CB371", borderColor: "#3CB371" }}
+                className="login-btn"
               >
                 Sign In
               </Button>
             </Form.Item>
           </Form>
 
-          <Divider style={{ borderColor: "#444" }} />
+          <Divider />
 
-          <div style={{ textAlign: "center" }}>
-            <Text style={{ color: "#bbb" }}>
+          <div className="login-footer">
+            <Text>
               Don’t have an account?{" "}
-              <a href="/register" style={{ color: "#3CB371" }}>
+              <a href="/guest/register" className="login-link">
                 Sign up
               </a>
             </Text>

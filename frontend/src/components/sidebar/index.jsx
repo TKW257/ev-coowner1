@@ -12,12 +12,12 @@ const Sidebar = () => {
 
   // 🧠 Lấy role từ localStorage
   const currentUser = useSelector((state) => state.user.current);
-  const role = currentUser.role || "OWNER";
+  const role = currentUser.role || "USER";
 
   let menuItems = [];
 
   // 🧩 Dùng if/else để gán menu theo role
-  if (role === "ADMIN") {
+  if (role === "STAFF") {
     menuItems = [
       {
         key: "/admin/bookingmanage",
@@ -25,7 +25,7 @@ const Sidebar = () => {
         label: <Link to="/admin/bookingmanage"> Bookings</Link>,
       },
     ];
-  } else if (role === "OWNER") {
+  } else if (role === "USER") {
     menuItems = [
       {
         key: "/owner/mycar",
