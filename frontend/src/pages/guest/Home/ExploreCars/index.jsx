@@ -10,24 +10,32 @@ const ExploreCars = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchTop4Vehicles = async () => {
-      try {
-        const res = await vehiclesApi.getTop4Vehicles();
-        setCars(res || []);
-      } catch (err) {
-        console.error("Lỗi khi lấy top 4 xe:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTop4Vehicles();
-  }, []);
+  const fetchAllVehicles = async () => {
+    try {
+      const res = await vehiclesApi.getAllVehicles();
+      console.log("API trả về:", res);
+      const vehicles = Array.isArray(res)
+        ? res
+        : Array.isArray(res?.content)
+        ? res.content
+        : [];
+      setCars(vehicles);
+    } catch (err) {
+      console.error("Lỗi khi lấy danh sách xe:", err);
+      setCars([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchAllVehicles();
+}, []);
+
 
   const handleViewAll = () => {
     window.location.href = "/cars";
   };
 
-//SEKELETON
+  //SEKELETON
   const renderSkeletons = () =>
     Array.from({ length: 4 }).map((_, index) => (
       <Col xs={24} sm={12} md={12} lg={6} key={`skeleton-${index}`}>
@@ -41,7 +49,7 @@ const ExploreCars = () => {
       </Col>
     ));
 
-    
+
   const renderCars = () =>
     cars.map((car) => (
       <Col xs={24} sm={12} md={12} lg={6} key={car.id}>

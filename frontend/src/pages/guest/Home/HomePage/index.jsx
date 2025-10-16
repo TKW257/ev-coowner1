@@ -43,12 +43,14 @@ const HomePage = () => {
             { name: "Mercedes Benz", img: "https://tse4.mm.bing.net/th/id/OIP.mthtoWZ8AXcJRR8o8pXD2wHaHa?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3" },
             { name: "Peugeot", img: "https://tse4.mm.bing.net/th/id/OIP.mthtoWZ8AXcJRR8o8pXD2wHaHa?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3https://tse4.mm.bing.net/th/id/OIP.QZRUtEA8SeOZrUtbE7XCegHaHa?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3" },
           ].map((brand, index) => (
+            
             <Col xs={12} sm={8} md={6} lg={4} key={index}>
-              <Card hoverable className="brand-card">
+              <Card hoverable variant="outlined" className="brand-card">
                 <img src={brand.img} alt={brand.name} className="brand-logo" />
                 <Text className="brand-name">{brand.name}</Text>
               </Card>
             </Col>
+
           ))}
         </Row>
       </section>

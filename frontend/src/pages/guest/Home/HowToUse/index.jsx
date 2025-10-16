@@ -46,7 +46,7 @@ const HowToCoOwn = () => {
           <Col xs={24} md={12}>
             <Space direction="vertical" size="large" className="steps">
               {steps.map((step, index) => (
-                <Card key={index} className="step-card" bordered={false}>
+                <Card key={index} className="step-card" variant="borderless">
                   <Space align="start" size="middle">
                     <div className="icon-wrapper">{step.icon}</div>
                     <div>
