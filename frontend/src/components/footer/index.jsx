@@ -15,7 +15,7 @@ const Footer = () => {
         </Col>
 
         <Col xs={24} md={8} className="footer-links">
-          <a href="/about">About</a> | <a href="/terms">Terms</a> | <a href="/contact">Contact</a>
+          <a href="/guest/aboutus">About</a> | <a href="/guest/terms">Terms</a> | <a href="/contact">Contact</a>
         </Col>
 
         <Col xs={24} md={8} className="footer-contact">

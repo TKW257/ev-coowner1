@@ -1,0 +1,79 @@
+.home-page {
+  .banner-section {
+    position: relative;
+    height: 80vh;
+    background-image: url("https://www.motorbiscuit.com/wp-content/uploads/2024/04/cyberbeast-tesla-cybertruck.jpg?w=1200");
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .banner-overlay {
+      background: rgba(0, 0, 0, 0.4);
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .banner-content {
+      text-align: center;
+      color: #fff;
+      padding: 20px;
+
+      .banner-subtitle {
+        font-size: 18px;
+        color: #eee;
+      }
+
+      .banner-title {
+        font-size: 48px;
+        font-weight: 700;
+        color: #fff;
+      }
+
+      .banner-desc {
+        font-size: 16px;
+        color: #ccc;
+      }
+    }
+  }
+
+  .brand-section {
+    background: #f9fafb;
+    padding: 60px 20px;
+    text-align: center;
+
+    .section-title {
+      margin-bottom: 40px;
+      font-weight: 600;
+    }
+
+    .brand-card {
+      border-radius: 10px;
+      text-align: center;
+      padding: 20px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .brand-logo {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        margin-bottom: 10px;
+      }
+
+      .brand-name {
+        display: block;
+        font-weight: 500;
+        color: #333;
+      }
+    }
+  }
+}

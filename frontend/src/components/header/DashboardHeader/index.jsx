@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Layout, Input, Avatar, Dropdown, Space, Typography } from "antd";
-import { SearchOutlined, UserOutlined } from "@ant-design/icons";
+import { SearchOutlined, UserOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { logout } from "../../../features/userSlice";
 import { useNavigate } from "react-router-dom";
 import "./style.scss";
@@ -24,6 +24,12 @@ const DashboardHeader = ({ children }) => {
     navigate("/login");
   };
 
+  const handleGoToDashboard = () => {
+    if (role === "STAFF") navigate("/admin");
+    else if (role === "USER") navigate("/owner/mycar");
+    else navigate("/user/dashboard");
+  };
+
   const userMenu = {
     items: [
       {
@@ -31,6 +37,12 @@ const DashboardHeader = ({ children }) => {
         label: <span>Trang cá nhân</span>,
         icon: <UserOutlined />,
         onClick: () => navigate("/profile"),
+      },
+      {
+        key: "dashboard",
+        label: <span> Dashboard</span>,
+        icon: <DatabaseOutlined />,
+        onClick: handleGoToDashboard,
       },
       { type: "divider" },
       {

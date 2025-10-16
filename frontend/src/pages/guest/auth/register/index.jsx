@@ -1,9 +1,8 @@
 import React from "react";
+import { Input, Button, Typography, Form, Divider, message } from "antd";
 import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { register } from "../../../../features/userSlice";
-import { Input, Button, Typography, Form, Divider } from "antd";
-import { message } from "antd";
 import "./style.scss";
 
 const { Text } = Typography;
@@ -14,7 +13,6 @@ function Register() {
 
   const handleSubmit = async (values) => {
     try {
-      //values.name = values.email;
       const actionResult = await dispatch(register(values));
       const user = unwrapResult(actionResult);
 
@@ -29,25 +27,24 @@ function Register() {
         type: "error",
         content: "Register failed. Please try again",
       });
-      console.log("Failed to register", error);
+      console.error("Failed to register", error);
     }
   };
 
   return (
     <>
       {contextHolder}
-      <div className="signup-container">
-        <div className="signup-right">
-          <div className="signup-form-box">
-            <div style={{ textAlign: "center", marginBottom: 20 }}>
-              <Text style={{ color: "#bbb" }}>Join with us now</Text>
+      <div className="register-container">
+        <div className="register-right">
+          <div className="register-form-box">
+            <div className="register-header">
+              <Text className="register-subtitle">Join with us now</Text>
             </div>
 
             <Form layout="vertical" onFinish={handleSubmit}>
-
               {/* Full Name */}
               <Form.Item
-                label={<span style={{ color: "white" }}>Full Name</span>}
+                label={<span className="register-label">Full Name</span>}
                 name="fullName"
                 rules={[{ required: true, message: "Please enter your name!" }]}
               >
@@ -56,7 +53,7 @@ function Register() {
 
               {/* Email */}
               <Form.Item
-                label={<span style={{ color: "white" }}>Email</span>}
+                label={<span className="register-label">Email</span>}
                 name="email"
                 rules={[
                   { required: true, message: "Please enter your email!" },
@@ -68,7 +65,7 @@ function Register() {
 
               {/* Password */}
               <Form.Item
-                label={<span style={{ color: "white" }}>Password</span>}
+                label={<span className="register-label">Password</span>}
                 name="password"
                 rules={[
                   { required: true, message: "Please enter your password!" },
@@ -83,18 +80,18 @@ function Register() {
                   type="primary"
                   htmlType="submit"
                   block
-                  style={{ backgroundColor: "#3CB371", borderColor: "#3CB371" }}
+                  className="register-btn"
                 >
                   Sign Up
                 </Button>
               </Form.Item>
 
-              <Divider style={{ borderColor: "#444" }} />
+              <Divider />
 
-              <div style={{ textAlign: "center" }}>
-                <Text style={{ color: "#bbb" }}>
+              <div className="register-footer">
+                <Text>
                   Already have an account?{" "}
-                  <a href="/login" style={{ color: "#3CB371" }}>
+                  <a href="/guest/login" className="register-link">
                     Sign in
                   </a>
                 </Text>

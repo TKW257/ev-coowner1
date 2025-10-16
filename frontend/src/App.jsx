@@ -1,13 +1,11 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { App as AntdApp } from "antd";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
-// --- Guest pages ---
-import GuestPage from "./pages/guest";
 import RegisterPage from "./pages/guest/auth/register";
 import LoginPage from "./pages/guest/auth/login";
+import HomePage from "./pages/guest/Home/HomePage"
 
-// --- Co-owner pages ---
 import MyCar from "./pages/co-owner/MyCar";
 import CarBooking from "./pages/co-owner/CarBooking";
 import VoteList from "./pages/co-owner/vote/VoteList";
@@ -22,28 +20,33 @@ import VoteDetailAdmin from "./pages/admin/vote/VoteDetailAdmin";
 // --- Layout ---
 import DashboardLayout from "./components/layouts/Dashboard";
 
+import GuestLayout from "./components/layouts/GuestLayout";
+import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
+import OurTerms from "./pages/guest/Home/OurTerms";
+
+import TestVehicles from "./test";
+
 const router = createBrowserRouter([
-  // --- Guest routes ---
+  { path: "/test", element: <TestVehicles /> },
   {
     path: "/",
-    element: <GuestPage />,
-  },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
-  {
-    path: "/login",
-    element: <LoginPage />,
+    element: <GuestLayout />,
+    children: [
+      { index: true, element: <HomePage /> },
+      { path: "guest/login", element: <LoginPage /> },
+      { path: "guest/register", element: <RegisterPage /> },
+      { path: "guest/aboutus", element: <WhyChooseUs /> },
+      { path: "guest/terms", element: <OurTerms /> },
+    ],
   },
 
   // --- Owner routes ---
   {
     path: "/owner",
     element: (
-      <ProtectedRoute allowedRoles={["USER"]}>
-        <DashboardLayout />
-      </ProtectedRoute>
+      //<ProtectedRoute allowedRoles={["USER"]}>
+      <DashboardLayout />
+      //</ProtectedRoute>
     ),
     children: [
       { path: "mycar", element: <MyCar /> },
@@ -58,9 +61,9 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      <ProtectedRoute allowedRoles={["STAFF"]}>
-        <DashboardLayout />
-      </ProtectedRoute>
+      //<ProtectedRoute allowedRoles={["STAFF"]}>
+      <DashboardLayout />
+      //</ProtectedRoute>
     ),
     children: [
       { path: "createvote", element: <VoteCreate /> },
@@ -68,6 +71,11 @@ const router = createBrowserRouter([
       { path: "vote/:id", element: <VoteDetailAdmin /> },
       { path: "viewvote", element: <VoteListAdmin /> },
     ],
+  },
+
+  {
+    path: "*",
+    element: <Navigate to="/" replace />,
   },
 ]);
 
