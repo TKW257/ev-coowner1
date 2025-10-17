@@ -2,7 +2,6 @@ import axiosClient from "./axiosClient";
 
 const bookingApi = {
 
-  // USER API
   createBooking(data) {
     return axiosClient.post("/bookings/createBooking", data);
   },
@@ -11,25 +10,13 @@ const bookingApi = {
     return axiosClient.get("/bookings/my");
   },
 
-  cancelBooking(id) {
-    return axiosClient.delete("/bookings/" + id); //chưa
-  },
-
-  // STAFF API
-  getAllBookings() {
-    return axiosClient.get("/bookings/viewAllBooking");
-  },
-
-  updateStatus(id, status) {
-    return axiosClient.put("/bookings/" + id + "/status?status=" + status);
-  },
-
-  /*
-    getBookingById: function(id) {
-      return axiosClient.get("/api/bookings/" + id);
-    }
-  */
-
 };
 
 export default bookingApi;
+
+
+
+
+ // cancelBooking(id) {
+  //   return axiosClient.delete("/bookings/" + id); //chưa
+  // },
