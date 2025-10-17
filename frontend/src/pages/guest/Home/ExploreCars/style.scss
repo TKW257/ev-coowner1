@@ -35,13 +35,45 @@
     }
 
     .car-info {
-      padding: 12px;
+      padding: 14px 16px;
     }
 
-    .car-spec {
-      display: block;
-      margin-bottom: 12px;
-      color: #555;
+    .car-name {
+      margin-bottom: 8px;
+      color: #111;
+    }
+
+    .car-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+
+      .car-battery {
+        font-size: 15px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .car-status {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: capitalize;
+
+        &.status-active {
+          color: #27ae60;
+        }
+
+        &.status-inactive {
+          color: #e74c3c;
+        }
+      }
+    }
+
+    .car-actions {
+      display: flex;
+      justify-content: space-between;
     }
   }
+
 }

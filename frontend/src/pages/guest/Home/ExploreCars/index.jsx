@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Button, Skeleton } from "antd";
+import { ThunderboltFilled, ThunderboltOutlined} from "@ant-design/icons";
 import vehiclesApi from "../../../../api/vehiclesApi";
 import "./style.scss";
 
@@ -10,25 +11,25 @@ const ExploreCars = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-  const fetchAllVehicles = async () => {
-    try {
-      const res = await vehiclesApi.getAllVehicles();
-      console.log("API trả về:", res);
-      const vehicles = Array.isArray(res)
-        ? res
-        : Array.isArray(res?.content)
-        ? res.content
-        : [];
-      setCars(vehicles);
-    } catch (err) {
-      console.error("Lỗi khi lấy danh sách xe:", err);
-      setCars([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchAllVehicles();
-}, []);
+    const fetchAllVehicles = async () => {
+      try {
+        const res = await vehiclesApi.getTop4Vehicles();
+        console.log("API trả về:", res);
+        const vehicles = Array.isArray(res)
+          ? res
+          : Array.isArray(res?.content)
+            ? res.content
+            : [];
+        setCars(vehicles);
+      } catch (err) {
+        console.error("Lỗi khi lấy danh sách xe:", err);
+        setCars([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAllVehicles();
+  }, []);
 
 
   const handleViewAll = () => {
@@ -51,38 +52,58 @@ const ExploreCars = () => {
 
 
   const renderCars = () =>
-    cars.map((car) => (
-      <Col xs={24} sm={12} md={12} lg={6} key={car.id}>
-        <Card
-          hoverable
-          cover={
-            <img
-              src={car.image_url || "https://via.placeholder.com/400x250?text=No+Image"}
-              alt={car.model}
-              className="car-img"
-            />
-          }
-          className="car-card"
-        >
-          <div className="car-info">
-            <Title level={4}>
-              {car.brand} {car.model} ({car.year})
-            </Title>
-            <Text className="car-spec">
-              💸 {car.operating_cost_per_day ? `$${car.operating_cost_per_day}/day` : "N/A"}{" "}
-              &nbsp;|&nbsp; 🚗{" "}
-              {car.operating_cost_per_km ? `$${car.operating_cost_per_km}/km` : "N/A"}
-            </Text>
-            <div className="car-actions">
-              <Button type="default">Xem chi tiết</Button>
-              <Button type="primary" style={{ marginLeft: 8 }}>
-                Góp vốn ngay
-              </Button>
+    cars.map((car) => {
+      const statusText = car.status || "Unknown";
+      const statusLower = statusText.toLowerCase();
+
+      let statusClass = "status-inactive";
+      if (statusLower.includes("active")) statusClass = "status-active";
+
+      return (
+        <Col xs={24} sm={12} md={12} lg={6} key={car.id}>
+          <Card
+            hoverable
+            cover={
+              <img
+                src={
+                  car.image_url ||
+                  "https://via.placeholder.com/400x250?text=No+Image"
+                }
+                alt={car.model}
+                className="car-img"
+              />
+            }
+            className="car-card"
+          >
+            <div className="car-info">
+              <Title level={4} className="car-name">
+                {car.brand} {car.model} ({car.year})
+              </Title>
+
+              <div className="car-details">
+                <Text className="car-battery">
+                  <ThunderboltOutlined /> {" "}
+                  {car.battery_capacity_kwh
+                    ? `${car.battery_capacity_kwh} kWh`
+                    : "N/A"}
+                </Text>
+                <Text className={`car-status ${statusClass}`}>
+                  ● {statusText}
+                </Text>
+              </div>
+
+              <div className="car-actions">
+                <Button type="default">Xem chi tiết</Button>
+                <Button type="primary" style={{ marginLeft: 8 }}>
+                  Góp vốn ngay
+                </Button>
+              </div>
             </div>
-          </div>
-        </Card>
-      </Col>
-    ));
+          </Card>
+        </Col>
+      );
+    });
+
 
   return (
     <section className="explore-section">
