@@ -1,18 +1,17 @@
-import axiosClient from "./axiosClient";
+import axiosClient from "../api/axiosClient";
 
 const voteApi = {
-  // Lấy danh sách votes
-  getAll: () => axiosClient.get("/votes"),
+  // STAFF
+  createTopic: (data) => axiosClient.post("/votes/topics", data),
+  getAllTopics: () => axiosClient.get("/votes/viewAllTopic"),
+  calculateResult: (id) => axiosClient.post(`/votes/topics/${id}/calculate`),
 
-  // Lấy chi tiết 1 vote (kèm voters nếu cần)
-  getDetail: (id) => axiosClient.get(`/votes/${id}?_embed=voters`),
+  // USER
+  getUserTopics: () => axiosClient.get("/votes/viewTopicUser"),
+  castVote: (data) => axiosClient.post("/votes/castVote", data),
 
-  // ✅ Hàm tạo topic mới (sửa lỗi createTopic)
-  createTopic: (data) => axiosClient.post("/votes", data),
-
-  // Xóa, cập nhật
-  update: (id, data) => axiosClient.put(`/votes/${id}`, data),
-  delete: (id) => axiosClient.delete(`/votes/${id}`),
+  // Common
+  getVotesByTopic: (id) => axiosClient.get(`/votes/topics/${id}`),
 };
 
 export default voteApi;

@@ -1,111 +1,75 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Button, Card, message, Typography, Spin } from "antd";
-
-const { Title, Text } = Typography;
+import { Card, Button, Radio, Spin, message } from "antd";
+import voteApi from "../../../api/voteApi";
 
 const VoteDetail = () => {
-  const { id } = useParams(); // Lấy id topic
-  const [topic, setTopic] = useState(null);
-  const [hasVoted, setHasVoted] = useState(false);
+  const { id } = useParams();
+  const [detail, setDetail] = useState(null);
+  const [choice, setChoice] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [voteChoice, setVoteChoice] = useState(null);
-  const userId = 2; // ✅ Giả lập user đang đăng nhập (Owner A)
-  const userName = "Owner A"; // có thể lấy từ context sau này
+
+  const userId = 1; // giả định user đang đăng nhập
+  const ownershipId = 1; // giả định ownership của user
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDetail = async () => {
       try {
-        // Lấy thông tin topic
-        const topicRes = await fetch(`http://localhost:3000/topics/${id}`);
-        if (!topicRes.ok) throw new Error("Không thể tải chủ đề");
-        const topicData = await topicRes.json();
-
-        // Kiểm tra user đã bình chọn chưa
-        const voteRes = await fetch(
-          `http://localhost:3000/votes?topicId=${id}&userId=${userId}`
-        );
-        const voteData = await voteRes.json();
-
-        setTopic(topicData);
-        if (voteData.length > 0) {
-          setHasVoted(true);
-          setVoteChoice(voteData[0].choice);
-        }
+        const res = await voteApi.getVoteDetail(id);
+        setDetail(res);
       } catch (err) {
-        message.error(err.message);
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchDetail();
   }, [id]);
 
-  const handleVote = async (choice) => {
+  const handleVote = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/votes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topicId: Number(id),
-          userId,
-          userName,
-          choice,
-          votedAt: new Date().toISOString(),
-        }),
+      await voteApi.castVote({
+        topicId: parseInt(id),
+        ownershipId,
+        userId,
+        choice: choice === "YES" ? "YES" : "NO",
       });
-
-      if (!res.ok) throw new Error("Không thể gửi bình chọn!");
-      message.success("Đã gửi bình chọn thành công 🎉");
-      setHasVoted(true);
-      setVoteChoice(choice);
+      message.success("Vote submitted!");
     } catch (err) {
-      message.error(err.message);
+      console.error(err);
+      message.error("You already voted or something went wrong");
     }
   };
 
-  if (loading) return <Spin tip="Đang tải chi tiết..." />;
-  if (!topic) return <p>Không tìm thấy chủ đề!</p>;
+  if (loading)
+    return (
+      <Spin tip="Loading...">
+        <div style={{ minHeight: 100 }} /> {/* hoặc nội dung placeholder */}
+      </Spin>
+    );
+
+  if (!detail) return <p>No detail found.</p>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Card
-        style={{
-          borderRadius: 12,
-          boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
-        }}
-      >
-        <Title level={3}>{topic.title}</Title>
-        <Text>{topic.description}</Text>
-        <br />
-        <Text type="secondary">
-          Tạo bởi: <b>{topic.createdBy}</b> —{" "}
-          {new Date(topic.createdAt).toLocaleString("vi-VN")}
-        </Text>
+    <Card title={detail.title} style={{ margin: 24 }}>
+      <p>{detail.description}</p>
+      <p>Status: {detail.status}</p>
 
-        <div style={{ marginTop: 20 }}>
-          {hasVoted ? (
-            <Text type="success">
-              ✅ Bạn đã bình chọn:{" "}
-              <b>{voteChoice ? "Đồng ý" : "Không đồng ý"}</b>
-            </Text>
-          ) : (
-            <>
-              <Button
-                type="primary"
-                onClick={() => handleVote(true)}
-                style={{ marginRight: 10 }}
-              >
-                Đồng ý 👍
-              </Button>
-              <Button danger onClick={() => handleVote(false)}>
-                Không đồng ý 👎
-              </Button>
-            </>
-          )}
-        </div>
-      </Card>
-    </div>
+      <Radio.Group onChange={(e) => setChoice(e.target.value)} value={choice}>
+        <Radio value="YES">Yes</Radio>
+        <Radio value="NO">No</Radio>
+      </Radio.Group>
+
+      <br />
+      <Button
+        type="primary"
+        onClick={handleVote}
+        disabled={!choice}
+        style={{ marginTop: 16 }}
+      >
+        Submit Vote
+      </Button>
+    </Card>
   );
 };
 

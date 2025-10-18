@@ -1,70 +1,50 @@
-import React, { useEffect, useState } from "react";
-import { Card, Button, Spin, message, Typography } from "antd";
+import { useEffect, useState } from "react";
+import { Card, Button, Spin } from "antd";
+import voteApi from "../../../api/voteApi";
 import { useNavigate } from "react-router-dom";
 
-const { Title, Text } = Typography;
-
 const VoteList = () => {
-  const [topics, setTopics] = useState([]);
+  const [votes, setVotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchTopics = async () => {
+    const fetchVotes = async () => {
       try {
-        const res = await fetch("http://localhost:3000/topics");
-        if (!res.ok) throw new Error("Không thể tải danh sách bình chọn!");
-        const data = await res.json();
-        setTopics(data);
+        const res = await voteApi.getVoteList();
+        setVotes(res);
       } catch (err) {
-        console.error(err);
-        setError(err.message);
-        message.error(err.message);
+        console.error("Error fetching votes:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchTopics();
+    fetchVotes();
   }, []);
 
-  if (loading) return <Spin tip="Đang tải danh sách..." />;
-  if (error) return <p style={{ color: "red" }}>Lỗi: {error}</p>;
+  if (loading) return <Spin tip="Loading vote topics..." />;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Title level={3}>Danh sách chủ đề bình chọn</Title>
-
-      {topics.length === 0 ? (
-        <Text type="secondary">Hiện chưa có chủ đề nào để biểu quyết.</Text>
-      ) : (
-        topics.map((topic) => (
-          <Card
-            key={topic.id}
-            style={{
-              marginBottom: 16,
-              borderRadius: 12,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            }}
-          >
-            <Title level={4}>{topic.title}</Title>
-            <Text>{topic.description}</Text>
-            <br />
-            <Text type="secondary">
-              Tạo bởi: <b>{topic.createdBy}</b> —{" "}
-              {new Date(topic.createdAt).toLocaleString("vi-VN")}
-            </Text>
-            <div style={{ marginTop: 10 }}>
-              <Button
-                type="primary"
-                onClick={() => navigate(`/owner/vote/${topic.id}`)}
-              >
-                Xem chi tiết
-              </Button>
-            </div>
-          </Card>
-        ))
-      )}
+    <div style={{ padding: 24 }}>
+      <h2>Vote Topics</h2>
+      {votes.map((topic) => (
+        <Card
+          key={topic.id}
+          title={topic.title}
+          style={{ marginBottom: 16 }}
+          extra={
+            <Button
+              type="link"
+              onClick={() => navigate(`/owner/vote/${topic.id}`)}
+            >
+              View Detail
+            </Button>
+          }
+        >
+          <p>{topic.description}</p>
+          <p>Status: {topic.status}</p>
+        </Card>
+      ))}
     </div>
   );
 };

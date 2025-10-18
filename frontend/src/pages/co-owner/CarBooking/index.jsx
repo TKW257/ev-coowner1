@@ -1,5 +1,17 @@
 import React, { useState } from "react";
-import { App, Card, Row, Col, Badge, Calendar, Tag, DatePicker, Button, Progress, Spin } from "antd";
+import {
+  App,
+  Card,
+  Row,
+  Col,
+  Badge,
+  Calendar,
+  Tag,
+  DatePicker,
+  Button,
+  Progress,
+  Spin,
+} from "antd";
 import { ThunderboltOutlined } from "@ant-design/icons";
 import { useParams } from "react-router-dom";
 import useCarBooking from "../../../hooks/useCarBooking";
@@ -10,7 +22,10 @@ const CarBookingPage = () => {
   const { id } = useParams();
   const { notification } = App.useApp();
   const [range, setRange] = useState([]);
-  const { car, loading, getDateStatus, bookCar } = useCarBooking(id, notification);
+  const { car, loading, getDateStatus, bookCar } = useCarBooking(
+    id,
+    notification
+  );
 
   const handleBook = async () => {
     const res = await bookCar(range);
@@ -49,27 +64,66 @@ const CarBookingPage = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Card bordered={false} style={{ borderRadius: 16, background: "#fafafa" }}>
+      <Card
+        bordered={false}
+        style={{ borderRadius: 16, background: "#fafafa" }}
+      >
         <Row gutter={[24, 16]} align="middle" style={{ marginBottom: 16 }}>
           <Col xs={24} md={8}>
-            <img
-              src={car.imageUrl || "https://via.placeholder.com/400x200?text=No+Image"}
-              alt={car.model}
-              style={{ width: "100%", borderRadius: 12, objectFit: "cover", maxHeight: 200 }}
-            />
+            {(() => {
+              const svg =
+                `<?xml version='1.0' encoding='utf-8'?>` +
+                `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='200'>` +
+                `<rect width='100%' height='100%' fill='%23e9e9e9'/>` +
+                `<text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-family='Arial' font-size='20'>No Image</text>` +
+                `</svg>`;
+              const placeholder = `data:image/svg+xml;utf8,${encodeURIComponent(
+                svg
+              )}`;
+              return (
+                <img
+                  src={car.imageUrl || placeholder}
+                  alt={car.model}
+                  style={{
+                    width: "100%",
+                    borderRadius: 12,
+                    objectFit: "cover",
+                    maxHeight: 200,
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = placeholder;
+                  }}
+                />
+              );
+            })()}
           </Col>
 
           <Col xs={24} md={16}>
-            <h2>{car.brand} {car.model}</h2>
-            <p>Biển số: {car.plateNumber} • Năm: {car.year}</p>
+            <h2>
+              {car.brand} {car.model}
+            </h2>
+            <p>
+              Biển số: {car.plateNumber} • Năm: {car.year}
+            </p>
 
             <Tag color={car.status === "available" ? "green" : "orange"}>
               {car.status === "available" ? "Sẵn sàng" : "Không khả dụng"}
             </Tag>
 
-            <Progress percent={car.batteryCapacityKwh} size="small" strokeColor="#52c41a" showInfo={false} />
-            <p>⚡ Dung lượng pin: <b>{car.batteryCapacityKwh}%</b></p>
-            <p>💰 Chi phí: {car.operatingCostPerDay}₫ / ngày • {car.operatingCostPerKm}₫ / km</p>
+            <Progress
+              percent={car.batteryCapacityKwh}
+              size="small"
+              strokeColor="#52c41a"
+              showInfo={false}
+            />
+            <p>
+              ⚡ Dung lượng pin: <b>{car.batteryCapacityKwh}%</b>
+            </p>
+            <p>
+              💰 Chi phí: {car.operatingCostPerDay}₫ / ngày •{" "}
+              {car.operatingCostPerKm}₫ / km
+            </p>
 
             <div style={{ marginTop: 12 }}>
               <RangePicker

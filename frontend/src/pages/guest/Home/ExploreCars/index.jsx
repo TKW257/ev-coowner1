@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Button, Skeleton } from "antd";
-import { ThunderboltFilled, ThunderboltOutlined} from "@ant-design/icons";
+import { ThunderboltFilled, ThunderboltOutlined } from "@ant-design/icons";
 import vehiclesApi from "../../../../api/vehiclesApi";
 import "./style.scss";
 
@@ -18,8 +18,8 @@ const ExploreCars = () => {
         const vehicles = Array.isArray(res)
           ? res
           : Array.isArray(res?.content)
-            ? res.content
-            : [];
+          ? res.content
+          : [];
         setCars(vehicles);
       } catch (err) {
         console.error("Lỗi khi lấy danh sách xe:", err);
@@ -30,7 +30,6 @@ const ExploreCars = () => {
     };
     fetchAllVehicles();
   }, []);
-
 
   const handleViewAll = () => {
     window.location.href = "/cars";
@@ -50,7 +49,6 @@ const ExploreCars = () => {
       </Col>
     ));
 
-
   const renderCars = () =>
     cars.map((car) => {
       const statusText = car.status || "Unknown";
@@ -63,16 +61,28 @@ const ExploreCars = () => {
         <Col xs={24} sm={12} md={12} lg={6} key={car.id}>
           <Card
             hoverable
-            cover={
-              <img
-                src={
-                  car.image_url ||
-                  "https://via.placeholder.com/400x250?text=No+Image"
-                }
-                alt={car.model}
-                className="car-img"
-              />
-            }
+            cover={(() => {
+              const svg =
+                `<?xml version='1.0' encoding='utf-8'?>` +
+                `<svg xmlns='http://www.w3.org/2000/svg' width='400' height='250'>` +
+                `<rect width='100%' height='100%' fill='%23e9e9e9'/>` +
+                `<text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23666' font-family='Arial' font-size='20'>No Image</text>` +
+                `</svg>`;
+              const placeholder = `data:image/svg+xml;utf8,${encodeURIComponent(
+                svg
+              )}`;
+              return (
+                <img
+                  src={car.image_url || placeholder}
+                  alt={car.model}
+                  className="car-img"
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = placeholder;
+                  }}
+                />
+              );
+            })()}
             className="car-card"
           >
             <div className="car-info">
@@ -82,7 +92,7 @@ const ExploreCars = () => {
 
               <div className="car-details">
                 <Text className="car-battery">
-                  <ThunderboltOutlined /> {" "}
+                  <ThunderboltOutlined />{" "}
                   {car.battery_capacity_kwh
                     ? `${car.battery_capacity_kwh} kWh`
                     : "N/A"}
@@ -103,7 +113,6 @@ const ExploreCars = () => {
         </Col>
       );
     });
-
 
   return (
     <section className="explore-section">
