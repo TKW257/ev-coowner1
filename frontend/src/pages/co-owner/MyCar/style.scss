@@ -114,7 +114,6 @@
       transition: transform 0.2s ease;
       cursor: pointer;
 
-      // Ẩn phần body mặc định của Card
       .ant-card-body {
         display: none;
         padding: 0;
@@ -131,7 +130,7 @@
       .mini-card-cover {
         position: relative;
         width: 100%;
-        height: 220px; // chiều cao cố định cho card
+        height: 220px; 
 
         img {
           width: 100%;

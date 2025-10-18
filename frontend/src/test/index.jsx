@@ -98,256 +98,115 @@ export default TestOwnership;
 
 
 
-// import React from "react";
-// import { Card, Row, Col, Tag, Typography, Button, Progress, Skeleton, Empty } from "antd";
-// import { ThunderboltOutlined, EyeOutlined, LikeOutlined, CarOutlined } from "@ant-design/icons";
-// import { useNavigate } from "react-router-dom";
-// import { useEffect, useState } from "react";
-// import ownerShipsApi from "../../../api/ownerShipsApi";
-// import "./style.scss";
 
-// const { Text } = Typography;
 
-// function MyCars() {
-//   const [cars, setCars] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [currentCar, setCurrentCar] = useState(null);
-//   const [fade, setFade] = useState(false);
-//   const navigate = useNavigate();
-//   const chosenCar = cars.find((c) => c.vehicleId === currentCar);
+// import React, { useState } from "react";
+// import { App, Card, Row, Col, Badge, Calendar, Tag, DatePicker, Button, Progress, Spin } from "antd";
+// import { ThunderboltOutlined } from "@ant-design/icons";
+// import { useParams } from "react-router-dom";
+// import useCarBooking from "../../../hooks/useCarBooking";
 
-//   useEffect(() => {
-//     const fetchMyVehicles = async () => {
-//       try {
-//         const res = await ownerShipsApi.getMyVehicles();
-//         const vehicles = res.data || [];
+// const { RangePicker } = DatePicker;
 
-//         setCars(vehicles);
-//         if (vehicles.length > 0) {
-//           setCurrentCar(vehicles[0].vehicleId);
-//         }
-//       } catch (err) {
-//         console.error("❌ Lỗi khi tải danh sách xe:", err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchMyVehicles();
-//   }, []);
+// const CarBookingPage = () => {
+//   const { id } = useParams();
+//   const { notification } = App.useApp();
+//   const [range, setRange] = useState([]);
+//   const { car, loading, getDateStatus, bookCar } = useCarBooking(id, notification);
 
-//   const handleBook = (car) =>
-//     navigate(`/owner/carbooking/${car.vehicleId}`, { state: { car } });
-
-//   const handleViewDetail = (car) =>
-//     navigate(`/dashboard/car/${car.vehicleId}`, { state: { car } });
-
-//   const handleVote = (car) =>
-//     navigate(`/dashboard/voting/${car.vehicleId}`, { state: { car } });
-
-//   const handleExploreCars = () => navigate("/dashboard/explorecars");
-
-//   const handleChangeCar = (vehicleId) => {
-//     if (vehicleId === currentCar) return;
-//     setFade(true);
-//     setTimeout(() => {
-//       setCurrentCar(vehicleId);
-//       setFade(false);
-//     }, 300);
+//   const handleBook = async () => {
+//     const res = await bookCar(range);
+//     if (res.success) {
+//       notification.success({ message: "Đặt lịch thành công" });
+//       setRange([]);
+//     } else {
+//       notification.warning({ message: res.message });
+//     }
 //   };
 
-//   // Load Skeleton
-//   if (loading) {
-//     return (
-//       <div className="mycar-skeleton">
-//         <div className="banner-skeleton">
-//           <div className="banner-img shimmer" />
-//         </div>
-//         <Row gutter={[24, 24]} className="car-skeleton-list">
-//           {Array.from({ length: 3 }).map((_, index) => (
-//             <Col xs={24} sm={12} md={8} key={index}>
-//               <Card className="car-skeleton-card">
-//                 <div className="car-img shimmer" />
-//                 <div className="car-info">
-//                   <Skeleton active paragraph={{ rows: 2 }} />
-//                 </div>
-//               </Card>
-//             </Col>
-//           ))}
-//         </Row>
-//       </div>
-//     );
-//   }
+//   const dateCellRender = (value) => (
+//     <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+//       <li>
+//         <Badge status={getDateStatus(value)} />
+//       </li>
+//     </ul>
+//   );
 
-//   // None Cars 
-//   if (!loading && cars.length === 0) {
+//   const cellRender = (current, info) =>
+//     info.type === "date" ? dateCellRender(current) : info.originNode;
+
+//   if (loading)
 //     return (
-//       <div className="mycar-empty">
-//         <Empty
-//           image={Empty.PRESENTED_IMAGE_SIMPLE}
-//           description={<span>Bạn chưa sở hữu chiếc xe nào</span>}
-//         />
-//         <Button
-//           type="primary"
-//           icon={<CarOutlined />}
-//           size="large"
-//           className="buy-btn"
-//           onClick={handleExploreCars}
-//         >
-//           Mua xe ngay
-//         </Button>
+//       <div style={{ padding: 40, textAlign: "center" }}>
+//         <Spin tip="Đang tải dữ liệu..." size="large" />
 //       </div>
 //     );
-//   }
+
+//   if (!car)
+//     return (
+//       <div style={{ padding: 24 }}>
+//         <Card>Không tìm thấy xe có ID {id}</Card>
+//       </div>
+//     );
 
 //   return (
-//     <div className="mycar-container">
+//     <div style={{ padding: 24 }}>
+//       <Card bordered={false} style={{ borderRadius: 16, background: "#fafafa" }}>
+//         <Row gutter={[24, 16]} align="middle" style={{ marginBottom: 16 }}>
+//           <Col xs={24} md={8}>
+//             <img
+//               src={car.imageUrl || "https://via.placeholder.com/400x200?text=No+Image"}
+//               alt={car.model}
+//               style={{ width: "100%", borderRadius: 12, objectFit: "cover", maxHeight: 200 }}
+//             />
+//           </Col>
 
-//       {/* Banner */}
-//       {chosenCar && (
-//         <div
-//           className={`banner ${fade ? "fade-out" : "fade-in"}`}
-//           style={{ backgroundImage: `url(${chosenCar.imageUrl})` }}
-//         >
-//           <div className="banner-overlay" />
-//           <div className="banner-content">
-//             <div className="banner-top">
-//               <div className="banner-info">
-//                 <Text strong className="banner-title">
-//                   {chosenCar.brand} {chosenCar.model}
-//                 </Text>
-//                 <br />
-//                 <Text type="secondary" className="banner-subtitle">
-//                   Biển số: {chosenCar.plateNumber || "N/A"} • Năm{" "}
-//                   {chosenCar.year || "Không rõ"}
-//                 </Text>
+//           <Col xs={24} md={16}>
+//             <h2>{car.brand} {car.model}</h2>
+//             <p>Biển số: {car.plateNumber} • Năm: {car.year}</p>
 
-//                 <div className="banner-tags">
-//                   <Tag
-//                     color={
-//                       chosenCar.status === "available"
-//                         ? "green"
-//                         : chosenCar.status === "rented"
-//                           ? "orange"
-//                           : "red"
-//                     }
-//                   >
-//                     {chosenCar.status || "unknown"}
-//                   </Tag>
-//                   <Tag color="blue">
-//                     {chosenCar.totalSharePercentage || 0}% Share
-//                   </Tag>
-//                 </div>
+//             <Tag color={car.status === "available" ? "green" : "orange"}>
+//               {car.status === "available" ? "Sẵn sàng" : "Không khả dụng"}
+//             </Tag>
 
-//                 <div className="banner-stats">
-//                   <Progress
-//                     percent={Math.min(
-//                       chosenCar.batteryCapacityKwh || 0,
-//                       100
-//                     )}
-//                     strokeColor="#1890ff"
-//                     size="small"
-//                     showInfo={false}
-//                     style={{ width: "180px" }}
-//                   />
-//                   <Text className="banner-text">
-//                     ⚡ {chosenCar.batteryCapacityKwh || 0} kWh
-//                   </Text>
-//                   <br />
-//                   <Text className="banner-text">
-//                     💰 Chi phí vận hành:{" "}
-//                     {chosenCar.operatingCostPerDay
-//                       ? `${chosenCar.operatingCostPerDay}₫/ngày`
-//                       : "Không rõ"}
-//                   </Text>
-//                 </div>
-//               </div>
+//             <Progress percent={car.batteryCapacityKwh} size="small" strokeColor="#52c41a" showInfo={false} />
+//             <p>⚡ Dung lượng pin: <b>{car.batteryCapacityKwh}%</b></p>
+//             <p>💰 Chi phí: {car.operatingCostPerDay}₫ / ngày • {car.operatingCostPerKm}₫ / km</p>
 
-//               <div className="banner-actions">
-//                 <Button
-//                   type="primary"
-//                   icon={<ThunderboltOutlined />}
-//                   size="large"
-//                   onClick={() => handleBook(chosenCar)}
-//                   disabled={chosenCar.status !== "available"}
-//                   className="booking-btn"
-//                 >
-//                   Booking
-//                 </Button>
-//                 <Button
-//                   icon={<LikeOutlined />}
-//                   size="large"
-//                   className="vote-btn"
-//                   onClick={() => handleVote(chosenCar)}
-//                 >
-//                   Voting
-//                 </Button>
-//                 <Button
-//                   icon={<EyeOutlined />}
-//                   size="large"
-//                   onClick={() => handleViewDetail(chosenCar)}
-//                 >
-//                   View Detail
-//                 </Button>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       )}
-
-//       {/* 📜 Danh sách xe */}
-//       <div className="car-list">
-//         <Row gutter={[16, 16]}>
-//           {cars.map((car) => (
-//             <Col xs={24} sm={12} md={8} key={car.vehicleId}>
-//               <Card
-//                 hoverable
-//                 onClick={() => handleChangeCar(car.vehicleId)}
-//                 className={`car-card ${car.vehicleId === currentCar ? "active" : ""
-//                   }`}
-//                 cover={
-//                   <img
-//                     src={car.imageUrl}
-//                     alt={car.model}
-//                     className="car-img"
-//                   />
-//                 }
+//             <div style={{ marginTop: 12 }}>
+//               <RangePicker
+//                 onChange={setRange}
+//                 value={range}
+//                 format="DD/MM/YYYY"
+//                 placeholder={["Ngày bắt đầu", "Ngày kết thúc"]}
+//                 disabled={car.status !== "available"}
+//               />
+//               <Button
+//                 type="primary"
+//                 icon={<ThunderboltOutlined />}
+//                 onClick={handleBook}
+//                 style={{ marginLeft: 8 }}
+//                 disabled={car.status !== "available"}
 //               >
-//                 <Text strong>
-//                   {car.brand} {car.model}
-//                 </Text>
-//                 <br />
-//                 <Text type="secondary">
-//                   {car.plateNumber || "Chưa có biển số"}
-//                 </Text>
-//                 <div className="car-tags">
-//                   <Tag
-//                     color={
-//                       car.status === "available"
-//                         ? "green"
-//                         : car.status === "rented"
-//                           ? "orange"
-//                           : "red"
-//                     }
-//                   >
-//                     {car.status || "unknown"}
-//                   </Tag>
-//                   <Tag color="blue">
-//                     {car.totalSharePercentage || 0}%
-//                   </Tag>
-//                   {car.vehicleId === currentCar && (
-//                     <Tag color="geekblue">Đang chọn</Tag>
-//                   )}
-//                 </div>
-//               </Card>
-//             </Col>
-//           ))}
+//                 Đặt lịch
+//               </Button>
+//             </div>
+//           </Col>
 //         </Row>
-//       </div>
+
+//         <div style={{ marginBottom: 12 }}>
+//           <Tag color="green">Ngày trống</Tag>
+//           <Tag color="orange">Đang chờ xác nhận</Tag>
+//           <Tag color="red">Đã được đặt</Tag>
+//         </div>
+
+//         <Calendar cellRender={cellRender} />
+//       </Card>
 //     </div>
 //   );
-// }
+// };
 
-// export default MyCars;
+// export default CarBookingPage;
 
 
 
@@ -624,3 +483,81 @@ export default TestOwnership;
 // };
 
 // export default MyCars;
+
+
+
+
+
+
+
+// import React, { useState } from "react";
+// import { Row, Col, Typography, Tag, Button, Divider, DatePicker, message } from "antd";
+// import dayjs from "dayjs";
+// import { useVehicle } from "../../../../hooks/useVehicle";
+
+// const { Title, Text } = Typography;
+// const { RangePicker } = DatePicker;
+
+// const CarInfoSection = ({ vehicleId, onBookingSuccess }) => {
+//   const { vehicle, loading: vehicleLoading } = useVehicle(vehicleId);
+//   const [selectedDates, setSelectedDates] = useState([]);
+//   const [bookingLoading, setBookingLoading] = useState(false);
+
+//   const handleDateChange = (dates) => {
+//     if (!dates || dates.length !== 2) return setSelectedDates([]);
+//     const start = dayjs(dates[0]).startOf("day");
+//     const end = dayjs(dates[1]).endOf("day");
+//     setSelectedDates([start, end]);
+//   };
+
+//   const handleBooking = async () => {
+//     if (selectedDates.length !== 2) {
+//       message.warning("Vui lòng chọn khoảng thời gian đặt xe!");
+//       return;
+//     }
+
+//     setBookingLoading(true);
+//     await new Promise((r) => setTimeout(r, 800)); // giả lập API
+//     message.success("Đặt xe thành công!");
+//     onBookingSuccess?.();
+//     setBookingLoading(false);
+//   };
+
+//   if (vehicleLoading) return <Text>Đang tải thông tin xe...</Text>;
+//   if (!vehicle) return null;
+
+//   return (
+//     <div style={{ padding: "16px 0" }}>
+//       <Row gutter={24}>
+//         <Col xs={24} sm={6}>
+//           <img
+//             src={vehicle.imageUrl}
+//             alt={vehicle.model}
+//             style={{ width: "100%", borderRadius: 12, objectFit: "cover" }}
+//           />
+//         </Col>
+//         <Col xs={24} sm={18}>
+//           <Title level={4}>
+//             {vehicle.brand} {vehicle.model}
+//           </Title>
+//           <Text>Năm {vehicle.year} • Biển số: {vehicle.plateNumber}</Text>
+//           <br />
+//           <Tag color={vehicle.status === "AVAILABLE" ? "blue" : "red"}>{vehicle.status}</Tag>
+//           <Divider />
+//           <RangePicker format="DD/MM/YYYY" onChange={handleDateChange} value={selectedDates} />
+//           <Button
+//             type="primary"
+//             loading={bookingLoading}
+//             onClick={handleBooking}
+//             style={{ marginLeft: 8 }}
+//           >
+//             Đặt xe
+//           </Button>
+//         </Col>
+//       </Row>
+//     </div>
+//   );
+// };
+
+// export default CarInfoSection;
+

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Button, Skeleton } from "antd";
-import { ThunderboltFilled, ThunderboltOutlined} from "@ant-design/icons";
+import { ThunderboltOutlined } from "@ant-design/icons";
 import vehiclesApi from "../../../../api/vehiclesApi";
 import "./style.scss";
 
@@ -14,15 +14,18 @@ const ExploreCars = () => {
     const fetchAllVehicles = async () => {
       try {
         const res = await vehiclesApi.getTop4Vehicles();
-        console.log("API trả về:", res);
+        console.log("🚗 API trả về:", res);
+
+        // Xử lý kết quả API an toàn
         const vehicles = Array.isArray(res)
           ? res
           : Array.isArray(res?.content)
-            ? res.content
-            : [];
+          ? res.content
+          : [];
+
         setCars(vehicles);
       } catch (err) {
-        console.error("Lỗi khi lấy danh sách xe:", err);
+        console.error("❌ Lỗi khi lấy danh sách xe:", err);
         setCars([]);
       } finally {
         setLoading(false);
@@ -31,12 +34,11 @@ const ExploreCars = () => {
     fetchAllVehicles();
   }, []);
 
-
   const handleViewAll = () => {
     window.location.href = "/cars";
   };
 
-  //SEKELETON
+  // Skeleton hiển thị trong lúc loading
   const renderSkeletons = () =>
     Array.from({ length: 4 }).map((_, index) => (
       <Col xs={24} sm={12} md={12} lg={6} key={`skeleton-${index}`}>
@@ -50,26 +52,27 @@ const ExploreCars = () => {
       </Col>
     ));
 
-
+  // Render danh sách xe
   const renderCars = () =>
     cars.map((car) => {
       const statusText = car.status || "Unknown";
       const statusLower = statusText.toLowerCase();
 
       let statusClass = "status-inactive";
-      if (statusLower.includes("active")) statusClass = "status-active";
+      if (statusLower.includes("active") || statusLower.includes("available"))
+        statusClass = "status-active";
 
       return (
-        <Col xs={24} sm={12} md={12} lg={6} key={car.id}>
+        <Col xs={24} sm={12} md={12} lg={6} key={car.vehicleId}>
           <Card
             hoverable
             cover={
               <img
                 src={
-                  car.image_url ||
-                  "https://via.placeholder.com/400x250?text=No+Image"
+                  car.imageUrl ||
+                  "https://placehold.co/400x250?text=No+Image"
                 }
-                alt={car.model}
+                alt={`${car.brand} ${car.model}`}
                 className="car-img"
               />
             }
@@ -82,9 +85,9 @@ const ExploreCars = () => {
 
               <div className="car-details">
                 <Text className="car-battery">
-                  <ThunderboltOutlined /> {" "}
-                  {car.battery_capacity_kwh
-                    ? `${car.battery_capacity_kwh} kWh`
+                  <ThunderboltOutlined />{" "}
+                  {car.batteryCapacityKwh
+                    ? `${car.batteryCapacityKwh} kWh`
                     : "N/A"}
                 </Text>
                 <Text className={`car-status ${statusClass}`}>
@@ -104,12 +107,11 @@ const ExploreCars = () => {
       );
     });
 
-
   return (
     <section className="explore-section">
       <div className="explore-header">
         <Title level={2} className="section-title">
-          Featured Electric Vehicles
+          Featured Electric Vehicles 
         </Title>
         <Button type="primary" size="large" onClick={handleViewAll}>
           View All →
