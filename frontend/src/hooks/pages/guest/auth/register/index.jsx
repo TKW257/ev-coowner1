@@ -2,7 +2,7 @@ import React from "react";
 import { Input, Button, Typography, Form, Divider, message } from "antd";
 import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
-import { register } from "../../../../features/userSlice";
+import { register } from "../../../../../features/userSlice";
 import "./style.scss";
 
 const { Text } = Typography;

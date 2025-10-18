@@ -3,7 +3,7 @@ import { Form, Input, Button, Typography, Divider } from "antd";
 import { useDispatch } from 'react-redux';
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useNavigate } from "react-router-dom";
-import { login } from "../../../../features/userSlice";
+import { login } from "../../../../../features/userSlice";
 import "./style.scss";
 
 const { Text } = Typography;

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { App, Card, Row, Col, Badge, Calendar, Tag, DatePicker, Button, Progress, Spin } from "antd";
 import { ThunderboltOutlined } from "@ant-design/icons";
 import { useParams } from "react-router-dom";
-import useCarBooking from "../../../hooks/useCarBooking";
+import useCarBooking from "../../../useCarBooking";
 
 const { RangePicker } = DatePicker;
 
