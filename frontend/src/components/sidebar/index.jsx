@@ -1,6 +1,6 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, } from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, CheckCircleOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -20,9 +20,19 @@ const Sidebar = () => {
   if (role === "STAFF") {
     menuItems = [
       {
+        key: "/admin",
+        icon: <DashboardOutlined />,
+        label: <Link to="/admin">Dashboard</Link>,
+      },
+      {
         key: "/admin/bookingmanage",
         icon: <BookOutlined />,
-        label: <Link to="/admin/bookingmanage"> Bookings</Link>,
+        label: <Link to="/admin/bookingmanage">Bookings</Link>,
+      },
+      {
+        key: "/admin/staffchecking",
+        icon: <CheckCircleOutlined />,
+        label: <Link to="/admin/staffchecking">Staff Checking</Link>,
       },
     ];
   } else if (role === "USER") {

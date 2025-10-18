@@ -9,6 +9,8 @@ import HomePage from "./hooks/pages/guest/Home/HomePage"
 import MyCar from "./hooks/pages/co-owner/MyCar";
 import CarBooking from "./hooks/pages/co-owner/CarBooking";
 import BookingManage from "./hooks/pages/admin/BookingManagement";
+import StaffCheckingManage from "./hooks/pages/admin/StaffCheckingManagement";
+import AdminDashboard from "./hooks/pages/admin/AdminDashboard";
 import DashboardLayout from "./components/layouts/Dashboard";
 
 import GuestLayout from "./components/layouts/GuestLayout";
@@ -46,11 +48,15 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      //<ProtectedRoute allowedRoles={["STAFF"]}>
-      <DashboardLayout />
-      //</ProtectedRoute>
+      // <ProtectedRoute allowedRoles={["STAFF"]}>
+        <DashboardLayout />
+      // </ProtectedRoute>
     ),
-    children: [{ path: "bookingmanage", element: <BookingManage /> }],
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "bookingmanage", element: <BookingManage /> },
+      { path: "staffchecking", element: <StaffCheckingManage /> }
+    ],
   },
 
   {
