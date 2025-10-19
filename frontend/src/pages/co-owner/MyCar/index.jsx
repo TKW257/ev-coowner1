@@ -51,7 +51,7 @@ const MyCars = () => {
 
 
   const handleBook = (car) => {
-      setCurrentCarId(car.vehicleId);
+    setCurrentCarId(car.vehicleId);
     navigate(`/owner/carbooking/${car.vehicleId}`);
   };
 
@@ -138,7 +138,7 @@ const MyCars = () => {
           {/* Ownership */}
           <div className="ownership-row ownership-row--fixed">
             <Row align="middle" gutter={[16, 16]}>
-              <Col xs={24} sm={8} md={8}>
+              <Col xs={12} sm={6} md={6}>
                 <div className="ownership-block">
                   <div className="ownership-title">Số km đã dùng / tháng</div>
                   <div className="ownership-value">
@@ -147,7 +147,7 @@ const MyCars = () => {
                 </div>
               </Col>
 
-              <Col xs={24} sm={8} md={8}>
+              <Col xs={12} sm={6} md={6}>
                 <div className="ownership-block">
                   <div className="ownership-title">Số ngày đã dùng / tháng</div>
                   <div className="ownership-value">
@@ -156,7 +156,7 @@ const MyCars = () => {
                 </div>
               </Col>
 
-              <Col xs={24} sm={8} md={8}>
+              <Col xs={12} sm={6} md={6}>
                 <div className="ownership-block">
                   <div className="ownership-title">Tỷ lệ sở hữu của bạn</div>
                   <div className="ownership-value percent-style">
@@ -166,7 +166,7 @@ const MyCars = () => {
                 </div>
               </Col>
 
-              <Col xs={24} sm={6} md={6}>
+              <Col xs={12} sm={6} md={6}>
                 <div className="ownership-block">
                   <div className="ownership-title">Tổng số xe của bạn</div>
                   <div className="ownership-value">

@@ -2,10 +2,9 @@ import axiosClient from "./axiosClient";
 
 const bookingApi = {
 
-  // ✅ Tạo booking mới
   createBooking(data) {
     console.log("📤 Gửi request tạo booking:", data);
-    return axiosClient.post(`/bookings`, data);
+    return axiosClient.post(`/bookings/createBooking`, data);
   },
 
   getMyBookings() {
@@ -15,6 +14,11 @@ const bookingApi = {
   getBookingsByVehicle(vehicleId) {
     return axiosClient.get(`/bookings/byVehicle/${vehicleId}`);
   },
+
+  cancelBooking(bookingId) {
+    return axiosClient.delete(`/bookings/${bookingId}`);
+  },
+
 };
 
 

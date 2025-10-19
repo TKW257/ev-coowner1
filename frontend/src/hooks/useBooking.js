@@ -18,7 +18,6 @@ export const useBooking = (onSuccess) => {
         startTime,
       });
 
-      // ✅ Endpoint đúng với BE: /bookings/createBooking
       const res = await bookingApi.createBooking({ vehicleId, startTime });
 
       console.log("%c✅ Booking thành công:", "color:#4caf50", res);

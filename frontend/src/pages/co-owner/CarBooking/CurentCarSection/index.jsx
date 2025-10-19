@@ -17,7 +17,7 @@ const CurentCarSection = ({ onBookingSuccess }) => {
     const fetchVehicle = async () => {
       if (!vehicleId) return;
       try {
-        const res = await bookingApi.getByVehicle(vehicleId);
+        const res = await bookingApi.getBookingsByVehicle(vehicleId);
         console.log("%c✅ Booking API response:", "color:green", res);
         if (Array.isArray(res) && res.length > 0) {
           setVehicle(res[0]);
@@ -49,7 +49,6 @@ const CurentCarSection = ({ onBookingSuccess }) => {
 
     const payload = {
       vehicleId: Number(vehicleId),
-      // BE yêu cầu định dạng: yyyy-MM-dd HH:mm:ss
       startTime: dayjs(selectedDate).format("YYYY-MM-DD HH:mm:ss"),
     };
 

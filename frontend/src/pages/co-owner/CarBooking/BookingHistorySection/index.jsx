@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Table, Tag, Button, Empty, message } from "antd";
-import dayjs from "dayjs";
 import bookingApi from "../../../../api/bookingApi";
 import { useParams } from "react-router-dom";
 
 const BookingHistorySection = () => {
-  const { vehicleId } = useParams(); 
+  const { vehicleId } = useParams();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!vehicleId) return;
 
-    const fetchVehicle = async () => {
+    const fetchBookings = async () => {
       setLoading(true);
       try {
         const res = await bookingApi.getBookingsByVehicle(vehicleId);
@@ -25,13 +24,40 @@ const BookingHistorySection = () => {
       }
     };
 
-    fetchVehicle();
+    fetchBookings();
   }, [vehicleId]);
 
-  const handlePayment = (record) => {
-    message.success(`Thanh toán thành công cho xe ${record.vehicleName || record.model}!`);
+  // ----- Cancel booking -----
+  const handleCancel = async (record) => {
+    try {
+      await bookingApi.cancelBooking(record.bookingId); // Gọi API hủy booking
+      message.success(`Hủy booking thành công cho xe ${record.vehicleName || record.model}!`);
+
+      // Cập nhật trạng thái booking trong table
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.bookingId === record.bookingId ? { ...b, bookingStatus: "Cancelled" } : b
+        )
+      );
+    } catch (error) {
+      console.error("❌ Lỗi khi hủy booking:", error);
+      message.error("Không thể hủy booking. Vui lòng thử lại!");
+    }
   };
 
+  // ----- Format ngày giờ -----
+  const formatDateTimeArray = (arr) => {
+    if (!arr || !Array.isArray(arr) || arr.length < 3) return "-";
+    const [year, month, day, hour = 0, minute = 0, second = 0] = arr;
+    const mm = month.toString().padStart(2, "0");
+    const dd = day.toString().padStart(2, "0");
+    const hh = hour.toString().padStart(2, "0");
+    const min = minute.toString().padStart(2, "0");
+    const ss = second.toString().padStart(2, "0");
+    return `${year}-${mm}-${dd} ${hh}:${min}:${ss}`;
+  };
+
+  // ----- Table columns -----
   const columns = [
     {
       title: "STT",
@@ -43,12 +69,12 @@ const BookingHistorySection = () => {
     {
       title: "Từ ngày",
       dataIndex: "startTime",
-      render: (t) => dayjs(t).format("DD/MM/YYYY"),
+      render: formatDateTimeArray,
     },
     {
       title: "Đến ngày",
       dataIndex: "endTime",
-      render: (t) => dayjs(t).format("DD/MM/YYYY"),
+      render: formatDateTimeArray,
     },
     {
       title: "Điểm ưu tiên",
@@ -84,10 +110,10 @@ const BookingHistorySection = () => {
         <Button
           type="primary"
           size="small"
-          disabled={!["Confirmed", "Completed"].includes(record.bookingStatus)}
-          onClick={() => handlePayment(record)}
+          disabled={!["Pending", "Confirmed"].includes(record.bookingStatus)} // Cho phép hủy cả Pending và Confirmed
+          onClick={() => handleCancel(record)}
         >
-          Thanh toán
+          Cancel
         </Button>
       ),
     },
