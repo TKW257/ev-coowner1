@@ -1,9 +1,10 @@
 import React from "react";
 import { Form, Input, Button, Typography, Divider } from "antd";
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useNavigate } from "react-router-dom";
 import { login } from "../../../../features/userSlice";
+import StorageKeys from "../../../../constants/storage-key";
 import "./style.scss";
 
 const { Text } = Typography;
@@ -17,6 +18,8 @@ function LoginPage() {
       const actionResult = await dispatch(login(values));
       const user = unwrapResult(actionResult);
 
+      console.log("Logged in user:", user);
+
       if (user.role === "STAFF") {
         navigate("/admin/bookingmanage");
       } else if (user.role === "USER") {
@@ -24,8 +27,6 @@ function LoginPage() {
       } else {
         navigate("/");
       }
-
-      console.log("Logged in user:", user);
     } catch (error) {
       console.log("Failed to login", error);
     }
@@ -51,7 +52,9 @@ function LoginPage() {
             <Form.Item
               label={<span className="login-label">Password</span>}
               name="password"
-              rules={[{ required: true, message: "Please enter your password!" }]}
+              rules={[
+                { required: true, message: "Please enter your password!" },
+              ]}
             >
               <Input.Password placeholder="Enter password" />
             </Form.Item>
