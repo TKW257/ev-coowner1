@@ -2,9 +2,9 @@ import axiosClient from "./axiosClient";
 
 const bookingApi = {
 
-  // USER API
   createBooking(data) {
-    return axiosClient.post("/bookings/createBooking", data);
+    console.log("📤 Gửi request tạo booking:", data);
+    return axiosClient.post(`/bookings/createBooking`, data);
   },
 
   getMyBookings() {

@@ -1,6 +1,6 @@
 .owner-sidebar {
   height: 100vh;
-  background: #000 !important;
+  background: #222222 !important;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -11,7 +11,7 @@
     align-items: center;
     justify-content: center;
     height: 64px;
-    border-bottom: 1px solid #1f1f1f;
+    border-bottom: 1px solid #555555;
     transition: all 0.3s ease;
 
     .logo-img {
