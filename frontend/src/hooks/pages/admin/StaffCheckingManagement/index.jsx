@@ -27,50 +27,20 @@ const StaffCheckingManagement = () => {
   const fetchStaffCheckings = useCallback(async () => {
     setLoading(true);
     try {
-      console.log("🔍 Fetching staff checkings...");
-      console.log("🌐 API endpoint: /staff-checkings/viewAllStaffChecking");
-      
       const response = await bookingApi.getAllStaffCheckings();
-      console.log("📊 Staff Checkings API Response:", response);
-      console.log("📋 Response type:", typeof response);
-      console.log("📋 Is array:", Array.isArray(response));
-      
-      // Vì axiosClient interceptor đã trả về response.data
       const checkingsData = Array.isArray(response) ? response : [];
-      console.log("📋 Staff Checkings processed:", checkingsData);
-      console.log("📋 Total checkings found:", checkingsData.length);
-      
-      if (checkingsData.length > 0) {
-        console.log("📋 First checking item:", checkingsData[0]);
-        console.log("📋 Sample checking structure:", {
-          id: checkingsData[0].id,
-          checkingType: checkingsData[0].checkingType,
-          bookingId: checkingsData[0].bookingId,
-          vehicleId: checkingsData[0].vehicleId,
-          userEmail: checkingsData[0].userEmail,
-          checkTime: checkingsData[0].checkTime
-        });
-      }
-      
       setCheckings(checkingsData);
       calculateStats(checkingsData);
-      
-      console.log("✅ Staff checkings loaded successfully!");
     } catch (error) {
       message.error("Không tải được danh sách staff checking!");
-      console.error("❌ Error fetching staff checkings:", error);
-      console.error("❌ Error response:", error.response);
-      console.error("❌ Error status:", error.response?.status);
-      console.error("❌ Error message:", error.message);
+      console.error("Error fetching staff checkings:", error);
     } finally {
       setLoading(false);
     }
   }, []);
 
   const calculateStats = (data) => {
-    console.log("📊 Calculating statistics...");
     const today = new Date().toDateString();
-    console.log("📅 Today's date:", today);
     
     const checkIns = data.filter(item => item.checkingType === "CheckIn");
     const checkOuts = data.filter(item => item.checkingType === "CheckOut");
@@ -90,20 +60,10 @@ const StaffCheckingManagement = () => {
       todayCheckings: todayCheckings.length
     };
     
-    console.log("📈 Statistics calculated:", stats);
-    console.log("📋 Check-ins found:", checkIns.length);
-    console.log("📋 Check-outs found:", checkOuts.length);
-    console.log("📋 Today's checkings:", todayCheckings.length);
-    
     setStats(stats);
   };
 
   useEffect(() => {
-    // Log authentication info
-    const token = localStorage.getItem(StorageKeys.TOKEN);
-    console.log("🔑 Token from localStorage:", token);
-    console.log("🔑 Token exists:", !!token);
-    
     fetchStaffCheckings();
   }, [fetchStaffCheckings]);
 
@@ -119,7 +79,6 @@ const StaffCheckingManagement = () => {
   };
 
   const handleViewDetails = (checking) => {
-    console.log("🔍 Viewing details for checking:", checking);
     setSelectedChecking(checking);
     setDetailModalVisible(true);
   };
@@ -179,10 +138,6 @@ const StaffCheckingManagement = () => {
     },
   ];
 
-  // Debug log for checkings state
-  console.log("🔍 Current checkings state:", checkings);
-  console.log("🔍 Checkings state length:", checkings.length);
-  console.log("🔍 Loading state:", loading);
 
   return (
     <div style={{ padding: '24px' }}>

@@ -21,20 +21,11 @@ const bookingApi = {
   },
 
   updateStatus(id, status) {
-    console.log("🔧 API: Updating booking status", { id, status });
-    
-    // Send status in request body (more standard REST API approach)
-    const requestData = { status: status };
-    console.log("🔧 API: Request data:", requestData);
-    console.log("🔧 API: Full URL will be:", `/bookings/${id}/status`);
-    
-    return axiosClient.put(`/bookings/${id}/status`, requestData).catch(error => {
-      console.log("🔧 API: Body method failed, trying query parameter method...");
-      console.log("🔧 API: Error:", error.response?.status, error.response?.data);
-      
-      // Fallback: try with query parameter
-      return axiosClient.put(`/bookings/${id}/status?status=${encodeURIComponent(status)}`);
-    });
+    const requestData = {
+      id: id,
+      status: status
+    };
+    return axiosClient.put("/bookings/updateStatus", requestData);
   },
 
   // STAFF CHECKING API

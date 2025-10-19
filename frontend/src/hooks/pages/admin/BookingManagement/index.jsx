@@ -15,13 +15,12 @@ const ManageBookings = () => {
   const [currentBooking, setCurrentBooking] = useState(null);
   const [checkingType, setCheckingType] = useState(""); // "checkin" or "checkout"
   const [form] = Form.useForm();
+  
+  // Confirmation modal states
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null); // { bookingId, newStatus, actionType }
 
   useEffect(() => {
-    // Log authentication info
-    const token = localStorage.getItem(StorageKeys.TOKEN);
-    console.log("🔑 Token from localStorage:", token);
-    console.log("🔑 Token exists:", !!token);
-    
     fetchBookings();
     fetchUsers();
   }, []);
@@ -29,7 +28,7 @@ const ManageBookings = () => {
   // Lấy danh sách booking khi filter user thay đổi
   useEffect(() => {
     if (userFilter !== "all") {
-      fetchUserBookings(userFilter);
+      fetchUserBookings();
     } else {
       fetchBookings();
     }
@@ -38,48 +37,26 @@ const ManageBookings = () => {
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      console.log("🔍 Fetching all bookings...");
       const response = await bookingApi.getAllBookings();
-      console.log("📊 API Response:", response);
-      console.log("📋 Response type:", typeof response);
-      console.log("📋 Is array:", Array.isArray(response));
-      
-      // Vì axiosClient interceptor đã trả về response.data
-      // nên response ở đây chính là data array
       const bookingsData = Array.isArray(response) ? response : [];
-      console.log("📋 Bookings data to set:", bookingsData);
-      console.log("📋 Bookings data length:", bookingsData.length);
-      console.log("📋 First booking item:", bookingsData[0]);
-      
       setBookings(bookingsData);
-      console.log("✅ Bookings state updated");
     } catch (error) {
       message.error("Không tải được danh sách booking!");
-      console.error("❌ Error fetching bookings:", error);
-      console.error("❌ Error response:", error.response);
-      console.error("❌ Error status:", error.response?.status);
+      console.error("Error fetching bookings:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchUserBookings = async (userId) => {
+  const fetchUserBookings = async () => {
     setLoading(true);
     try {
-      console.log("🔍 Fetching user bookings for user:", userId);
       const response = await bookingApi.getAllBookings();
-      console.log("📊 User Bookings API Response:", response);
-      console.log("📋 Is array:", Array.isArray(response));
-      
-      // Vì axiosClient interceptor đã trả về response.data
       const userBookings = Array.isArray(response) ? response : [];
-      console.log("📋 User Bookings processed:", userBookings);
       setBookings(userBookings);
     } catch (error) {
       message.error("Không tải được booking của user!");
-      console.error("❌ Error fetching user bookings:", error);
-      console.error("❌ Error response:", error.response);
-      console.error("❌ Error status:", error.response?.status);
+      console.error("Error fetching user bookings:", error);
     } finally {
       setLoading(false);
     }
@@ -99,57 +76,50 @@ const ManageBookings = () => {
     }
   };
 
-  const handleStatusUpdate = async (bookingId, newStatus) => {
+  const handleStatusUpdateClick = (bookingId, newStatus, actionType) => {
+    setPendingAction({
+      bookingId,
+      newStatus,
+      actionType
+    });
+    setConfirmModalVisible(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!pendingAction) return;
+    
+    const { bookingId, newStatus } = pendingAction;
+    setConfirmModalVisible(false);
+    
     try {
-      console.log("🔄 Updating booking status:", { bookingId, newStatus });
-      
-      // Check if token exists before making request
       const token = localStorage.getItem(StorageKeys.TOKEN);
-      console.log("🔑 Token check:", { tokenExists: !!token, tokenPreview: token ? token.substring(0, 20) + "..." : "No token" });
       
       if (!token) {
         message.error("Không có token xác thực! Vui lòng đăng nhập lại.");
         return;
       }
       
-      // Validate bookingId
       if (!bookingId) {
         message.error("ID booking không hợp lệ!");
-        console.error("❌ Invalid bookingId:", bookingId);
         return;
       }
       
-      // Validate status
       const validStatuses = ["Pending", "Completed", "Cancelled"];
       if (!validStatuses.includes(newStatus)) {
         message.error(`Trạng thái không hợp lệ: ${newStatus}`);
-        console.error("❌ Invalid status:", newStatus);
         return;
       }
       
-      console.log("🚀 Calling bookingApi.updateStatus with:", { bookingId, newStatus });
-      const response = await bookingApi.updateStatus(bookingId, newStatus);
-      console.log("✅ Status update response:", response);
-      
+      await bookingApi.updateStatus(bookingId, newStatus);
       message.success(`Cập nhật trạng thái thành ${newStatus} thành công!`);
       
-      // Refresh danh sách booking sau khi update thành công
-      console.log("🔄 Refreshing bookings list...");
       if (userFilter !== "all") {
-        await fetchUserBookings(userFilter);
+        await fetchUserBookings();
       } else {
         await fetchBookings();
       }
-      console.log("✅ Bookings list refreshed");
       
     } catch (error) {
-      console.error("❌ Error updating status:", error);
-      console.error("❌ Error response:", error.response);
-      console.error("❌ Error status:", error.response?.status);
-      console.error("❌ Error data:", error.response?.data);
-      console.error("❌ Error message:", error.message);
-      
-      // Hiển thị lỗi chi tiết hơn
       let errorMessage = "Không thể cập nhật trạng thái!";
       
       if (error.response?.status === 401) {
@@ -168,34 +138,32 @@ const ManageBookings = () => {
         errorMessage = `Lỗi: ${error.message}`;
       }
       
-      console.error("❌ Final error message:", errorMessage);
       message.error(errorMessage);
+    } finally {
+      setPendingAction(null);
     }
   };
 
+  const handleCancelAction = () => {
+    setConfirmModalVisible(false);
+    setPendingAction(null);
+  };
+
+
   const handleCheckInOut = (booking, type) => {
-    console.log("🚀 Starting check-in/out process...");
-    console.log("📋 Selected booking:", booking);
-    console.log("🔧 Checking type:", type);
-    
     setCurrentBooking(booking);
     setCheckingType(type);
     setCheckingModalVisible(true);
     form.resetFields();
-    
-    console.log("✅ Modal opened for:", type);
   };
 
   const handleCheckingSubmit = async () => {
     try {
-      console.log("📝 Form submission started...");
       const values = await form.validateFields();
-      console.log("📋 Form values:", values);
       
-      // Convert DatePicker to array format [year, month, day, hour, minute, second]
       const checkTime = values.checkingTime ? [
         values.checkingTime.year(),
-        values.checkingTime.month() + 1, // month() returns 0-11, API expects 1-12
+        values.checkingTime.month() + 1,
         values.checkingTime.date(),
         values.checkingTime.hour(),
         values.checkingTime.minute(),
@@ -209,11 +177,9 @@ const ManageBookings = () => {
         new Date().getSeconds()
       ];
 
-      console.log("⏰ Check time array:", checkTime);
-
       const checkingData = {
         vehicleId: currentBooking.vehicleId,
-        userEmail: values.userEmail || "admin@example.com", // TODO: Get from current user
+        userEmail: values.userEmail || "admin@example.com",
         bookingId: currentBooking.bookingId,
         checkingType: checkingType === "checkin" ? "CheckIn" : "CheckOut",
         checkTime: checkTime,
@@ -224,27 +190,17 @@ const ManageBookings = () => {
         distanceTraveled: checkingType === "checkout" ? values.distanceTraveled : null,
         batteryUsedPercent: checkingType === "checkout" ? values.batteryUsedPercent : null
       };
-
-      console.log("📦 Final checking data to send:", checkingData);
-      console.log("🌐 API endpoint: /staff-checkings/createStaffChecking");
       
       await bookingApi.createStaffChecking(checkingData);
-      
-      console.log("✅ API call successful!");
       message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
       setCheckingModalVisible(false);
       
-      console.log("🔄 Refreshing bookings list...");
-      // Refresh danh sách booking
       if (userFilter !== "all") {
-        fetchUserBookings(userFilter);
+        fetchUserBookings();
       } else {
         fetchBookings();
       }
-    } catch (error) {
-      console.error("❌ Error in checking submission:", error);
-      console.error("❌ Error details:", error.response?.data);
-      console.error("❌ Error status:", error.response?.status);
+    } catch {
       message.error(`Không thể thực hiện ${checkingType === "checkin" ? "check-in" : "check-out"}!`);
     }
   };
@@ -296,65 +252,60 @@ const ManageBookings = () => {
     {
       title: "Hành động",
       key: "action",
-      render: (_, record) => (
-        <Space>
-          {record.bookingStatus === "Pending" && (
-            <Button 
-              type="primary" 
-              size="small"
-              onClick={() => handleStatusUpdate(record.bookingId, "Completed")}
-            >
-              Xác nhận
-            </Button>
-          )}
-          {record.bookingStatus === "Completed" && (
-            <>
-              <Button 
-                type="primary" 
-                size="small"
-                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-                onClick={() => handleCheckInOut(record, "checkin")}
-              >
-                Check-in
-              </Button>
-              <Button 
-                type="primary" 
-                size="small"
-                style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
-                onClick={() => handleCheckInOut(record, "checkout")}
-              >
-                Check-out
-              </Button>
-            </>
-          )}
-          <Button 
-            danger 
-            size="small"
-            onClick={() => handleStatusUpdate(record.bookingId, "Cancelled")}
-          >
-            Hủy
-          </Button>
-        </Space>
-      ),
+      render: (_, record) => {
+        // Nếu trạng thái là Cancelled thì không hiển thị nút nào
+        if (record.bookingStatus === "Cancelled") {
+          return <span>-</span>;
+        }
+
+        return (
+          <Space>
+            {/* Trạng thái Pending: hiển thị 2 nút Xác nhận và Hủy */}
+            {record.bookingStatus === "Pending" && (
+              <>
+                <Button 
+                  type="primary" 
+                  size="small"
+                  onClick={() => handleStatusUpdateClick(record.bookingId, "Completed", "Xác nhận")}
+                >
+                  Xác nhận
+                </Button>
+                <Button 
+                  danger 
+                  size="small"
+                  onClick={() => handleStatusUpdateClick(record.bookingId, "Cancelled", "Hủy")}
+                >
+                  Hủy
+                </Button>
+              </>
+            )}
+            {/* Trạng thái Completed: hiển thị 2 nút Check-in và Check-out */}
+            {record.bookingStatus === "Completed" && (
+              <>
+                <Button 
+                  type="primary" 
+                  size="small"
+                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                  onClick={() => handleCheckInOut(record, "checkin")}
+                >
+                  Check-in
+                </Button>
+                <Button 
+                  type="primary" 
+                  size="small"
+                  style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
+                  onClick={() => handleCheckInOut(record, "checkout")}
+                >
+                  Check-out
+                </Button>
+              </>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
-  // Debug log for bookings state
-  console.log("🔍 Current bookings state:", bookings);
-  console.log("🔍 Bookings state length:", bookings.length);
-  console.log("🔍 Loading state:", loading);
-
-  // Debug function để kiểm tra token và API
-  const debugTokenAndAPI = () => {
-    const token = localStorage.getItem(StorageKeys.TOKEN);
-    console.log("🔍 DEBUG: Current token:", token);
-    console.log("🔍 DEBUG: Token exists:", !!token);
-    console.log("🔍 DEBUG: All localStorage keys:", Object.keys(localStorage));
-    console.log("🔍 DEBUG: Current bookings count:", bookings.length);
-    console.log("🔍 DEBUG: Sample booking:", bookings[0]);
-    
-    message.info("Debug info logged to console. Press F12 to check.");
-  };
 
   return (
     <div>
@@ -373,13 +324,6 @@ const ManageBookings = () => {
           ))}
         </Select>
         
-        <Button 
-          type="default" 
-          onClick={debugTokenAndAPI}
-          style={{ backgroundColor: '#f0f0f0' }}
-        >
-          🔍 Debug Token & API
-        </Button>
       </div>
       <Table
         rowKey="bookingId"
@@ -505,6 +449,33 @@ const ManageBookings = () => {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Confirmation Modal */}
+      <Modal
+        title="Xác nhận hành động"
+        open={confirmModalVisible}
+        onOk={handleConfirmAction}
+        onCancel={handleCancelAction}
+        okText="Xác nhận"
+        cancelText="Hủy"
+        okButtonProps={{
+          style: pendingAction?.newStatus === "Cancelled" 
+            ? { backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' }
+            : {}
+        }}
+      >
+        <p>
+          {pendingAction?.newStatus === "Completed" && 
+            `Bạn có chắc chắn muốn xác nhận booking này?`}
+          {pendingAction?.newStatus === "Cancelled" && 
+            `Bạn có chắc chắn muốn hủy booking này?`}
+        </p>
+        {pendingAction && (
+          <p>
+            <strong>Booking ID:</strong> {pendingAction.bookingId}
+          </p>
+        )}
       </Modal>
     </div>
   );
