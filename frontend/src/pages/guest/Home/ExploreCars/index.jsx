@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Row, Col, Typography, Button, Skeleton } from "antd";
-import vehiclesApi from "../../../../../api/vehiclesApi";
+import vehiclesApi from "../../../../api/vehiclesApi";
 import "./style.scss";
 
 const { Title, Text } = Typography;

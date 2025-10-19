@@ -8,8 +8,8 @@ import {
   CalendarOutlined,
   EyeOutlined
 } from "@ant-design/icons";
-import bookingApi from "../../../../api/bookingApi";
-import StorageKeys from "../../../../constants/storage-key";
+import bookingApi from "../../../api/bookingApi";
+import StorageKeys from "../../../constants/storage-key";
 
 const StaffCheckingManagement = () => {
   const [checkings, setCheckings] = useState([]);

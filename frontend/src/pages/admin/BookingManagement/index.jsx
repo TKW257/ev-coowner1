@@ -1,8 +1,8 @@
 // src/pages/admin/ManageBookings.jsx
 import React, { useState, useEffect } from "react";
 import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, DatePicker, InputNumber, Switch } from "antd";
-import bookingApi from "../../../../api/bookingApi";
-import StorageKeys from "../../../../constants/storage-key";
+import bookingApi from "../../../api/bookingApi";
+import StorageKeys from "../../../constants/storage-key";
 
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([]);

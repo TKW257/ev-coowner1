@@ -2,20 +2,20 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import { App as AntdApp } from "antd";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
-import RegisterPage from "./hooks/pages/guest/auth/register";
-import LoginPage from "./hooks/pages/guest/auth/login";
-import HomePage from "./hooks/pages/guest/Home/HomePage"
+import RegisterPage from "./pages/guest/auth/register";
+import LoginPage from "./pages/guest/auth/login";
+import HomePage from "./pages/guest/Home/HomePage"
 
-import MyCar from "./hooks/pages/co-owner/MyCar";
-import CarBooking from "./hooks/pages/co-owner/CarBooking";
-import BookingManage from "./hooks/pages/admin/BookingManagement";
-import StaffCheckingManage from "./hooks/pages/admin/StaffCheckingManagement";
-import AdminDashboard from "./hooks/pages/admin/AdminDashboard";
+import MyCar from "./pages/co-owner/MyCar";
+import CarBooking from "./pages/co-owner/CarBooking";
+import BookingManage from "./pages/admin/BookingManagement";
+import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import DashboardLayout from "./components/layouts/Dashboard";
 
 import GuestLayout from "./components/layouts/GuestLayout";
-import WhyChooseUs from "./hooks/pages/guest/Home/WhyChooseUs";
-import OurTerms from "./hooks/pages/guest/Home/OurTerms";
+import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
+import OurTerms from "./pages/guest/Home/OurTerms";
 
 import TestVehicles from "./test";
 
