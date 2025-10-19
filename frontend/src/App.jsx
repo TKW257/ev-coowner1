@@ -11,6 +11,7 @@ import CarBooking from "./pages/co-owner/CarBooking";
 import BookingManage from "./pages/admin/BookingManagement";
 import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
+import UserManagement from "./pages/admin/UserManagement";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import DashboardLayout from "./components/layouts/Dashboard";
 
@@ -57,7 +58,8 @@ const router = createBrowserRouter([
       { index: true, element: <AdminDashboard /> },
       { path: "bookingmanage", element: <BookingManage /> },
       { path: "staffchecking", element: <StaffCheckingManage /> },
-      { path: "vehicles", element: <VehicleManagement /> }
+      { path: "vehicles", element: <VehicleManagement /> },
+      { path: "users", element: <UserManagement /> }
     ],
   },
 

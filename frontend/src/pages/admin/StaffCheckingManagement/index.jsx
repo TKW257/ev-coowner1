@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Table, Tag, Space, Button, message, Select, Card, Statistic, Row, Col, Modal, Descriptions } from "antd";
-import { 
-  CheckCircleOutlined, 
-  ClockCircleOutlined, 
-  CarOutlined, 
-  UserOutlined,
-  CalendarOutlined,
-  EyeOutlined
-} from "@ant-design/icons";
+import { CheckCircleOutlined, ClockCircleOutlined, CarOutlined, UserOutlined,CalendarOutlined, EyeOutlined} from "@ant-design/icons";
 import bookingApi from "../../../api/bookingApi";
 import StorageKeys from "../../../constants/storage-key";
 
