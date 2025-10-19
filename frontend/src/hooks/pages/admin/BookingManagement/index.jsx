@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, DatePicker, InputNumber, Switch } from "antd";
 import bookingApi from "../../../../api/bookingApi";
+import StorageKeys from "../../../../constants/storage-key";
 
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -17,7 +18,7 @@ const ManageBookings = () => {
 
   useEffect(() => {
     // Log authentication info
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem(StorageKeys.TOKEN);
     console.log("🔑 Token from localStorage:", token);
     console.log("🔑 Token exists:", !!token);
     
@@ -100,30 +101,96 @@ const ManageBookings = () => {
 
   const handleStatusUpdate = async (bookingId, newStatus) => {
     try {
-      await bookingApi.updateStatus(bookingId, newStatus);
-      message.success(`Cập nhật trạng thái thành ${newStatus}`);
-      // Refresh danh sách booking
-      if (userFilter !== "all") {
-        fetchUserBookings(userFilter);
-      } else {
-        fetchBookings();
+      console.log("🔄 Updating booking status:", { bookingId, newStatus });
+      
+      // Check if token exists before making request
+      const token = localStorage.getItem(StorageKeys.TOKEN);
+      console.log("🔑 Token check:", { tokenExists: !!token, tokenPreview: token ? token.substring(0, 20) + "..." : "No token" });
+      
+      if (!token) {
+        message.error("Không có token xác thực! Vui lòng đăng nhập lại.");
+        return;
       }
+      
+      // Validate bookingId
+      if (!bookingId) {
+        message.error("ID booking không hợp lệ!");
+        console.error("❌ Invalid bookingId:", bookingId);
+        return;
+      }
+      
+      // Validate status
+      const validStatuses = ["Pending", "Completed", "Cancelled"];
+      if (!validStatuses.includes(newStatus)) {
+        message.error(`Trạng thái không hợp lệ: ${newStatus}`);
+        console.error("❌ Invalid status:", newStatus);
+        return;
+      }
+      
+      console.log("🚀 Calling bookingApi.updateStatus with:", { bookingId, newStatus });
+      const response = await bookingApi.updateStatus(bookingId, newStatus);
+      console.log("✅ Status update response:", response);
+      
+      message.success(`Cập nhật trạng thái thành ${newStatus} thành công!`);
+      
+      // Refresh danh sách booking sau khi update thành công
+      console.log("🔄 Refreshing bookings list...");
+      if (userFilter !== "all") {
+        await fetchUserBookings(userFilter);
+      } else {
+        await fetchBookings();
+      }
+      console.log("✅ Bookings list refreshed");
+      
     } catch (error) {
-      message.error("Không thể cập nhật trạng thái!");
-      console.error("Error updating status:", error);
+      console.error("❌ Error updating status:", error);
+      console.error("❌ Error response:", error.response);
+      console.error("❌ Error status:", error.response?.status);
+      console.error("❌ Error data:", error.response?.data);
+      console.error("❌ Error message:", error.message);
+      
+      // Hiển thị lỗi chi tiết hơn
+      let errorMessage = "Không thể cập nhật trạng thái!";
+      
+      if (error.response?.status === 401) {
+        errorMessage = "Không có quyền truy cập! Vui lòng đăng nhập lại.";
+      } else if (error.response?.status === 403) {
+        errorMessage = "Bạn không có quyền thực hiện hành động này!";
+      } else if (error.response?.status === 404) {
+        errorMessage = "Không tìm thấy booking với ID này!";
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response?.data?.message || "Dữ liệu đầu vào không hợp lệ!";
+      } else if (error.response?.status >= 500) {
+        errorMessage = "Lỗi máy chủ! Vui lòng thử lại sau.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = `Lỗi: ${error.message}`;
+      }
+      
+      console.error("❌ Final error message:", errorMessage);
+      message.error(errorMessage);
     }
   };
 
   const handleCheckInOut = (booking, type) => {
+    console.log("🚀 Starting check-in/out process...");
+    console.log("📋 Selected booking:", booking);
+    console.log("🔧 Checking type:", type);
+    
     setCurrentBooking(booking);
     setCheckingType(type);
     setCheckingModalVisible(true);
     form.resetFields();
+    
+    console.log("✅ Modal opened for:", type);
   };
 
   const handleCheckingSubmit = async () => {
     try {
+      console.log("📝 Form submission started...");
       const values = await form.validateFields();
+      console.log("📋 Form values:", values);
       
       // Convert DatePicker to array format [year, month, day, hour, minute, second]
       const checkTime = values.checkingTime ? [
@@ -142,6 +209,8 @@ const ManageBookings = () => {
         new Date().getSeconds()
       ];
 
+      console.log("⏰ Check time array:", checkTime);
+
       const checkingData = {
         vehicleId: currentBooking.vehicleId,
         userEmail: values.userEmail || "admin@example.com", // TODO: Get from current user
@@ -156,13 +225,16 @@ const ManageBookings = () => {
         batteryUsedPercent: checkingType === "checkout" ? values.batteryUsedPercent : null
       };
 
-      console.log("📝 Checking data:", checkingData);
+      console.log("📦 Final checking data to send:", checkingData);
+      console.log("🌐 API endpoint: /staff-checkings/createStaffChecking");
       
       await bookingApi.createStaffChecking(checkingData);
       
+      console.log("✅ API call successful!");
       message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
       setCheckingModalVisible(false);
       
+      console.log("🔄 Refreshing bookings list...");
       // Refresh danh sách booking
       if (userFilter !== "all") {
         fetchUserBookings(userFilter);
@@ -170,8 +242,10 @@ const ManageBookings = () => {
         fetchBookings();
       }
     } catch (error) {
+      console.error("❌ Error in checking submission:", error);
+      console.error("❌ Error details:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
       message.error(`Không thể thực hiện ${checkingType === "checkin" ? "check-in" : "check-out"}!`);
-      console.error("Error creating staff checking:", error);
     }
   };
 
@@ -270,9 +344,21 @@ const ManageBookings = () => {
   console.log("🔍 Bookings state length:", bookings.length);
   console.log("🔍 Loading state:", loading);
 
+  // Debug function để kiểm tra token và API
+  const debugTokenAndAPI = () => {
+    const token = localStorage.getItem(StorageKeys.TOKEN);
+    console.log("🔍 DEBUG: Current token:", token);
+    console.log("🔍 DEBUG: Token exists:", !!token);
+    console.log("🔍 DEBUG: All localStorage keys:", Object.keys(localStorage));
+    console.log("🔍 DEBUG: Current bookings count:", bookings.length);
+    console.log("🔍 DEBUG: Sample booking:", bookings[0]);
+    
+    message.info("Debug info logged to console. Press F12 to check.");
+  };
+
   return (
     <div>
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 16, display: 'flex', gap: '10px', alignItems: 'center' }}>
         <Select
           style={{ width: 200 }}
           placeholder="Chọn user để lọc"
@@ -286,6 +372,14 @@ const ManageBookings = () => {
             </Select.Option>
           ))}
         </Select>
+        
+        <Button 
+          type="default" 
+          onClick={debugTokenAndAPI}
+          style={{ backgroundColor: '#f0f0f0' }}
+        >
+          🔍 Debug Token & API
+        </Button>
       </div>
       <Table
         rowKey="bookingId"
