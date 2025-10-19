@@ -21,6 +21,11 @@ const Sidebar = () => {
         icon: <BookOutlined />,
         label: <Link to="/admin/bookingmanage"> Bookings</Link>,
       },
+      {
+        key: "invoicemanagement",
+        icon: <BookOutlined />,
+        label: <Link to="/admin/invoice"> Hóa đơn</Link>,
+      },
     ];
   } else if (role === "USER") {
     menuItems = [

@@ -11,8 +11,10 @@ import OurTerms from "./pages/guest/Home/OurTerms";
 import MyCarPage from "./pages/co-owner/MyCarPage";
 import InvoicePage from "./pages/co-owner/InvoicePage";
 import CarBooking from "./pages/co-owner/CarBooking";
-import BookingManage from "./pages/admin/BookingManagement";
 
+
+import BookingManage from "./pages/admin/BookingManagement";
+import InvoiceManagement from "./pages/admin/InvoiceManagement"
 
 import DashboardLayout from "./components/layouts/Dashboard";
 import GuestLayout from "./components/layouts/GuestLayout";
@@ -54,7 +56,10 @@ const router = createBrowserRouter([
       <DashboardLayout />
       //</ProtectedRoute>
     ),
-    children: [{ path: "bookingmanage", element: <BookingManage /> }],
+    children: [
+      { path: "bookingmanage", element: <BookingManage /> },
+      { path: "invoice", element: <InvoiceManagement /> },
+    ],
   },
 
   {
