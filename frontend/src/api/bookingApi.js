@@ -3,16 +3,15 @@ import axiosClient from "./axiosClient";
 const bookingApi = {
 
   createBooking(data) {
-    console.log("📤 Gửi request tạo booking:", data);
     return axiosClient.post(`/bookings/createBooking`, data);
-  },
-
-  getMyBookings() {
-    return axiosClient.get("/bookings/my");
   },
 
   getBookingsByVehicle(vehicleId) {
     return axiosClient.get(`/bookings/byVehicle/${vehicleId}`);
+  },
+
+  getVehicleSchedule(vehicleId) {
+    return axiosClient.get(`/bookings/vehicle/${vehicleId}/schedule`);
   },
 
   cancelBooking(bookingId) {
@@ -23,10 +22,3 @@ const bookingApi = {
 
 
 export default bookingApi;
-
-
-
-
-// cancelBooking(id) {
-//   return axiosClient.delete("/bookings/" + id); //chưa
-// },

@@ -5,15 +5,18 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import RegisterPage from "./pages/guest/auth/register";
 import LoginPage from "./pages/guest/auth/login";
 import HomePage from "./pages/guest/Home/HomePage"
-
-import MyCar from "./pages/co-owner/MyCar";
-import CarBooking from "./pages/co-owner/CarBooking";
-import BookingManage from "./pages/admin/BookingManagement";
-import DashboardLayout from "./components/layouts/Dashboard";
-
-import GuestLayout from "./components/layouts/GuestLayout";
 import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
 import OurTerms from "./pages/guest/Home/OurTerms";
+
+import MyCarPage from "./pages/co-owner/MyCarPage";
+import InvoicePage from "./pages/co-owner/InvoicePage";
+import CarBooking from "./pages/co-owner/CarBooking";
+import BookingManage from "./pages/admin/BookingManagement";
+
+
+import DashboardLayout from "./components/layouts/Dashboard";
+import GuestLayout from "./components/layouts/GuestLayout";
+
 
 import TestVehicles from "./test";
 
@@ -38,9 +41,10 @@ const router = createBrowserRouter([
       //</ProtectedRoute>
     ),
     children: [
-      { path: "mycar", element: <MyCar /> },
+      { path: "mycar", element: <MyCarPage /> },
       { path: "carbooking", element: <CarBooking /> },
       { path: "carbooking/:vehicleId", element: <CarBooking /> },
+      { path: "invoice", element: <InvoicePage /> },
     ],
   },
   {
