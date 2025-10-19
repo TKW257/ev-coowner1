@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Card, Typography, Spin, message, Empty } from "antd";
-import ownershipApi from "../api/ownerShipsApi";
+import ownershipApi from "../api/ownershipApi";
 
 const { Title, Text } = Typography;
 
@@ -96,8 +96,6 @@ const TestOwnership = () => {
 
 export default TestOwnership;
 
-
-
 // import React from "react";
 // import { Card, Row, Col, Tag, Typography, Button, Progress, Skeleton, Empty } from "antd";
 // import { ThunderboltOutlined, EyeOutlined, LikeOutlined, CarOutlined } from "@ant-design/icons";
@@ -178,7 +176,7 @@ export default TestOwnership;
 //     );
 //   }
 
-//   // None Cars 
+//   // None Cars
 //   if (!loading && cars.length === 0) {
 //     return (
 //       <div className="mycar-empty">
@@ -348,13 +346,6 @@ export default TestOwnership;
 // }
 
 // export default MyCars;
-
-
-
-
-
-
-
 
 // import React, { useEffect, useState } from "react";
 // import { Card, Row, Col, Tag, Typography, Button, Empty, Statistic } from "antd";

@@ -1,6 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Tag, Typography, Button, Empty, Statistic } from "antd";
-import { ThunderboltOutlined, EyeOutlined, LikeOutlined, DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  Row,
+  Col,
+  Tag,
+  Typography,
+  Button,
+  Empty,
+  Statistic,
+} from "antd";
+import {
+  ThunderboltOutlined,
+  EyeOutlined,
+  LikeOutlined,
+  DollarOutlined,
+  CalendarOutlined,
+  DashboardOutlined,
+  PercentageOutlined,
+  CarOutlined,
+} from "@ant-design/icons";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import "./style.scss";
 
@@ -11,6 +30,7 @@ const MyCars = () => {
   const [currentCarId, setCurrentCarId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fade, setFade] = useState(false);
+  const navigate = useNavigate();
 
   // Convert currentCarId to string to match key
   const chosenCar = currentCarId ? carsObj[String(currentCarId)] : null;
@@ -28,16 +48,14 @@ const MyCars = () => {
 
         // Chuyển sang object với key = string vehicleId
         const vehiclesMap = {};
-        vehiclesArray.forEach(v => {
+        vehiclesArray.forEach((v) => {
           vehiclesMap[String(v.vehicleId)] = v;
         });
-        console.log("🟢 Vehicles object:", vehiclesMap);
 
         setCarsObj(vehiclesMap);
 
         if (vehiclesArray.length > 0) {
           setCurrentCarId(vehiclesArray[0].vehicleId);
-          console.log("🟢 Set currentCarId:", vehiclesArray[0].vehicleId);
         }
       } catch (err) {
         console.error("❌ Lỗi khi tải danh sách xe:", err);
@@ -48,6 +66,11 @@ const MyCars = () => {
 
     fetchMyVehicles();
   }, []);
+
+  const handleBook = (car) => {
+    setCurrentCarId(car.vehicleId);
+    navigate(`/owner/carbooking/${car.vehicleId}`);
+  };
 
   const handleChangeCar = (id) => {
     if (id === currentCarId) return;
@@ -69,10 +92,6 @@ const MyCars = () => {
     );
   }
 
-  const handleBook = (car) => {
-    alert(`Booking car id=${car.vehicleId}`);
-  };
-
   console.log("🟢 currentCarId:", currentCarId, "chosenCar:", chosenCar);
 
   return (
@@ -87,10 +106,16 @@ const MyCars = () => {
                 <Title level={3} className="car-name">
                   {chosenCar.brand} {chosenCar.model}
                 </Title>
-                <Text className="plate">Biển số xe: {chosenCar.plateNumber}</Text>
+                <Text className="plate">
+                  Biển số xe: {chosenCar.plateNumber}
+                </Text>
                 <div className="status-tag">
                   <Tag
-                    color={chosenCar.vehicleStatus?.toLowerCase() === "available" ? "green" : "orange"}
+                    color={
+                      chosenCar.vehicleStatus?.toLowerCase() === "available"
+                        ? "green"
+                        : "orange"
+                    }
                   >
                     {chosenCar.vehicleStatus}
                   </Tag>
@@ -103,10 +128,13 @@ const MyCars = () => {
                     type="primary"
                     icon={<CalendarOutlined />}
                     onClick={() => handleBook(chosenCar)}
-                    disabled={chosenCar.vehicleStatus.toLowerCase() !== "available"}
+                    disabled={
+                      chosenCar.vehicleStatus.toLowerCase() !== "available"
+                    }
                   >
                     Booking
                   </Button>
+
                   <Button icon={<LikeOutlined />}>Voting</Button>
                   <Button icon={<EyeOutlined />}>View Detail</Button>
                 </div>
@@ -118,16 +146,39 @@ const MyCars = () => {
           <div className="specs-row">
             <Row gutter={[16, 16]}>
               <Col xs={12} sm={6}>
-                <Statistic title="Năm SX" value={chosenCar.year} prefix={<CalendarOutlined />} valueStyle={{ fontSize: 20 }} />
+                <Statistic
+                  title="Năm SX"
+                  value={chosenCar.year}
+                  prefix={<CalendarOutlined />}
+                  valueStyle={{ fontSize: 20 }}
+                />
               </Col>
               <Col xs={12} sm={6}>
-                <Statistic title="Dung lượng pin" value={chosenCar.batteryCapacityKwh} suffix="kWh" prefix={<ThunderboltOutlined />} valueStyle={{ fontSize: 20 }} />
+                <Statistic
+                  title="Dung lượng pin"
+                  value={chosenCar.batteryCapacityKwh}
+                  suffix="kWh"
+                  prefix={<ThunderboltOutlined />}
+                  valueStyle={{ fontSize: 20 }}
+                />
               </Col>
               <Col xs={12} sm={6}>
-                <Statistic title="Chi phí / km" value={chosenCar.operatingCostPerKm} suffix="₫" prefix={<DollarOutlined />} valueStyle={{ fontSize: 20 }} />
+                <Statistic
+                  title="Chi phí / km"
+                  value={chosenCar.operatingCostPerKm}
+                  suffix="₫"
+                  prefix={<DollarOutlined />}
+                  valueStyle={{ fontSize: 20 }}
+                />
               </Col>
               <Col xs={12} sm={6}>
-                <Statistic title="Chi phí / ngày" value={chosenCar.operatingCostPerDay} suffix="₫" prefix={<DollarOutlined />} valueStyle={{ fontSize: 20 }} />
+                <Statistic
+                  title="Chi phí / ngày"
+                  value={chosenCar.operatingCostPerDay}
+                  suffix="₫"
+                  prefix={<DollarOutlined />}
+                  valueStyle={{ fontSize: 20 }}
+                />
               </Col>
             </Row>
           </div>
@@ -139,7 +190,11 @@ const MyCars = () => {
                 <div className="ownership-block">
                   <div className="ownership-title">Số km đã dùng / tháng</div>
                   <div className="ownership-value">
-                    <Statistic value={`${chosenCar.usedKmThisMonth} / ${chosenCar.allowedKmThisMonth}`} prefix={<DashboardOutlined />} valueStyle={{ fontSize: 18 }} />
+                    <Statistic
+                      value={`${chosenCar.usedKmThisMonth} / ${chosenCar.allowedKmThisMonth}`}
+                      prefix={<DashboardOutlined />}
+                      valueStyle={{ fontSize: 18 }}
+                    />
                   </div>
                 </div>
               </Col>
@@ -148,7 +203,11 @@ const MyCars = () => {
                 <div className="ownership-block">
                   <div className="ownership-title">Số ngày đã dùng / tháng</div>
                   <div className="ownership-value">
-                    <Statistic value={`${chosenCar.usedDaysThisMonth} / ${chosenCar.allowedDaysThisMonth}`} prefix={<CalendarOutlined />} valueStyle={{ fontSize: 18 }} />
+                    <Statistic
+                      value={`${chosenCar.usedDaysThisMonth} / ${chosenCar.allowedDaysThisMonth}`}
+                      prefix={<CalendarOutlined />}
+                      valueStyle={{ fontSize: 18 }}
+                    />
                   </div>
                 </div>
               </Col>
@@ -157,7 +216,9 @@ const MyCars = () => {
                 <div className="ownership-block">
                   <div className="ownership-title">Tỷ lệ sở hữu của bạn</div>
                   <div className="ownership-value percent-style">
-                    <span className="pct-number">{chosenCar.totalSharePercentage}</span>
+                    <span className="pct-number">
+                      {chosenCar.totalSharePercentage}
+                    </span>
                     <PercentageOutlined /> / 100
                   </div>
                 </div>
@@ -167,7 +228,11 @@ const MyCars = () => {
                 <div className="ownership-block">
                   <div className="ownership-title">Tổng số xe của bạn</div>
                   <div className="ownership-value">
-                    <Statistic value={Object.keys(carsObj).length} prefix={<CarOutlined />} valueStyle={{ fontSize: 18 }} />
+                    <Statistic
+                      value={Object.keys(carsObj).length}
+                      prefix={<CarOutlined />}
+                      valueStyle={{ fontSize: 18 }}
+                    />
                   </div>
                 </div>
               </Col>
@@ -184,15 +249,29 @@ const MyCars = () => {
               <Card
                 hoverable
                 onClick={() => handleChangeCar(car.vehicleId)}
-                className={`mini-card ${car.vehicleId === currentCarId ? "active" : ""}`}
+                className={`mini-card ${
+                  car.vehicleId === currentCarId ? "active" : ""
+                }`}
                 cover={
                   <div className="mini-card-cover">
                     <img src={car.imageUrl} alt={car.model} />
                     <div className="overlay">
-                      <div className="mini-title">{car.brand} {car.model}</div>
+                      <div className="mini-title">
+                        {car.brand} {car.model}
+                      </div>
                       <div className="mini-tags">
-                        <Tag color={car.vehicleStatus?.toLowerCase() === "available" ? "green" : "orange"}>{car.vehicleStatus}</Tag>
-                        {car.vehicleId === currentCarId && <Tag color="geekblue">Đang chọn</Tag>}
+                        <Tag
+                          color={
+                            car.vehicleStatus?.toLowerCase() === "available"
+                              ? "green"
+                              : "orange"
+                          }
+                        >
+                          {car.vehicleStatus}
+                        </Tag>
+                        {car.vehicleId === currentCarId && (
+                          <Tag color="geekblue">Đang chọn</Tag>
+                        )}
                       </div>
                     </div>
                   </div>

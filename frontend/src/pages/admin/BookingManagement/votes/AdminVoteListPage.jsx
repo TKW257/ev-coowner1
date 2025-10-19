@@ -44,7 +44,7 @@ export default function AdminVoteListPage() {
         <h2>Voting Topics (Staff)</h2>
         <Button
           type="primary"
-          onClick={() => navigate("/admin/votes/create")}
+          onClick={() => navigate("/admin/vote/create")}
           className="mb-3"
         >
           + Create Topic
@@ -60,7 +60,7 @@ export default function AdminVoteListPage() {
               <TopicCard
                 key={id ?? JSON.stringify(t)}
                 topic={t}
-                onDetail={(id) => navigate(`/admin/votes/${id}`)}
+                onDetail={(id) => navigate(`/admin/vote/${id}`)}
                 onCalculate={handleCalculate}
               />
             );
