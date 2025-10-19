@@ -1,3 +1,11 @@
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
+import { App as AntdApp } from "antd";
+import ProtectedRoute from "./routes/ProtectedRoute";
+
+import RegisterPage from "./pages/guest/auth/register";
+import LoginPage from "./pages/guest/auth/login";
+import HomePage from "./pages/guest/Home/HomePage"
+
 import {
   createBrowserRouter,
   RouterProvider,
@@ -21,6 +29,18 @@ import OwnerVoteListPage from "./pages/co-owner/votes/OwnerVoteListPage";
 
 // ===== Admin Pages =====
 import BookingManage from "./pages/admin/BookingManagement";
+import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import DashboardLayout from "./components/layouts/Dashboard";
+
+import GuestLayout from "./components/layouts/GuestLayout";
+import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
+import OurTerms from "./pages/guest/Home/OurTerms";
+
+import TestVehicles from "./test";
+
+const router = createBrowserRouter([
+  { path: "/test", element: <TestVehicles /> },
 import AdminVoteListPage from "./pages/admin/BookingManagement/votes/AdminVoteListPage";
 import AdminCreateTopicPage from "./pages/admin/BookingManagement/votes/AdminCreateTopicPage";
 import TopicDetailPage from "./pages/admin/BookingManagement/votes/TopicDetailPage";
@@ -62,6 +82,9 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
+      //<ProtectedRoute allowedRoles={["USER"]}>
+      <DashboardLayout />
+      //</ProtectedRoute>
       // <ProtectedRoute allowedRoles={["STAFF"]}>
       <DashboardLayout />
       // </ProtectedRoute>
@@ -77,6 +100,20 @@ const router = createBrowserRouter([
   },
 
   // ===== 404 Redirect =====
+  {
+    path: "/admin",
+    element: (
+      // <ProtectedRoute allowedRoles={["STAFF"]}>
+        <DashboardLayout />
+      // </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "bookingmanage", element: <BookingManage /> },
+      { path: "staffchecking", element: <StaffCheckingManage /> }
+    ],
+  },
+
   {
     path: "*",
     element: <Navigate to="/" replace />,

@@ -1,7 +1,26 @@
-import React from "react";
-import { Card, message } from "antd";
-import CarInfoSection from "./CurentCarSection";
-import BookingHistorySection from "./BookingHistorySection";
+import React, { useState } from "react";
+import { App, Card, Row, Col, Badge, Calendar, Tag, DatePicker, Button, Progress, Spin } from "antd";
+import { ThunderboltOutlined } from "@ant-design/icons";
+import { useParams } from "react-router-dom";
+import useCarBooking from "../../../hooks/useCarBooking.js";
+
+const { RangePicker } = DatePicker;
+
+const CarBookingPage = () => {
+  const { id } = useParams();
+  const { notification } = App.useApp();
+  const [range, setRange] = useState([]);
+  const { car, loading, getDateStatus, bookCar } = useCarBooking(id, notification);
+
+  const handleBook = async () => {
+    const res = await bookCar(range);
+    if (res.success) {
+      notification.success({ message: "Đặt lịch thành công" });
+      setRange([]);
+    } else {
+      notification.warning({ message: res.message });
+    }
+  };
 
 const VehicleBookingPage = () => {
   const handleBookingSuccess = (res) => {

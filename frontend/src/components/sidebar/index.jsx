@@ -1,12 +1,6 @@
 import React from "react";
 import { Menu } from "antd";
-import {
-  HomeOutlined,
-  CalendarOutlined,
-  BookOutlined,
-  DashboardOutlined,
-  LikeOutlined,
-} from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, CheckCircleOutlined, LikeOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -18,19 +12,27 @@ const Sidebar = () => {
 
   // 🧠 Lấy role từ redux
   const currentUser = useSelector((state) => state.user.current);
-  const role = currentUser?.role || "USER";
+  const role = currentUser.role || "USER";
 
   let menuItems = [];
 
-  // 🧩 Menu theo role
+  // 🧩 Dùng if/else để gán menu theo role
   if (role === "STAFF") {
     menuItems = [
+      {
+        key: "/admin",
+        icon: <DashboardOutlined />,
+        label: <Link to="/admin">Dashboard</Link>,
+      },
       {
         key: "/admin/bookingmanage",
         icon: <BookOutlined />,
         label: <Link to="/admin/bookingmanage">Bookings</Link>,
       },
       {
+        key: "/admin/staffchecking",
+        icon: <CheckCircleOutlined />,
+        label: <Link to="/admin/staffchecking">Staff Checking</Link>,
         key: "/admin/vote",
         icon: <LikeOutlined />,
         label: <Link to="/admin/vote">Vote Management</Link>,
