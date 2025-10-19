@@ -38,7 +38,18 @@ const ManageBookings = () => {
     setLoading(true);
     try {
       const response = await bookingApi.getAllBookings();
+      console.log("📊 BookingManagement - API Response:", response);
+      console.log("📋 Response Type:", typeof response);
+      console.log("📋 Is Array:", Array.isArray(response));
+      
       const bookingsData = Array.isArray(response) ? response : [];
+      console.log("📋 Bookings Data:", bookingsData);
+      console.log("📋 Total bookings:", bookingsData.length);
+      
+      if (bookingsData.length > 0) {
+        console.log("📋 First booking sample:", bookingsData[0]);
+      }
+      
       setBookings(bookingsData);
     } catch (error) {
       message.error("Không tải được danh sách booking!");
@@ -52,7 +63,14 @@ const ManageBookings = () => {
     setLoading(true);
     try {
       const response = await bookingApi.getAllBookings();
+      console.log("📊 BookingManagement - User Bookings API Response:", response);
+      console.log("📋 User Bookings Type:", typeof response);
+      console.log("📋 User Bookings Is Array:", Array.isArray(response));
+      
       const userBookings = Array.isArray(response) ? response : [];
+      console.log("📋 User Bookings Data:", userBookings);
+      console.log("📋 Total user bookings:", userBookings.length);
+      
       setBookings(userBookings);
     } catch (error) {
       message.error("Không tải được booking của user!");
@@ -306,6 +324,10 @@ const ManageBookings = () => {
     },
   ];
 
+  // Log bookings state để debug
+  console.log("🔍 BookingManagement - Current bookings state:", bookings);
+  console.log("🔍 BookingManagement - Bookings count:", bookings.length);
+  console.log("🔍 BookingManagement - Loading state:", loading);
 
   return (
     <div>
