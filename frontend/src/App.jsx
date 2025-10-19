@@ -47,22 +47,16 @@ const router = createBrowserRouter([
   },
 
   // ===== OWNER =====
-  {
-    path: "/owner",
-    element: (
-      // <ProtectedRoute allowedRoles={["USER"]}>
-      <DashboardLayout />
-      // </ProtectedRoute>
-    ),
-    children: [
-      { path: "mycar", element: <MyCar /> },
-      { path: "carbooking", element: <CarBooking /> },
-      { path: "carbooking/:id", element: <CarBooking /> },
-
-      // ✅ Vote page for Owner (đồng bộ với Sidebar)
-      { path: "vote", element: <OwnerVoteListPage /> },
-    ],
-  },
+{
+  path: "/owner",
+  element: <DashboardLayout />,
+  children: [
+    { path: "mycar", element: <MyCar /> },
+    { path: "carbooking", element: <CarBooking /> },
+    { path: "carbooking/:vehicleId", element: <CarBooking /> },
+    { path: "vote", element: <OwnerVoteListPage /> },
+  ],
+},
 
   // ===== ADMIN =====
   {

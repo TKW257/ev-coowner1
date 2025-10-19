@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, Row, Col, Tag, Typography, Button, Empty, Statistic } from "antd";
 import { ThunderboltOutlined, EyeOutlined, LikeOutlined, DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined } from "@ant-design/icons";
 import ownerShipsApi from "../../../api/ownerShipsApi";
@@ -11,6 +12,7 @@ const MyCars = () => {
   const [currentCarId, setCurrentCarId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fade, setFade] = useState(false);
+  const navigate = useNavigate();
 
   // Convert currentCarId to string to match key
   const chosenCar = currentCarId ? carsObj[String(currentCarId)] : null;
@@ -31,13 +33,11 @@ const MyCars = () => {
         vehiclesArray.forEach(v => {
           vehiclesMap[String(v.vehicleId)] = v;
         });
-        console.log("🟢 Vehicles object:", vehiclesMap);
 
         setCarsObj(vehiclesMap);
 
         if (vehiclesArray.length > 0) {
           setCurrentCarId(vehiclesArray[0].vehicleId);
-          console.log("🟢 Set currentCarId:", vehiclesArray[0].vehicleId);
         }
       } catch (err) {
         console.error("❌ Lỗi khi tải danh sách xe:", err);
@@ -48,6 +48,12 @@ const MyCars = () => {
 
     fetchMyVehicles();
   }, []);
+
+
+  const handleBook = (car) => {
+    setCurrentCarId(car.vehicleId);
+    navigate(`/owner/carbooking/${car.vehicleId}`);
+  };
 
   const handleChangeCar = (id) => {
     if (id === currentCarId) return;
@@ -68,10 +74,6 @@ const MyCars = () => {
       </div>
     );
   }
-
-  const handleBook = (car) => {
-    alert(`Booking car id=${car.vehicleId}`);
-  };
 
   console.log("🟢 currentCarId:", currentCarId, "chosenCar:", chosenCar);
 
@@ -107,6 +109,7 @@ const MyCars = () => {
                   >
                     Booking
                   </Button>
+
                   <Button icon={<LikeOutlined />}>Voting</Button>
                   <Button icon={<EyeOutlined />}>View Detail</Button>
                 </div>
@@ -135,7 +138,7 @@ const MyCars = () => {
           {/* Ownership */}
           <div className="ownership-row ownership-row--fixed">
             <Row align="middle" gutter={[16, 16]}>
-              <Col xs={24} sm={8} md={8}>
+              <Col xs={12} sm={6} md={6}>
                 <div className="ownership-block">
                   <div className="ownership-title">Số km đã dùng / tháng</div>
                   <div className="ownership-value">
@@ -144,7 +147,7 @@ const MyCars = () => {
                 </div>
               </Col>
 
-              <Col xs={24} sm={8} md={8}>
+              <Col xs={12} sm={6} md={6}>
                 <div className="ownership-block">
                   <div className="ownership-title">Số ngày đã dùng / tháng</div>
                   <div className="ownership-value">
@@ -153,7 +156,7 @@ const MyCars = () => {
                 </div>
               </Col>
 
-              <Col xs={24} sm={8} md={8}>
+              <Col xs={12} sm={6} md={6}>
                 <div className="ownership-block">
                   <div className="ownership-title">Tỷ lệ sở hữu của bạn</div>
                   <div className="ownership-value percent-style">
@@ -163,7 +166,7 @@ const MyCars = () => {
                 </div>
               </Col>
 
-              <Col xs={24} sm={6} md={6}>
+              <Col xs={12} sm={6} md={6}>
                 <div className="ownership-block">
                   <div className="ownership-title">Tổng số xe của bạn</div>
                   <div className="ownership-value">
