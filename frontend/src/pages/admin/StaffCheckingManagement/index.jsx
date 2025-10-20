@@ -350,7 +350,7 @@ const StaffCheckingManagement = () => {
 
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '24px', color: "black" }}>
       <h2>Quản lý Staff Checking</h2>
       
       {/* Statistics Cards */}
