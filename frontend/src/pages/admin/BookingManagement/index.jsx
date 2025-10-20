@@ -1,11 +1,12 @@
 // src/pages/admin/ManageBookings.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, InputNumber, Switch } from "antd";
 import bookingApi from "../../../api/bookingApi";
 import StorageKeys from "../../../constants/storage-key";
 
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([]);
+  const [allBookings, setAllBookings] = useState([]); 
   const [loading, setLoading] = useState(false);
   const [userFilter, setUserFilter] = useState("all");
   const [users, setUsers] = useState([]);
@@ -14,31 +15,47 @@ const ManageBookings = () => {
   // Check-in/Check-out modal states
   const [checkingModalVisible, setCheckingModalVisible] = useState(false);
   const [currentBooking, setCurrentBooking] = useState(null);
-  const [checkingType, setCheckingType] = useState(""); // "checkin" or "checkout"
+  const [checkingType, setCheckingType] = useState(""); 
   const [hasUserEmail, setHasUserEmail] = useState(false);
   const [form] = Form.useForm();
   
   // Confirmation modal states
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null); // { bookingId, newStatus, actionType }
+  const [pendingAction, setPendingAction] = useState(null); 
 
-  useEffect(() => {
-    fetchBookings();
-    fetchUsers();
-    fetchStaffCheckings();
+  const extractUsersFromBookings = useCallback((bookingsData) => {
+    const usersMap = new Map();
+    
+    bookingsData.forEach(booking => {
+      // Lấy thông tin user từ booking
+      const userId = booking.userId || booking.user_id || booking.userName;
+      const userName = booking.userName || booking.user_name || booking.full_name;
+      
+      // Chỉ thêm user nếu có tên và chưa có trong map
+      if (userName && !usersMap.has(userId)) {
+        usersMap.set(userId, {
+          id: userId,
+          name: userName,
+          full_name: userName 
+        });
+      }
+    });
+    
+    return Array.from(usersMap.values());
   }, []);
 
-  // Lấy danh sách booking khi filter user thay đổi
-  useEffect(() => {
-    fetchStaffCheckings(); 
-    if (userFilter !== "all") {
-      fetchUserBookings();
-    } else {
-      fetchBookings();
+  const filterBookingsByUser = useCallback((bookingsData, userId) => {
+    if (userId === "all") {
+      return bookingsData;
     }
-  }, [userFilter]);
+    
+    return bookingsData.filter(booking => {
+      const bookingUserId = booking.userId || booking.user_id || booking.userName;
+      return bookingUserId === userId;
+    });
+  }, []);
 
-  const fetchBookings = async () => {
+  const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
       const response = await bookingApi.getAllBookings();
@@ -55,50 +72,20 @@ const ManageBookings = () => {
       }
       
       setBookings(bookingsData);
+      setAllBookings(bookingsData); 
+      
+      const usersFromBookings = extractUsersFromBookings(bookingsData);
+      setUsers(usersFromBookings);
+      console.log("📋 Users from bookings:", usersFromBookings);
     } catch (error) {
       message.error("Không tải được danh sách booking!");
       console.error("Error fetching bookings:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [extractUsersFromBookings]);
 
-  const fetchUserBookings = async () => {
-    setLoading(true);
-    try {
-      const response = await bookingApi.getAllBookings();
-      console.log("📊 BookingManagement - User Bookings API Response:", response);
-      console.log("📋 User Bookings Type:", typeof response);
-      console.log("📋 User Bookings Is Array:", Array.isArray(response));
-      
-      const userBookings = Array.isArray(response) ? response : [];
-      console.log("📋 User Bookings Data:", userBookings);
-      console.log("📋 Total user bookings:", userBookings.length);
-      
-      setBookings(userBookings);
-    } catch (error) {
-      message.error("Không tải được booking của user!");
-      console.error("Error fetching user bookings:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      // Mock users data - trong thực tế sẽ call API để lấy danh sách users
-      const mockUsers = [
-        { id: "1", full_name: "Phu Nguyen" },
-        { id: "2", full_name: "Jane Doe" },
-        { id: "3", full_name: "Jack Doe" }
-      ];
-      setUsers(mockUsers);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-    }
-  };
-
-  const fetchStaffCheckings = async () => {
+  const fetchStaffCheckings = useCallback(async () => {
     try {
       const response = await bookingApi.getAllStaffCheckings();
       const checkingsData = Array.isArray(response) ? response : [];
@@ -107,7 +94,19 @@ const ManageBookings = () => {
     } catch (error) {
       console.error("Error fetching staff checkings:", error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchBookings();
+    fetchStaffCheckings();
+  }, [fetchBookings, fetchStaffCheckings]);
+
+  useEffect(() => {
+    fetchStaffCheckings(); 
+    const filteredBookings = filterBookingsByUser(allBookings, userFilter);
+    setBookings(filteredBookings);
+    console.log("📋 Filtered bookings:", filteredBookings);
+  }, [userFilter, allBookings, filterBookingsByUser, fetchStaffCheckings]);
 
   const handleStatusUpdateClick = (bookingId, newStatus, actionType) => {
     setPendingAction({
@@ -146,11 +145,7 @@ const ManageBookings = () => {
       await bookingApi.updateStatus(bookingId, newStatus);
       message.success(`Cập nhật trạng thái thành ${newStatus} thành công!`);
       
-      if (userFilter !== "all") {
-        await fetchUserBookings();
-      } else {
-        await fetchBookings();
-      }
+      await fetchBookings();
       
     } catch (error) {
       let errorMessage = "Không thể cập nhật trạng thái!";
@@ -189,7 +184,6 @@ const ManageBookings = () => {
     setHasUserEmail(!!booking.userEmail);
     setCheckingModalVisible(true);
     
-    // Set initial values cho form
     setTimeout(() => {
       form.setFieldsValue({
         userEmail: booking.userEmail || ''
@@ -217,13 +211,8 @@ const ManageBookings = () => {
       setCheckingModalVisible(false);
       setHasUserEmail(false);
       
-      // Fetch lại dữ liệu để cập nhật trạng thái
       fetchStaffCheckings();
-      if (userFilter !== "all") {
-        fetchUserBookings();
-      } else {
-        fetchBookings();
-      }
+      fetchBookings();
     } catch {
       message.error(`Không thể thực hiện ${checkingType === "checkin" ? "check-in" : "check-out"}!`);
     }
@@ -375,7 +364,7 @@ const ManageBookings = () => {
           <Select.Option value="all">Tất cả users</Select.Option>
           {users.map(user => (
             <Select.Option key={user.id} value={user.id}>
-              {user.full_name}
+              {user.full_name || user.name}
             </Select.Option>
           ))}
         </Select>
