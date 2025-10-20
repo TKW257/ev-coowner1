@@ -30,7 +30,7 @@ const ManageBookings = () => {
 
   // Lấy danh sách booking khi filter user thay đổi
   useEffect(() => {
-    fetchStaffCheckings(); // Luôn fetch lại staff checkings để đảm bảo dữ liệu mới nhất
+    fetchStaffCheckings(); 
     if (userFilter !== "all") {
       fetchUserBookings();
     } else {
