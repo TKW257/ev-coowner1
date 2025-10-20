@@ -133,8 +133,8 @@ const UserManagement = () => {
     },
     {
       title: "Tên đầy đủ",
-      dataIndex: "full_name",
-      key: "full_name",
+      dataIndex: "fullName",
+      key: "fullName",
     },
     {
       title: "Email",
