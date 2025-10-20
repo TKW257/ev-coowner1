@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Tag, Button, Empty, message } from "antd";
+import { Table, Tag, Button, Empty } from "antd";
 import bookingApi from "../../../../api/bookingApi";
 import { useParams } from "react-router-dom";
 
@@ -18,7 +18,6 @@ const BookingHistorySection = () => {
         setBookings(Array.isArray(res) ? res : res.data || []);
       } catch (error) {
         console.error("❌ Lỗi khi tải lịch sử đặt xe:", error);
-        message.error("Không thể tải lịch sử đặt xe!");
       } finally {
         setLoading(false);
       }
@@ -26,14 +25,12 @@ const BookingHistorySection = () => {
 
     fetchBookings();
   }, [vehicleId]);
+  
 
-  // ----- Cancel booking -----
+  //Cancel
   const handleCancel = async (record) => {
     try {
-      await bookingApi.cancelBooking(record.bookingId); // Gọi API hủy booking
-      message.success(`Hủy booking thành công cho xe ${record.vehicleName || record.model}!`);
-
-      // Cập nhật trạng thái booking trong table
+      await bookingApi.cancelBooking(record.bookingId); 
       setBookings((prev) =>
         prev.map((b) =>
           b.bookingId === record.bookingId ? { ...b, bookingStatus: "Cancelled" } : b
@@ -41,7 +38,6 @@ const BookingHistorySection = () => {
       );
     } catch (error) {
       console.error("❌ Lỗi khi hủy booking:", error);
-      message.error("Không thể hủy booking. Vui lòng thử lại!");
     }
   };
 
@@ -57,7 +53,7 @@ const BookingHistorySection = () => {
     return `${year}-${mm}-${dd} ${hh}:${min}:${ss}`;
   };
 
-  // ----- Table columns -----
+  //Table
   const columns = [
     {
       title: "STT",
@@ -110,7 +106,7 @@ const BookingHistorySection = () => {
         <Button
           type="primary"
           size="small"
-          disabled={!["Pending", "Confirmed"].includes(record.bookingStatus)} // Cho phép hủy cả Pending và Confirmed
+          disabled={!["Pending", "Confirmed"].includes(record.bookingStatus)}
           onClick={() => handleCancel(record)}
         >
           Cancel

@@ -1,13 +1,18 @@
 import { useState } from "react";
-import { message } from "antd";
+import { App } from "antd"; // dùng notification từ AntdApp
 import bookingApi from "../api/bookingApi";
 
 export const useBooking = (onSuccess) => {
   const [loading, setLoading] = useState(false);
+  const { notification } = App.useApp(); // ✅ lấy notification từ AntdApp
 
   const createBooking = async ({ vehicleId, startTime }) => {
     if (!vehicleId || !startTime) {
-      message.warning("Vui lòng chọn xe và ngày bắt đầu!");
+      notification.warning({
+        message: "Thiếu thông tin đặt xe",
+        description: "Vui lòng chọn xe và ngày bắt đầu!",
+        placement: "topRight",
+      });
       return;
     }
 
@@ -19,9 +24,16 @@ export const useBooking = (onSuccess) => {
       });
 
       const res = await bookingApi.createBooking({ vehicleId, startTime });
-
       console.log("%c✅ Booking thành công:", "color:#4caf50", res);
-      message.success("Đặt xe thành công!");
+
+      // Hiển thị notification thành công
+      notification.success({
+        message: "Đặt xe thành công!",
+        description: res?.message || "Bạn đã đặt xe thành công.",
+        placement: "topRight",
+      });
+
+      // Giữ nguyên logic cũ
       onSuccess?.(res);
       return res;
     } catch (error) {
@@ -33,7 +45,13 @@ export const useBooking = (onSuccess) => {
 
       const errMsg =
         error.response?.data?.message || "Đặt xe thất bại, vui lòng thử lại!";
-      message.error(errMsg);
+
+      // Hiển thị notification lỗi
+      notification.error({
+        message: "Đặt xe thất bại",
+        description: errMsg,
+        placement: "topRight",
+      });
     } finally {
       setLoading(false);
     }

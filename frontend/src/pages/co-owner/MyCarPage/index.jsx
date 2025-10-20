@@ -20,9 +20,7 @@ const MyCars = () => {
   useEffect(() => {
     const fetchMyVehicles = async () => {
       try {
-        console.log("🟢 Fetching my vehicles...");
         const res = await ownerShipsApi.getMyVehicles();
-        console.log("🟢 Axios res:", res);
 
         // Axios trả data dạng array trực tiếp hoặc trong res.data
         const vehiclesArray = Array.isArray(res) ? res : res.data || [];

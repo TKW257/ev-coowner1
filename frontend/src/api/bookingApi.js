@@ -3,21 +3,19 @@ import axiosClient from "./axiosClient";
 const bookingApi = {
 
   createBooking(data) {
-    console.log("📤 Gửi request tạo booking:", data);
     return axiosClient.post(`/bookings/createBooking`, data);
   },
 
-  getMyBookings() {
-    return axiosClient.get("/bookings/my");
+  getBookingsByVehicle(vehicleId) {
+    return axiosClient.get(`/bookings/byVehicle/${vehicleId}`);
   },
 
-  cancelBooking(id) {
-    return axiosClient.delete("/bookings/" + id); //chưa
+  getVehicleSchedule(vehicleId) {
+    return axiosClient.get(`/bookings/vehicle/${vehicleId}/schedule`);
   },
 
-  // STAFF API
-  getAllBookings() {
-    return axiosClient.get("/bookings/viewAllBooking");
+  cancelBooking(bookingId) {
+    return axiosClient.delete(`/bookings/${bookingId}`);
   },
 
   updateStatus(id, status) {
@@ -37,11 +35,6 @@ const bookingApi = {
     return axiosClient.get("/staff-checkings/viewAllStaffChecking");
   },
 
-  /*
-    getBookingById: function(id) {
-      return axiosClient.get("/api/bookings/" + id);
-    }
-  */
 
 };
 
