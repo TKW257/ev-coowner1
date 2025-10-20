@@ -1,6 +1,14 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, FileTextOutlined, CheckCircleOutlined, LikeOutlined } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  CalendarOutlined,
+  BookOutlined,
+  DashboardOutlined,
+  FileTextOutlined,
+  CheckCircleOutlined,
+  LikeOutlined,
+} from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -38,8 +46,12 @@ const Sidebar = () => {
         icon: <BookOutlined />,
         label: <Link to="/admin/invoice"> Hóa đơn</Link>,
       },
+      {
+        key: "vote",
+        icon: <BookOutlined />,
+        label: <Link to="/admin/vote"> Bình chọn </Link>,
+      },
     ];
-    
   } else if (role === "USER") {
     menuItems = [
       {
@@ -50,12 +62,12 @@ const Sidebar = () => {
       {
         key: "booking",
         icon: <CalendarOutlined />,
-        label: <Link to="/owner/carbooking" >Đặt xe</Link>,
+        label: <Link to="/owner/carbooking">Đặt xe</Link>,
       },
-        {
+      {
         key: "invoice",
         icon: <FileTextOutlined />,
-        label: <Link to="/owner/invoice" >Hóa đơn</Link>,
+        label: <Link to="/owner/invoice">Hóa đơn</Link>,
       },
       {
         key: "/owner/vote",
@@ -67,7 +79,6 @@ const Sidebar = () => {
 
   return (
     <div className="owner-sidebar">
-
       <div className="sidebar-logo" onClick={() => navigate("/")}>
         <img src={logoFull} alt="CoEV Logo" className="logo-img" />
       </div>
