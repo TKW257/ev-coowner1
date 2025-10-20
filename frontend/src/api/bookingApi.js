@@ -18,7 +18,24 @@ const bookingApi = {
     return axiosClient.delete(`/bookings/${bookingId}`);
   },
 
-};
+  updateStatus(id, status) {
+    const requestData = {
+      id: id,
+      status: status
+    };
+    return axiosClient.put("/bookings/updateStatus", requestData);
+  },
 
+  // STAFF CHECKING API
+  createStaffChecking(data) {
+    return axiosClient.post("/staff-checkings/createStaffChecking", data);
+  },
+
+  getAllStaffCheckings() {
+    return axiosClient.get("/staff-checkings/viewAllStaffChecking");
+  },
+
+
+};
 
 export default bookingApi;

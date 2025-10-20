@@ -2,27 +2,40 @@ import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
 import { App as AntdApp } from "antd";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
+// ===== Guest Pages =====
 import RegisterPage from "./pages/guest/auth/register";
 import LoginPage from "./pages/guest/auth/login";
-import HomePage from "./pages/guest/Home/HomePage"
+import HomePage from "./pages/guest/Home/HomePage";
 import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
 import OurTerms from "./pages/guest/Home/OurTerms";
-
-import MyCarPage from "./pages/co-owner/MyCarPage";
-import InvoicePage from "./pages/co-owner/InvoicePage";
-import CarBooking from "./pages/co-owner/CarBooking";
-
-
-import InvoiceManagement from "./pages/admin/InvoiceManagement"
-
-import DashboardLayout from "./components/layouts/Dashboard";
 import GuestLayout from "./components/layouts/GuestLayout";
 
+// ===== Owner Pages =====
+import MyCarPage from "./pages/co-owner/MyCarPage";
+import CarBooking from "./pages/co-owner/CarBooking";
+import OwnerVoteListPage from "./pages/co-owner/votes/OwnerVoteListPage";
+import InvoicePage from "./pages/co-owner/InvoicePage";
 
+// ===== Admin Pages =====
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import BookingManage from "./pages/admin/BookingManagement";
+import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
+import AdminVoteListPage from "./pages/admin/BookingManagement/votes/AdminVoteListPage";
+import AdminCreateTopicPage from "./pages/admin/BookingManagement/votes/AdminCreateTopicPage";
+import TopicDetailPage from "./pages/admin/BookingManagement/votes/TopicDetailPage";
+import InvoiceManagement from "./pages/admin/InvoiceManagement";
+//mport VehicleManagement from "./pages/admin/VehicleManagement";
+//import UserManagement from "./pages/admin/UserManagement";
+import DashboardLayout from "./components/layouts/Dashboard";
+
+// ===== Test =====
 import TestVehicles from "./test";
 
+// ===== Router =====
 const router = createBrowserRouter([
   { path: "/test", element: <TestVehicles /> },
+
+  // ===== GUEST =====
   {
     path: "/",
     element: <GuestLayout />,
@@ -34,38 +47,50 @@ const router = createBrowserRouter([
       { path: "guest/terms", element: <OurTerms /> },
     ],
   },
+
+  // ===== OWNER =====
   {
     path: "/owner",
-    element: (
-      //<ProtectedRoute allowedRoles={["USER"]}>
-      <DashboardLayout />
-      //</ProtectedRoute>
-    ),
+    element: <DashboardLayout />,
     children: [
       { path: "mycar", element: <MyCarPage /> },
       { path: "carbooking", element: <CarBooking /> },
       { path: "carbooking/:vehicleId", element: <CarBooking /> },
+      { path: "vote", element: <OwnerVoteListPage /> },
       { path: "invoice", element: <InvoicePage /> },
     ],
   },
+
+  // ===== ADMIN =====
   {
     path: "/admin",
     element: (
-      //<ProtectedRoute allowedRoles={["STAFF"]}>
-      <DashboardLayout />
-      //</ProtectedRoute>
+      <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
+        <DashboardLayout />
+      </ProtectedRoute>
     ),
     children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "bookingmanage", element: <BookingManage /> },
+      { path: "staffchecking", element: <StaffCheckingManage /> },
       { path: "invoice", element: <InvoiceManagement /> },
+
+      // Vote pages for Admin
+      { path: "vote", element: <AdminVoteListPage /> },
+      { path: "vote/create", element: <AdminCreateTopicPage /> },
+      { path: "vote/:id", element: <TopicDetailPage /> },
+
+      // Additional admin pages
+      //{ path: "vehicles", element: <VehicleManagement /> },
+      //{ path: "users", element: <UserManagement /> },
     ],
   },
 
-  {
-    path: "*",
-    element: <Navigate to="/" replace />,
-  },
+  // ===== 404 Redirect =====
+  { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
+// ===== App =====
 function App() {
   return (
     <AntdApp>

@@ -17,6 +17,8 @@ import "./style.scss";
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // 🧠 Lấy role từ redux
   const currentUser = useSelector((state) => state.user.current);
   const role = currentUser?.role || "USER";
 
@@ -24,6 +26,11 @@ const Sidebar = () => {
 
   if (role === "STAFF") {
     menuItems = [
+      {
+        key: "/admin",
+        icon: <DashboardOutlined />,
+        label: <Link to="/admin">Dashboard</Link>,
+      },
       {
         key: "/admin/bookingmanage",
         icon: <BookOutlined />,
@@ -62,8 +69,18 @@ const Sidebar = () => {
         icon: <FileTextOutlined />,
         label: <Link to="/owner/invoice">Hóa đơn</Link>,
       },
+      {
+        key: "/owner/vote",
+        icon: <LikeOutlined />,
+        label: <Link to="/owner/vote">Vote</Link>,
+      },
     ];
   }
+
+  // Highlight menu even on nested routes
+  const selectedKey = menuItems.find((item) =>
+    location.pathname.startsWith(item.key)
+  )?.key;
 
   return (
     <div className="owner-sidebar">
@@ -75,7 +92,7 @@ const Sidebar = () => {
         <Menu
           mode="inline"
           theme="dark"
-          selectedKeys={[location.pathname]}
+          selectedKeys={[selectedKey]}
           className="menu"
           items={menuItems}
         />
