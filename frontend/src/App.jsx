@@ -13,7 +13,6 @@ import InvoicePage from "./pages/co-owner/InvoicePage";
 import CarBooking from "./pages/co-owner/CarBooking";
 
 
-import BookingManage from "./pages/admin/BookingManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement"
 
 import DashboardLayout from "./components/layouts/Dashboard";
@@ -57,7 +56,6 @@ const router = createBrowserRouter([
       //</ProtectedRoute>
     ),
     children: [
-      { path: "bookingmanage", element: <BookingManage /> },
       { path: "invoice", element: <InvoiceManagement /> },
     ],
   },
