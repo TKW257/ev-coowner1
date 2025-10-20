@@ -21,6 +21,7 @@ const StaffCheckingManagement = () => {
     setLoading(true);
     try {
       const response = await bookingApi.getAllStaffCheckings();
+      
       const checkingsData = Array.isArray(response) ? response : [];
       setCheckings(checkingsData);
       calculateStats(checkingsData);

@@ -59,6 +59,7 @@ const ManageBookings = () => {
     setLoading(true);
     try {
       const response = await bookingApi.getAllBookings();
+      
       console.log("📊 BookingManagement - API Response:", response);
       console.log("📋 Response Type:", typeof response);
       console.log("📋 Is Array:", Array.isArray(response));
@@ -88,6 +89,7 @@ const ManageBookings = () => {
   const fetchStaffCheckings = useCallback(async () => {
     try {
       const response = await bookingApi.getAllStaffCheckings();
+      
       const checkingsData = Array.isArray(response) ? response : [];
       setStaffCheckings(checkingsData);
       console.log("📋 Staff Checkings:", checkingsData);

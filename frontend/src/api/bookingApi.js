@@ -37,6 +37,8 @@ const bookingApi = {
     return axiosClient.get("/staff-checkings/viewAllStaffChecking");
   },
 
+
+
   /*
     getBookingById: function(id) {
       return axiosClient.get("/api/bookings/" + id);
