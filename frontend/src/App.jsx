@@ -8,30 +8,29 @@ import LoginPage from "./pages/guest/auth/login";
 import HomePage from "./pages/guest/Home/HomePage";
 import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
 import OurTerms from "./pages/guest/Home/OurTerms";
-import GuestLayout from "./components/layouts/GuestLayout";
+
 
 // ===== Owner Pages =====
 import MyCarPage from "./pages/co-owner/MyCarPage";
 import CarBooking from "./pages/co-owner/CarBooking";
-import OwnerVoteListPage from "./pages/co-owner/votes/OwnerVoteListPage";
 import InvoicePage from "./pages/co-owner/InvoicePage";
+// import OwnerVoteListPage from "./pages/co-owner/votes/OwnerVoteListPage";
 
 // ===== Admin Pages =====
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import BookingManage from "./pages/admin/BookingManagement";
 import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
-import AdminVoteListPage from "./pages/admin/BookingManagement/votes/AdminVoteListPage";
-import AdminCreateTopicPage from "./pages/admin/BookingManagement/votes/AdminCreateTopicPage";
-import TopicDetailPage from "./pages/admin/BookingManagement/votes/TopicDetailPage";
+import VehicleManagement from "./pages/admin/VehicleManagement";
+import UserManagement from "./pages/admin/UserManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
-//mport VehicleManagement from "./pages/admin/VehicleManagement";
-//import UserManagement from "./pages/admin/UserManagement";
-import DashboardLayout from "./components/layouts/Dashboard";
 
-// ===== Test =====
+// import AdminVoteListPage from "./pages/admin/BookingManagement/votes/AdminVoteListPage";
+// import AdminCreateTopicPage from "./pages/admin/BookingManagement/votes/AdminCreateTopicPage";
+// import TopicDetailPage from "./pages/admin/BookingManagement/votes/TopicDetailPage";
+import DashboardLayout from "./components/layouts/Dashboard";
+import GuestLayout from "./components/layouts/GuestLayout";
 import TestVehicles from "./test";
 
-// ===== Router =====
 const router = createBrowserRouter([
   { path: "/test", element: <TestVehicles /> },
 
@@ -51,13 +50,17 @@ const router = createBrowserRouter([
   // ===== OWNER =====
   {
     path: "/owner",
-    element: <DashboardLayout />,
+    element: (
+     // <ProtectedRoute allowedRoles={["USER"]}>
+        <DashboardLayout />
+     // </ProtectedRoute>
+    ),
     children: [
       { path: "mycar", element: <MyCarPage /> },
       { path: "carbooking", element: <CarBooking /> },
       { path: "carbooking/:vehicleId", element: <CarBooking /> },
-      { path: "vote", element: <OwnerVoteListPage /> },
       { path: "invoice", element: <InvoicePage /> },
+      // { path: "vote", element: <OwnerVoteListPage /> },
     ],
   },
 
@@ -65,24 +68,22 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
+     // <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
         <DashboardLayout />
-      </ProtectedRoute>
+      //</ProtectedRoute>
     ),
     children: [
       { index: true, element: <AdminDashboard /> },
       { path: "bookingmanage", element: <BookingManage /> },
       { path: "staffchecking", element: <StaffCheckingManage /> },
+      { path: "vehicles", element: <VehicleManagement /> },
+      { path: "users", element: <UserManagement /> },
       { path: "invoice", element: <InvoiceManagement /> },
 
-      // Vote pages for Admin
-      { path: "vote", element: <AdminVoteListPage /> },
-      { path: "vote/create", element: <AdminCreateTopicPage /> },
-      { path: "vote/:id", element: <TopicDetailPage /> },
-
-      // Additional admin pages
-      //{ path: "vehicles", element: <VehicleManagement /> },
-      //{ path: "users", element: <UserManagement /> },
+      // Vote pages for Admin (commented until needed)
+      // { path: "vote", element: <AdminVoteListPage /> },
+      // { path: "vote/create", element: <AdminCreateTopicPage /> },
+      // { path: "vote/:id", element: <TopicDetailPage /> },
     ],
   },
 
@@ -90,7 +91,6 @@ const router = createBrowserRouter([
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
-// ===== App =====
 function App() {
   return (
     <AntdApp>

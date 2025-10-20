@@ -1,14 +1,6 @@
 import React from "react";
 import { Menu } from "antd";
-import {
-  HomeOutlined,
-  CalendarOutlined,
-  BookOutlined,
-  DashboardOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  LikeOutlined,
-} from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, FileTextOutlined, CheckCircleOutlined, LikeOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -20,7 +12,7 @@ const Sidebar = () => {
 
   // 🧠 Lấy role từ redux
   const currentUser = useSelector((state) => state.user.current);
-  const role = currentUser?.role || "USER";
+  const role = currentUser.role || "USER";
 
   let menuItems = [];
 
@@ -42,32 +34,28 @@ const Sidebar = () => {
         label: <Link to="/admin/staffchecking">Staff Checking</Link>,
       },
       {
-        key: "/admin/vote",
-        icon: <LikeOutlined />,
-        label: <Link to="/admin/vote">Vote Management</Link>,
-      },
-      {
-        key: "/admin/invoice",
+        key: "invoicemanagement",
         icon: <BookOutlined />,
-        label: <Link to="/admin/invoice">Hóa đơn</Link>,
+        label: <Link to="/admin/invoice"> Hóa đơn</Link>,
       },
     ];
+    
   } else if (role === "USER") {
     menuItems = [
       {
-        key: "/owner/mycar",
+        key: "mycar",
         icon: <HomeOutlined />,
-        label: <Link to="/owner/mycar">Xe của tôi</Link>,
+        label: <Link to="/owner/mycar">Xe của tôi </Link>,
       },
       {
-        key: "/owner/carbooking",
+        key: "booking",
         icon: <CalendarOutlined />,
-        label: <Link to="/owner/carbooking">Đặt xe</Link>,
+        label: <Link to="/owner/carbooking" >Đặt xe</Link>,
       },
-      {
-        key: "/owner/invoice",
+        {
+        key: "invoice",
         icon: <FileTextOutlined />,
-        label: <Link to="/owner/invoice">Hóa đơn</Link>,
+        label: <Link to="/owner/invoice" >Hóa đơn</Link>,
       },
       {
         key: "/owner/vote",
@@ -77,13 +65,9 @@ const Sidebar = () => {
     ];
   }
 
-  // Highlight menu even on nested routes
-  const selectedKey = menuItems.find((item) =>
-    location.pathname.startsWith(item.key)
-  )?.key;
-
   return (
     <div className="owner-sidebar">
+
       <div className="sidebar-logo" onClick={() => navigate("/")}>
         <img src={logoFull} alt="CoEV Logo" className="logo-img" />
       </div>
@@ -92,7 +76,7 @@ const Sidebar = () => {
         <Menu
           mode="inline"
           theme="dark"
-          selectedKeys={[selectedKey]}
+          selectedKeys={[location.pathname]}
           className="menu"
           items={menuItems}
         />
