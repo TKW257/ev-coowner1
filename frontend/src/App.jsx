@@ -21,7 +21,7 @@ import OurTerms from "./pages/guest/Home/OurTerms";
 import MyCarPage from "./pages/co-owner/MyCarPage";
 import CarBooking from "./pages/co-owner/CarBooking";
 import InvoicePage from "./pages/co-owner/InvoicePage";
-import OwnerVoteListPage from "./pages/co-owner/votes/OwnerVoteListPage";
+import OwnerVoteListPage from "./pages/co-owner/VotesPage/OwnerVoteListPage";
 
 // ===== Admin Pages =====
 import AdminDashboard from "./pages/admin/AdminDashboard";
