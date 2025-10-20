@@ -1,6 +1,6 @@
 // src/pages/admin/ManageBookings.jsx
 import React, { useState, useEffect } from "react";
-import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, DatePicker, InputNumber, Switch } from "antd";
+import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, InputNumber, Switch } from "antd";
 import bookingApi from "../../../api/bookingApi";
 import StorageKeys from "../../../constants/storage-key";
 
@@ -9,11 +9,13 @@ const ManageBookings = () => {
   const [loading, setLoading] = useState(false);
   const [userFilter, setUserFilter] = useState("all");
   const [users, setUsers] = useState([]);
+  const [staffCheckings, setStaffCheckings] = useState([]);
   
   // Check-in/Check-out modal states
   const [checkingModalVisible, setCheckingModalVisible] = useState(false);
   const [currentBooking, setCurrentBooking] = useState(null);
   const [checkingType, setCheckingType] = useState(""); // "checkin" or "checkout"
+  const [hasUserEmail, setHasUserEmail] = useState(false);
   const [form] = Form.useForm();
   
   // Confirmation modal states
@@ -23,10 +25,12 @@ const ManageBookings = () => {
   useEffect(() => {
     fetchBookings();
     fetchUsers();
+    fetchStaffCheckings();
   }, []);
 
   // Lấy danh sách booking khi filter user thay đổi
   useEffect(() => {
+    fetchStaffCheckings(); // Luôn fetch lại staff checkings để đảm bảo dữ liệu mới nhất
     if (userFilter !== "all") {
       fetchUserBookings();
     } else {
@@ -91,6 +95,17 @@ const ManageBookings = () => {
       setUsers(mockUsers);
     } catch (error) {
       console.error("Error fetching users:", error);
+    }
+  };
+
+  const fetchStaffCheckings = async () => {
+    try {
+      const response = await bookingApi.getAllStaffCheckings();
+      const checkingsData = Array.isArray(response) ? response : [];
+      setStaffCheckings(checkingsData);
+      console.log("📋 Staff Checkings:", checkingsData);
+    } catch (error) {
+      console.error("Error fetching staff checkings:", error);
     }
   };
 
@@ -171,48 +186,39 @@ const ManageBookings = () => {
   const handleCheckInOut = (booking, type) => {
     setCurrentBooking(booking);
     setCheckingType(type);
+    setHasUserEmail(!!booking.userEmail);
     setCheckingModalVisible(true);
-    form.resetFields();
+    
+    // Set initial values cho form
+    setTimeout(() => {
+      form.setFieldsValue({
+        userEmail: booking.userEmail || ''
+      });
+    }, 100);
   };
 
   const handleCheckingSubmit = async () => {
     try {
       const values = await form.validateFields();
-      
-      const checkTime = values.checkingTime ? [
-        values.checkingTime.year(),
-        values.checkingTime.month() + 1,
-        values.checkingTime.date(),
-        values.checkingTime.hour(),
-        values.checkingTime.minute(),
-        values.checkingTime.second()
-      ] : [
-        new Date().getFullYear(),
-        new Date().getMonth() + 1,
-        new Date().getDate(),
-        new Date().getHours(),
-        new Date().getMinutes(),
-        new Date().getSeconds()
-      ];
 
       const checkingData = {
         vehicleId: currentBooking.vehicleId,
-        userEmail: values.userEmail || "admin@example.com",
+        userEmail: values.userEmail || currentBooking.userEmail || "admin@example.com",
         bookingId: currentBooking.bookingId,
-        checkingType: checkingType === "checkin" ? "CheckIn" : "CheckOut",
-        checkTime: checkTime,
+        staffCheckingType: checkingType === "checkin" ? "CheckIn" : "CheckOut",
         odometer: values.odometer || 0,
         batteryPercent: values.batteryPercent || 100,
         damageReported: values.damageReported || false,
-        notes: values.notes || "",
-        distanceTraveled: checkingType === "checkout" ? values.distanceTraveled : null,
-        batteryUsedPercent: checkingType === "checkout" ? values.batteryUsedPercent : null
+        notes: values.notes || ""
       };
       
       await bookingApi.createStaffChecking(checkingData);
       message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
       setCheckingModalVisible(false);
+      setHasUserEmail(false);
       
+      // Fetch lại dữ liệu để cập nhật trạng thái
+      fetchStaffCheckings();
       if (userFilter !== "all") {
         fetchUserBookings();
       } else {
@@ -221,6 +227,23 @@ const ManageBookings = () => {
     } catch {
       message.error(`Không thể thực hiện ${checkingType === "checkin" ? "check-in" : "check-out"}!`);
     }
+  };
+
+  // Function để kiểm tra trạng thái check-in/check-out của booking
+  const getBookingCheckingStatus = (bookingId) => {
+    const bookingCheckings = staffCheckings.filter(
+      checking => checking.bookingId === bookingId || checking.booking_id === bookingId
+    );
+    
+    const hasCheckIn = bookingCheckings.some(
+      checking => checking.checkingType === "CheckIn" || checking.staffCheckingType === "CheckIn"
+    );
+    
+    const hasCheckOut = bookingCheckings.some(
+      checking => checking.checkingType === "CheckOut" || checking.staffCheckingType === "CheckOut"
+    );
+    
+    return { hasCheckIn, hasCheckOut };
   };
 
   const columns = [
@@ -276,6 +299,9 @@ const ManageBookings = () => {
           return <span>-</span>;
         }
 
+        // Lấy trạng thái checking của booking
+        const { hasCheckIn, hasCheckOut } = getBookingCheckingStatus(record.bookingId);
+
         return (
           <Space>
             {/* Trạng thái Pending: hiển thị 2 nút Xác nhận và Hủy */}
@@ -297,25 +323,33 @@ const ManageBookings = () => {
                 </Button>
               </>
             )}
-            {/* Trạng thái Completed: hiển thị 2 nút Check-in và Check-out */}
+            
+            {/* Trạng thái Completed: Logic hiển thị nút theo trạng thái check-in/check-out */}
             {record.bookingStatus === "Completed" && (
               <>
-                <Button 
-                  type="primary" 
-                  size="small"
-                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-                  onClick={() => handleCheckInOut(record, "checkin")}
-                >
-                  Check-in
-                </Button>
-                <Button 
-                  type="primary" 
-                  size="small"
-                  style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
-                  onClick={() => handleCheckInOut(record, "checkout")}
-                >
-                  Check-out
-                </Button>
+                {/* Sau khi xác nhận, hiển thị nút Check-out */}
+                {!hasCheckIn && !hasCheckOut && (
+                  <Button 
+                    type="primary" 
+                    size="small"
+                    style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
+                    onClick={() => handleCheckInOut(record, "checkout")}
+                  >
+                    Check-out
+                  </Button>
+                )}
+                
+                {/* Sau khi đã check-out, hiển thị nút Check-in */}
+                {!hasCheckIn && hasCheckOut && (
+                  <Button 
+                    type="primary" 
+                    size="small"
+                    style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                    onClick={() => handleCheckInOut(record, "checkin")}
+                  >
+                    Check-in
+                  </Button>
+                )}
               </>
             )}
           </Space>
@@ -360,7 +394,10 @@ const ManageBookings = () => {
         title={`${checkingType === "checkin" ? "Check-in" : "Check-out"} - ${currentBooking?.vehicleName}`}
         open={checkingModalVisible}
         onOk={handleCheckingSubmit}
-        onCancel={() => setCheckingModalVisible(false)}
+        onCancel={() => {
+          setCheckingModalVisible(false);
+          setHasUserEmail(false);
+        }}
         okText={checkingType === "checkin" ? "Check-in" : "Check-out"}
         cancelText="Hủy"
         width={600}
@@ -379,23 +416,14 @@ const ManageBookings = () => {
           <Form.Item 
             name="userEmail" 
             label="Email người dùng"
-            rules={[{ required: true, message: 'Vui lòng nhập email!' }]}
+            rules={[{ required: !hasUserEmail, message: 'Vui lòng nhập email!' }]}
           >
-            <Input placeholder="Nhập email người dùng" />
-          </Form.Item>
-
-          <Form.Item 
-            name="checkingTime" 
-            label="Thời gian"
-            rules={[{ required: true, message: 'Vui lòng chọn thời gian!' }]}
-          >
-            <DatePicker 
-              showTime 
-              format="DD/MM/YYYY HH:mm:ss"
-              placeholder="Chọn thời gian"
-              style={{ width: '100%' }}
+            <Input 
+              placeholder={hasUserEmail ? "Email từ dữ liệu booking" : "Nhập email người dùng"} 
+              disabled={hasUserEmail}
             />
           </Form.Item>
+
 
           <Form.Item 
             name="odometer" 
@@ -432,34 +460,6 @@ const ManageBookings = () => {
             <Switch />
           </Form.Item>
 
-          {checkingType === "checkout" && (
-            <>
-              <Form.Item 
-                name="distanceTraveled" 
-                label="Quãng đường đã đi (km)"
-              >
-                <InputNumber 
-                  placeholder="Nhập quãng đường"
-                  style={{ width: '100%' }}
-                  min={0}
-                  step={0.1}
-                />
-              </Form.Item>
-
-              <Form.Item 
-                name="batteryUsedPercent" 
-                label="Phần trăm pin đã sử dụng (%)"
-              >
-                <InputNumber 
-                  placeholder="Nhập phần trăm pin đã sử dụng"
-                  style={{ width: '100%' }}
-                  min={0}
-                  max={100}
-                  step={0.1}
-                />
-              </Form.Item>
-            </>
-          )}
 
           <Form.Item 
             name="notes" 
