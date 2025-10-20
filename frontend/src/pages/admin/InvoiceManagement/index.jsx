@@ -1,334 +1,369 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
-  Card,
   Row,
   Col,
+  Card,
+  Statistic,
   Table,
   Tag,
   Button,
+  Modal,
+  Input,
+  Form,
+  Descriptions,
+  message,
   Spin,
   Empty,
-  Modal,
-  Descriptions,
 } from "antd";
 import {
-  PlusOutlined,
-  EyeOutlined,
   DollarOutlined,
   FileTextOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  DownloadOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
+import dayjs from "dayjs";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import invoiceApi from "../../../api/invoiceApi";
+import useCreateInvoice from "../../../hooks/useCreateInvoice";
 
 const AdminInvoiceDashboard = () => {
-  const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState([]);
-  const [summary, setSummary] = useState({
-    totalInvoices: 0,
-    totalRevenue: 0,
-    paidCount: 0,
-    unpaidCount: 0,
-  });
-  const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [openCreate, setOpenCreate] = useState(false);
+  const [form] = Form.useForm();
+  const { createInvoice, creating } = useCreateInvoice();
+  const pdfRef = useRef();
 
-  const revenueData = [
-    { month: "May", revenue: 12500000 },
-    { month: "Jun", revenue: 15800000 },
-    { month: "Jul", revenue: 21200000 },
-    { month: "Aug", revenue: 18400000 },
-    { month: "Sep", revenue: 22900000 },
-    { month: "Oct", revenue: 19300000 },
-  ];
+  const handleView = (record) => {
+    setSelectedInvoice(record);
+    setOpen(true);
+  };
 
-  const mockInvoices = [
-    {
-      invoiceId: "INV-1001",
-      userName: "Nguyễn Văn A",
-      vehicleName: "VinFast VF8",
-      totalAmount: 8500000,
-      status: "PAID",
-      createdAt: "2025-10-05",
-      note: "Hóa đơn tháng 10 cho xe VF8",
-      paymentMethod: "Chuyển khoản",
-      dueDate: "2025-10-15",
-    },
-    {
-      invoiceId: "INV-1002",
-      userName: "Trần Thị B",
-      vehicleName: "VinFast VF9",
-      totalAmount: 9200000,
-      status: "UNPAID",
-      createdAt: "2025-10-06",
-      note: "Hóa đơn tháng 10 cho xe VF9",
-      paymentMethod: "Tiền mặt",
-      dueDate: "2025-10-20",
-    },
-    {
-      invoiceId: "INV-1003",
-      userName: "Lê Minh C",
-      vehicleName: "Tesla Model 3",
-      totalAmount: 11200000,
-      status: "PAID",
-      createdAt: "2025-10-08",
-      note: "Hóa đơn tháng 10 Tesla",
-      paymentMethod: "Ví điện tử",
-      dueDate: "2025-10-10",
-    },
-  ];
+  const handleCreateInvoice = async () => {
+    try {
+      const values = await form.validateFields();
+      const res = await createInvoice(values);
+      if (res) {
+        message.success("Tạo hóa đơn thành công!");
+        setOpenCreate(false);
+        form.resetFields();
+        const updated = await invoiceApi.getAllInvoices();
+        setInvoices(updated);
+      }
+    } catch (err) {
+      console.error("❌ Create failed:", err);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    const element = pdfRef.current;
+    if (!element) return;
+    const canvas = await html2canvas(element, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgWidth = 190;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+    pdf.save(`Invoice_INV-${selectedInvoice.invoiceId}.pdf`);
+  };
 
   useEffect(() => {
-    setTimeout(() => {
-      setInvoices(mockInvoices);
-      setSummary({
-        totalInvoices: mockInvoices.length,
-        totalRevenue: mockInvoices.reduce((s, i) => s + i.totalAmount, 0),
-        paidCount: mockInvoices.filter((i) => i.status === "PAID").length,
-        unpaidCount: mockInvoices.filter((i) => i.status === "UNPAID").length,
-      });
-      setLoading(false);
-    }, 800);
+    const fetchInvoices = async () => {
+      try {
+        setLoading(true);
+        const res = await invoiceApi.getAllInvoices();
+        if (!Array.isArray(res)) throw new Error("Invalid data format");
+        const formatted = res.map((inv) => ({
+          invoiceId: inv.invoiceId,
+          userId: inv.userId,
+          userName: inv.fullName,
+          email: inv.email,
+          phone: inv.phone,
+          vehicleId: inv.vehicleId,
+          vehicleName: inv.model,
+          plateNumber: inv.plateNumber,
+          invoiceMonth: dayjs(
+            new Date(inv.issuedDate[0], inv.issuedDate[1] - 1, inv.issuedDate[2])
+          ).format("YYYY-MM"),
+          totalAmount: inv.totalAmount,
+          status: inv.status,
+          issuedDate: new Date(...inv.issuedDate.slice(0, 6)),
+          dueDate: new Date(...inv.dueDate.slice(0, 6)),
+          note: inv.note || "Tổng hợp chi phí tháng này",
+          details:
+            inv.details?.map((d) => ({
+              detailId: d.detailId,
+              feeType: d.feeType,
+              sourceType: d.sourceType,
+              description: d.description,
+              amount: d.amount,
+            })) || [],
+        }));
+        setInvoices(formatted);
+      } catch (err) {
+        console.error(err);
+        message.error("Không thể tải danh sách hóa đơn.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInvoices();
   }, []);
+
+  const totalInvoices = invoices.length;
+  const openInvoices = invoices.filter((i) => i.status === "OPEN").length;
+  const paidInvoices = invoices.filter(
+    (i) => i.status === "SETTLED" || i.status === "PAID"
+  ).length;
+  const totalAmount = invoices.reduce((sum, i) => sum + i.totalAmount, 0);
 
   const columns = [
     {
-      title: "Mã hóa đơn",
+      title: "Mã HĐ",
       dataIndex: "invoiceId",
+      render: (id) => `#INV-${id}`,
     },
+    { title: "Người dùng", dataIndex: "userName" },
+    { title: "Xe", dataIndex: "vehicleName" },
+    { title: "Tháng", dataIndex: "invoiceMonth" },
     {
-      title: "Người dùng",
-      dataIndex: "userName",
-    },
-    {
-      title: "Phương tiện",
-      dataIndex: "vehicleName",
-    },
-    {
-      title: "Tổng tiền (VNĐ)",
+      title: "Tổng (₫)",
       dataIndex: "totalAmount",
-      render: (v) => v.toLocaleString("vi-VN"),
+      render: (val) =>
+        val.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
-      render: (s) =>
-        s === "PAID" ? (
-          <Tag color="green">Đã thanh toán</Tag>
-        ) : (
-          <Tag color="orange">Chưa thanh toán</Tag>
-        ),
+      render: (status, record) => {
+        const isOverdue =
+          status === "OPEN" && dayjs(record.dueDate).isBefore(dayjs());
+        let color = "orange";
+        if (status === "SETTLED" || status === "PAID") color = "green";
+        else if (isOverdue) color = "red";
+        return <Tag color={color}>{isOverdue ? "OVERDUE" : status}</Tag>;
+      },
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
+      title: "Phát hành",
+      dataIndex: "issuedDate",
+      render: (date) => dayjs(date).format("DD/MM/YYYY"),
     },
     {
-      title: "Thao tác",
-      render: (_, r) => (
-        <Button
-          icon={<EyeOutlined />}
-          onClick={() => {
-            setSelectedInvoice(r);
-            setDetailModalVisible(true);
-          }}
-        >
-          Xem chi tiết
+      title: "Hạn TT",
+      dataIndex: "dueDate",
+      render: (date) => dayjs(date).format("DD/MM/YYYY"),
+    },
+    {
+      title: "Hành động",
+      key: "action",
+      render: (_, record) => (
+        <Button type="link" onClick={() => handleView(record)}>
+          Xem
         </Button>
       ),
     },
   ];
 
+  const detailColumns = [
+    { title: "Loại phí", dataIndex: "feeType" },
+    { title: "Nguồn", dataIndex: "sourceType" },
+    { title: "Mô tả", dataIndex: "description" },
+    {
+      title: "Số tiền (₫)",
+      dataIndex: "amount",
+      render: (val) =>
+        val.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
+    },
+  ];
+
   return (
     <div style={{ padding: 24 }}>
-      {/* Summary + Chart */}
-      <Row gutter={24} style={{ marginBottom: 32 }}>
-        <Col span={12}>
-          <Row gutter={[16, 16]}>
-            <Col span={12}>
-              <Card bordered={false} style={cardStyle}>
-                <div style={horizontalStyle}>
-                  <FileTextOutlined style={iconStyle("#1890ff")} />
-                  <div>
-                    <h2 style={valueStyle}>{summary.totalInvoices}</h2>
-                    <p style={labelStyle}>Tổng hóa đơn</p>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-            <Col span={12}>
-              <Card bordered={false} style={cardStyle}>
-                <div style={horizontalStyle}>
-                  <DollarOutlined style={iconStyle("#52c41a")} />
-                  <div>
-                    <h2 style={valueStyle}>
-                      {summary.totalRevenue.toLocaleString("vi-VN")}
-                    </h2>
-                    <p style={labelStyle}>Tổng doanh thu (VNĐ)</p>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-            <Col span={12}>
-              <Card bordered={false} style={cardStyle}>
-                <div style={horizontalStyle}>
-                  <CheckCircleOutlined style={iconStyle("green")} />
-                  <div>
-                    <h2 style={valueStyle}>{summary.paidCount}</h2>
-                    <p style={labelStyle}>Đã thanh toán</p>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-            <Col span={12}>
-              <Card bordered={false} style={cardStyle}>
-                <div style={horizontalStyle}>
-                  <ClockCircleOutlined style={iconStyle("orange")} />
-                  <div>
-                    <h2 style={valueStyle}>{summary.unpaidCount}</h2>
-                    <p style={labelStyle}>Chưa thanh toán</p>
-                  </div>
-                </div>
-              </Card>
-            </Col>
-          </Row>
+      {/* === Summary Cards === */}
+      <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="Tổng HĐ" value={totalInvoices} prefix={<FileTextOutlined />} />
+          </Card>
         </Col>
-
-        <Col span={12}>
-          <Card bordered={false} style={chartCardStyle}>
-            <div style={{ marginBottom: 12, fontWeight: 600 }}>
-              💰 Doanh thu theo tháng
-            </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip
-                  formatter={(v) => v.toLocaleString("vi-VN") + " VNĐ"}
-                />
-                <Bar dataKey="revenue" fill="#1890ff" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="Đang mở" value={openInvoices} valueStyle={{ color: "#faad14" }} prefix={<ClockCircleOutlined />} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="Đã TT" value={paidInvoices} valueStyle={{ color: "#3f8600" }} prefix={<CheckCircleOutlined />} />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} md={6}>
+          <Card>
+            <Statistic title="Tổng tiền" value={totalAmount.toLocaleString("vi-VN")} valueStyle={{ color: "#1677ff" }} prefix={<DollarOutlined />} />
           </Card>
         </Col>
       </Row>
 
-      {/* Danh sách hóa đơn */}
-      <Card
-        title={
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>📂 Danh sách hóa đơn</span>
-            <Button type="primary" icon={<PlusOutlined />}>
-              Tạo hóa đơn
-            </Button>
-          </div>
-        }
-      >
+      {/* === Table + Button === */}
+      <Card>
+        <Row justify="end" style={{ marginBottom: 12 }}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            loading={creating}
+            onClick={() => setOpenCreate(true)}
+          >
+            Tạo hóa đơn
+          </Button>
+        </Row>
+
         {loading ? (
           <div style={{ textAlign: "center", padding: 50 }}>
-            <Spin tip="Đang tải dữ liệu..." />
+            <Spin size="large" tip="Đang tải danh sách hóa đơn..." />
           </div>
         ) : invoices.length === 0 ? (
-          <Empty description="Không có hóa đơn nào" />
+          <Empty description="Không có hóa đơn nào" style={{ padding: 50 }} />
         ) : (
-          <Table dataSource={invoices} columns={columns} rowKey="invoiceId" />
+          <Table columns={columns} dataSource={invoices} rowKey="invoiceId" pagination={{ pageSize: 6 }} />
         )}
       </Card>
 
-      {/* Modal chi tiết */}
+      {/* === Modal tạo hóa đơn === */}
       <Modal
-        title="📋 Chi tiết hóa đơn"
-        open={detailModalVisible}
-        onCancel={() => setDetailModalVisible(false)}
-        footer={null}
+        title="Tạo hóa đơn mới"
+        open={openCreate}
+        onCancel={() => setOpenCreate(false)}
+        onOk={handleCreateInvoice}
+        okText="Tạo"
+        cancelText="Hủy"
+        confirmLoading={creating}
+      >
+        <Form layout="vertical" form={form}>
+          <Form.Item label="Mã người dùng" name="userId" rules={[{ required: true, message: "Nhập userId!" }]}>
+            <Input placeholder="Nhập ID người dùng" />
+          </Form.Item>
+          <Form.Item label="Mã xe" name="vehicleId" rules={[{ required: true, message: "Nhập vehicleId!" }]}>
+            <Input placeholder="Nhập ID xe" />
+          </Form.Item>
+          <Form.Item label="Ghi chú" name="note">
+            <Input.TextArea rows={3} placeholder="Ghi chú (nếu có)" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* === Modal xem chi tiết === */}
+      <Modal
+        open={open}
+        title={`Hóa đơn #INV-${selectedInvoice?.invoiceId || ""}`}
+        onCancel={() => setOpen(false)}
+        width={850}
+        footer={[
+          <Button key="close" onClick={() => setOpen(false)}>
+            Đóng
+          </Button>,
+          <Button
+            key="download"
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={handleDownloadPDF}
+          >
+            Tải PDF
+          </Button>,
+        ]}
       >
         {selectedInvoice && (
-          <Descriptions bordered column={1} size="small">
-            <Descriptions.Item label="Mã hóa đơn">
-              {selectedInvoice.invoiceId}
-            </Descriptions.Item>
-            <Descriptions.Item label="Người dùng">
-              {selectedInvoice.userName}
-            </Descriptions.Item>
-            <Descriptions.Item label="Phương tiện">
-              {selectedInvoice.vehicleName}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tổng tiền (VNĐ)">
-              {selectedInvoice.totalAmount.toLocaleString("vi-VN")}
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              {selectedInvoice.status === "PAID" ? (
-                <Tag color="green">Đã thanh toán</Tag>
-              ) : (
-                <Tag color="orange">Chưa thanh toán</Tag>
-              )}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ngày tạo">
-              {selectedInvoice.createdAt}
-            </Descriptions.Item>
-            <Descriptions.Item label="Hạn thanh toán">
-              {selectedInvoice.dueDate}
-            </Descriptions.Item>
-            <Descriptions.Item label="Phương thức thanh toán">
-              {selectedInvoice.paymentMethod}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ghi chú">
-              {selectedInvoice.note}
-            </Descriptions.Item>
-          </Descriptions>
+          <div ref={pdfRef} style={{ padding: 10, background: "white" }}>
+            {/* Người dùng */}
+            <Descriptions bordered column={1} size="small" title="Người dùng">
+              <Descriptions.Item label="Tên">
+                {selectedInvoice.userName}
+              </Descriptions.Item>
+              <Descriptions.Item label="Email">
+                {selectedInvoice.email}
+              </Descriptions.Item>
+              <Descriptions.Item label="SĐT">
+                {selectedInvoice.phone}
+              </Descriptions.Item>
+            </Descriptions>
+
+            {/* Xe */}
+            <Descriptions
+              bordered
+              column={1}
+              size="small"
+              title="Thông tin xe"
+              style={{ marginTop: 16 }}
+            >
+              <Descriptions.Item label="Tên xe">
+                {selectedInvoice.vehicleName}
+              </Descriptions.Item>
+              <Descriptions.Item label="Biển số">
+                {selectedInvoice.plateNumber}
+              </Descriptions.Item>
+            </Descriptions>
+
+            {/* Hóa đơn */}
+            <Descriptions
+              bordered
+              column={1}
+              size="small"
+              title="Chi tiết hóa đơn"
+              style={{ marginTop: 16 }}
+            >
+              <Descriptions.Item label="Mã HĐ">
+                #INV-{selectedInvoice.invoiceId}
+              </Descriptions.Item>
+              <Descriptions.Item label="Tháng">
+                {selectedInvoice.invoiceMonth}
+              </Descriptions.Item>
+              <Descriptions.Item label="Phát hành">
+                {dayjs(selectedInvoice.issuedDate).format("DD/MM/YYYY")}
+              </Descriptions.Item>
+              <Descriptions.Item label="Hạn TT">
+                {dayjs(selectedInvoice.dueDate).format("DD/MM/YYYY")}
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái">
+                <Tag
+                  color={
+                    selectedInvoice.status === "OPEN" ? "orange" : "green"
+                  }
+                >
+                  {selectedInvoice.status}
+                </Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Ghi chú">
+                {selectedInvoice.note}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <h3 style={{ marginTop: 20 }}>Chi tiết phí</h3>
+            <Table
+              columns={detailColumns}
+              dataSource={selectedInvoice.details}
+              pagination={false}
+              rowKey="detailId"
+              size="small"
+            />
+
+            <h4 style={{ marginTop: 20, textAlign: "right" }}>
+              <strong>
+                Tổng cộng:{" "}
+                {selectedInvoice.totalAmount.toLocaleString("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                })}
+              </strong>
+            </h4>
+          </div>
         )}
       </Modal>
     </div>
   );
 };
-
-// === STYLE ===
-const horizontalStyle = {
-  display: "flex",
-  alignItems: "center",
-  gap: 12,
-};
-
-const cardStyle = {
-  borderRadius: 12,
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-  height: 120,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-start",
-  paddingLeft: 20,
-};
-
-const valueStyle = {
-  margin: 0,
-  fontWeight: 600,
-  fontSize: 18,
-};
-
-const labelStyle = {
-  margin: 0,
-  color: "#888",
-  fontSize: 13,
-};
-
-const chartCardStyle = {
-  borderRadius: 12,
-  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
-  height: 280,
-};
-
-const iconStyle = (color) => ({
-  fontSize: 26,
-  color,
-});
 
 export default AdminInvoiceDashboard;

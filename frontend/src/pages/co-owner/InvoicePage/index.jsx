@@ -4,7 +4,7 @@ import { DollarOutlined, FileTextOutlined, CheckCircleOutlined, ClockCircleOutli
 import dayjs from "dayjs";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import invoiceApi from "../../../api/invoiceApi"; 
+import invoiceApi from "../../../api/invoiceApi";
 
 const UserInvoiceDashboard = () => {
   const [invoices, setInvoices] = useState([]);
@@ -13,7 +13,26 @@ const UserInvoiceDashboard = () => {
   const [loading, setLoading] = useState(true);
   const pdfRef = useRef();
 
-  // === Fetch data ===
+
+  const handleView = (record) => {
+    setSelectedInvoice(record);
+    setOpen(true);
+  };
+
+  const handleDownloadPDF = async () => {
+    const element = pdfRef.current;
+    if (!element) return;
+    const canvas = await html2canvas(element, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+
+    const imgWidth = 190;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+    pdf.save(`Invoice_INV-${selectedInvoice.invoiceId}.pdf`);
+  };
+
+
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
@@ -140,25 +159,6 @@ const UserInvoiceDashboard = () => {
         val.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
     },
   ];
-
-  const handleView = (record) => {
-    setSelectedInvoice(record);
-    setOpen(true);
-  };
-
-  // === PDF download ===
-  const handleDownloadPDF = async () => {
-    const element = pdfRef.current;
-    if (!element) return;
-    const canvas = await html2canvas(element, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-
-    const imgWidth = 190;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-    pdf.save(`Invoice_INV-${selectedInvoice.invoiceId}.pdf`);
-  };
 
   return (
     <div style={{ padding: 24 }}>
