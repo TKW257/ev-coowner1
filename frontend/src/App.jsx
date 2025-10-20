@@ -29,11 +29,9 @@ import InvoiceManagement from "./pages/admin/InvoiceManagement";
 // import TopicDetailPage from "./pages/admin/BookingManagement/votes/TopicDetailPage";
 import DashboardLayout from "./components/layouts/Dashboard";
 import GuestLayout from "./components/layouts/GuestLayout";
-import TestVehicles from "./test";
 
 // ===== Router =====
 const router = createBrowserRouter([
-  { path: "/test", element: <TestVehicles /> },
 
   // ===== GUEST =====
   {
