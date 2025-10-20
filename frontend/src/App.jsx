@@ -13,16 +13,16 @@ import GuestLayout from "./components/layouts/GuestLayout";
 // ===== Owner Pages =====
 import MyCarPage from "./pages/co-owner/MyCarPage";
 import CarBooking from "./pages/co-owner/CarBooking";
-import OwnerVoteListPage from "./pages/co-owner/votes/OwnerVoteListPage";
+// import OwnerVoteListPage from "./pages/co-owner/votes/OwnerVoteListPage";
 import InvoicePage from "./pages/co-owner/InvoicePage";
 
 // ===== Admin Pages =====
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import BookingManage from "./pages/admin/BookingManagement";
 import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
-import AdminVoteListPage from "./pages/admin/BookingManagement/votes/AdminVoteListPage";
-import AdminCreateTopicPage from "./pages/admin/BookingManagement/votes/AdminCreateTopicPage";
-import TopicDetailPage from "./pages/admin/BookingManagement/votes/TopicDetailPage";
+// import AdminVoteListPage from "./pages/admin/BookingManagement/votes/AdminVoteListPage";
+// import AdminCreateTopicPage from "./pages/admin/BookingManagement/votes/AdminCreateTopicPage";
+// import TopicDetailPage from "./pages/admin/BookingManagement/votes/TopicDetailPage";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
 import DashboardLayout from "./components/layouts/Dashboard";
 
@@ -54,7 +54,7 @@ const router = createBrowserRouter([
       { path: "mycar", element: <MyCarPage /> },
       { path: "carbooking", element: <CarBooking /> },
       { path: "carbooking/:vehicleId", element: <CarBooking /> },
-      { path: "vote", element: <OwnerVoteListPage /> },
+      // { path: "vote", element: <OwnerVoteListPage /> },
       { path: "invoice", element: <InvoicePage /> },
     ],
   },
@@ -71,12 +71,12 @@ const router = createBrowserRouter([
       { index: true, element: <AdminDashboard /> },
       { path: "bookingmanage", element: <BookingManage /> },
       { path: "staffchecking", element: <StaffCheckingManage /> },
-      { path: "invoice", element: <InvoiceManagement /> },
+      // { path: "invoice", element: <InvoiceManagement /> },
 
       // Vote pages for Admin
-      { path: "vote", element: <AdminVoteListPage /> },
-      { path: "vote/create", element: <AdminCreateTopicPage /> },
-      { path: "vote/:id", element: <TopicDetailPage /> },
+      // { path: "vote", element: <AdminVoteListPage /> },
+      // { path: "vote/create", element: <AdminCreateTopicPage /> },
+      // { path: "vote/:id", element: <TopicDetailPage /> },
     ],
   },
 
