@@ -163,7 +163,7 @@ setUsers(usersFromBookings);
         return;
       }
       
-      const validStatuses = ["Pending", "Confirmed", "Completed", "Cancelled"];
+      const validStatuses = ["Pending", "Confirmed", "InProgress", "Completed", "Cancelled"];
       if (!validStatuses.includes(newStatus)) {
         message.error(`Trạng thái không hợp lệ: ${newStatus}`);
         return;
@@ -240,7 +240,22 @@ setUsers(usersFromBookings);
       };
       
       await bookingApi.createStaffChecking(checkingData);
-      message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
+      
+      // Tự động cập nhật status dựa trên loại checking
+      let newStatus = null;
+      if (checkingType === "checkout" && currentBooking.bookingStatus === "Confirmed") {
+        newStatus = "InProgress";
+      } else if (checkingType === "checkin" && currentBooking.bookingStatus === "InProgress") {
+        newStatus = "Completed";
+      }
+      
+      if (newStatus) {
+        await bookingApi.updateStatus(currentBooking.bookingId, newStatus);
+        message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công và cập nhật trạng thái thành ${newStatus}!`);
+      } else {
+        message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
+      }
+      
       setCheckingModalVisible(false);
       setHasUserEmail(false);
       setCurrentBooking(null);
@@ -311,6 +326,7 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
       render: (status) => {
         const colorMap = {
           Confirmed: "blue",
+          InProgress: "purple",
           Completed: "green", 
           Pending: "orange",
           Cancelled: "red"
@@ -356,22 +372,9 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
               </>
             )}
             
-            {/* Trạng thái Confirmed: Hiển thị nút để chuyển sang Completed */}
+            {/* Trạng thái Confirmed: Hiển thị nút Check-out */}
             {record.bookingStatus === "Confirmed" && (
-              <Button 
-                type="primary" 
-                size="small"
-                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-                onClick={() => handleStatusUpdateClick(record.bookingId, "Completed", "Hoàn thành")}
-              >
-                Hoàn thành
-              </Button>
-            )}
-
-            {/* Trạng thái Completed: Logic hiển thị nút theo trạng thái check-in/check-out */}
-            {record.bookingStatus === "Completed" && (
               <>
-                {/* Sau khi xác nhận, hiển thị nút Check-out */}
                 {!hasCheckIn && !hasCheckOut && (
                   <Button 
                     type="primary" 
@@ -382,9 +385,13 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
                     Check-out
                   </Button>
                 )}
-                
-                {/* Sau khi đã check-out, hiển thị nút Check-in */}
-                {!hasCheckIn && hasCheckOut && (
+              </>
+            )}
+
+            {/* Trạng thái InProgress: Hiển thị nút Check-in */}
+            {record.bookingStatus === "InProgress" && (
+              <>
+                {hasCheckOut && !hasCheckIn && (
                   <Button 
                     type="primary" 
                     size="small"
@@ -393,6 +400,18 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
                   >
                     Check-in
                   </Button>
+                )}
+              </>
+            )}
+
+            {/* Trạng thái Completed: Logic hiển thị nút check-in/check-out để tiện theo dõi */}
+            {record.bookingStatus === "Completed" && (
+              <>
+                {/* Hiển thị thông tin check status */}
+                {(hasCheckIn || hasCheckOut) && (
+                  <span style={{ fontSize: '12px', color: '#52c41a' }}>
+                    {hasCheckIn && hasCheckOut ? 'Đã hoàn thành' : hasCheckIn ? 'Đã check-in' : 'Đã check-out'}
+                  </span>
                 )}
               </>
             )}
@@ -549,6 +568,8 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
         <p>
           {pendingAction?.newStatus === "Confirmed" && 
             `Bạn có chắc chắn muốn xác nhận booking này?`}
+          {pendingAction?.newStatus === "InProgress" && 
+            `Bạn có chắc chắn muốn chuyển booking này sang trạng thái đang thực hiện?`}
           {pendingAction?.newStatus === "Completed" && 
             `Bạn có chắc chắn muốn hoàn thành booking này?`}
           {pendingAction?.newStatus === "Cancelled" && 
