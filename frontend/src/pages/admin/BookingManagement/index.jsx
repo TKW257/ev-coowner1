@@ -110,6 +110,15 @@ const ManageBookings = () => {
     console.log("📋 Filtered bookings:", filteredBookings);
   }, [userFilter, allBookings, filterBookingsByUser, fetchStaffCheckings]);
 
+  // Handle setting form values when modal opens and currentBooking has userEmail
+  useEffect(() => {
+    if (checkingModalVisible && currentBooking && currentBooking.userEmail) {
+      form.setFieldsValue({
+        userEmail: currentBooking.userEmail
+      });
+    }
+  }, [checkingModalVisible, currentBooking, form]);
+
   const handleStatusUpdateClick = (bookingId, newStatus, actionType) => {
     setPendingAction({
       bookingId,
@@ -183,14 +192,20 @@ const ManageBookings = () => {
   const handleCheckInOut = (booking, type) => {
     setCurrentBooking(booking);
     setCheckingType(type);
-    setHasUserEmail(!!booking.userEmail);
+    
+    // Check if userEmail is available from booking data
+    const hasUserEmailFromBooking = !!(booking.userEmail);
+    setHasUserEmail(hasUserEmailFromBooking);
     setCheckingModalVisible(true);
     
-    setTimeout(() => {
-      form.setFieldsValue({
-        userEmail: booking.userEmail || ''
-      });
-    }, 100);
+    // Set form values immediately if userEmail is available
+    if (hasUserEmailFromBooking) {
+      setTimeout(() => {
+        form.setFieldsValue({
+          userEmail: booking.userEmail
+        });
+      }, 100);
+    }
   };
 
   const handleCheckingSubmit = async () => {
@@ -212,6 +227,8 @@ const ManageBookings = () => {
       message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
       setCheckingModalVisible(false);
       setHasUserEmail(false);
+      setCurrentBooking(null);
+      form.resetFields();
       
       fetchStaffCheckings();
       fetchBookings();
@@ -388,6 +405,8 @@ const ManageBookings = () => {
         onCancel={() => {
           setCheckingModalVisible(false);
           setHasUserEmail(false);
+          setCurrentBooking(null);
+          form.resetFields();
         }}
         okText={checkingType === "checkin" ? "Check-in" : "Check-out"}
         cancelText="Hủy"

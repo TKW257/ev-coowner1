@@ -33,8 +33,13 @@ const bookingApi = {
     return axiosClient.post("/staff-checkings/createStaffChecking", data);
   },
 
-  getAllStaffCheckings() {
+  viewAllStaffCheckings() {
     return axiosClient.get("/staff-checkings/viewAllStaffChecking");
+  },
+
+  getAllStaffCheckings() {
+    // Alias for viewAllStaffCheckings for backward compatibility
+    return this.viewAllStaffCheckings();
   },
 
 

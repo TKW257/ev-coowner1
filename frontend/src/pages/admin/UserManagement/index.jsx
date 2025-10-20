@@ -30,7 +30,6 @@ const UserManagement = () => {
   const roleOptions = [
     { value: "USER", label: "User" },
     { value: "STAFF", label: "Staff" },
-    { value: "ADMIN", label: "Admin" },
   ];
 
   useEffect(() => {
