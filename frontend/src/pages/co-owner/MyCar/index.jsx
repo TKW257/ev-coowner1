@@ -1,191 +1,212 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Progress, Tag, Typography, Button, message } from "antd";
-import { ThunderboltOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { Card, Row, Col, Tag, Typography, Button, Empty, Statistic } from "antd";
+import { ThunderboltOutlined, EyeOutlined, LikeOutlined, DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined } from "@ant-design/icons";
+import ownerShipsApi from "../../../api/ownerShipsApi";
+import "./style.scss";
 
-const { Text } = Typography;
+const { Title, Text } = Typography;
 
-function MyCars() {
-  const [cars, setCars] = useState([]);
+const MyCars = () => {
+  const [carsObj, setCarsObj] = useState({}); // vehicleId (string) => car
+  const [currentCarId, setCurrentCarId] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentCar, setCurrentCar] = useState(null);
+  const [fade, setFade] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 Giả lập currentUser
-  const currentUser = { id: 1, name: "Nguyen Van A" };
-
-  // 🔹 Dữ liệu mock
-  const mockCars = [
-    {
-      id: 1,
-      brand: "Tesla",
-      model: "Model 3",
-      year: 2023,
-      plateNumber: "ABC-123",
-      status: "available",
-      batteryCapacityKwh: 75,
-      operatingCostPerDay: 120000,
-      operatingCostPerKm: 2000,
-      imageUrl: "https://tesla-cdn.thron.com/delivery/public/image/tesla/3.jpg",
-    },
-    {
-      id: 2,
-      brand: "Nissan",
-      model: "Leaf",
-      year: 2022,
-      plateNumber: "XYZ-456",
-      status: "rented",
-      batteryCapacityKwh: 40,
-      operatingCostPerDay: 90000,
-      operatingCostPerKm: 1800,
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Nissan_Leaf_2022.jpg/320px-Nissan_Leaf_2022.jpg",
-    },
-    {
-      id: 3,
-      brand: "BMW",
-      model: "i3",
-      year: 2021,
-      plateNumber: "DEF-789",
-      status: "available",
-      batteryCapacityKwh: 42,
-      operatingCostPerDay: 100000,
-      operatingCostPerKm: 1900,
-      imageUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/BMW_i3_2017_IMG_0741.jpg/320px-BMW_i3_2017_IMG_0741.jpg",
-    },
-  ];
-
-  const chosenCar = cars.find((car) => car.id === currentCar);
-
-  const handleBookCar = (car) => {
-    navigate(`/owner/carbooking/${car.id}`, { state: { car } });
-  };
+  // Convert currentCarId to string to match key
+  const chosenCar = currentCarId ? carsObj[String(currentCarId)] : null;
 
   useEffect(() => {
-    if (!currentUser?.id) {
-      message.error("Không tìm thấy thông tin người dùng! (chưa login?)");
-      setLoading(false);
-      return;
-    }
-
-    // 🔹 Sử dụng mock data
-    const fetchUserCars = async () => {
+    const fetchMyVehicles = async () => {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 500)); // giả lập delay
-        setCars(mockCars);
-        setCurrentCar(mockCars[0]?.id || null);
-      } catch (error) {
-        console.error("❌ Lỗi khi tải danh sách xe:", error);
-        message.error("Không thể tải danh sách xe của bạn");
+        console.log("🟢 Fetching my vehicles...");
+        const res = await ownerShipsApi.getMyVehicles();
+        console.log("🟢 Axios res:", res);
+
+        // Axios trả data dạng array trực tiếp hoặc trong res.data
+        const vehiclesArray = Array.isArray(res) ? res : res.data || [];
+        console.log("🟢 Vehicles array:", vehiclesArray);
+
+        // Chuyển sang object với key = string vehicleId
+        const vehiclesMap = {};
+        vehiclesArray.forEach(v => {
+          vehiclesMap[String(v.vehicleId)] = v;
+        });
+
+        setCarsObj(vehiclesMap);
+
+        if (vehiclesArray.length > 0) {
+          setCurrentCarId(vehiclesArray[0].vehicleId);
+        }
+      } catch (err) {
+        console.error("❌ Lỗi khi tải danh sách xe:", err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUserCars();
+    fetchMyVehicles();
   }, []);
 
-  if (loading) return <p style={{ padding: 24 }}>⏳ Đang tải dữ liệu xe của bạn...</p>;
+
+  const handleBook = (car) => {
+    setCurrentCarId(car.vehicleId);
+    navigate(`/owner/carbooking/${car.vehicleId}`);
+  };
+
+  const handleChangeCar = (id) => {
+    if (id === currentCarId) return;
+    setFade(true);
+    setTimeout(() => {
+      setCurrentCarId(id);
+      setFade(false);
+    }, 300);
+  };
+
+  if (!loading && Object.keys(carsObj).length === 0) {
+    return (
+      <div className="mycar-empty">
+        <Empty description="Bạn chưa sở hữu chiếc xe nào" />
+        <Button type="primary" className="add-btn">
+          Thêm xe ngay
+        </Button>
+      </div>
+    );
+  }
+
+  console.log("🟢 currentCarId:", currentCarId, "chosenCar:", chosenCar);
 
   return (
-    <div style={{ padding: 24 }}>
-      {/* 🔹 Xe hiện tại */}
+    <div className="mycars-root">
       {chosenCar && (
-        <Card
-          variant="outlined"
-          style={{ marginBottom: 24, background: "#fafafa", borderRadius: 12 }}
-        >
-          <Row gutter={16} align="middle">
-            <Col xs={24} sm={10} md={8}>
-              <img
-                src={chosenCar.imageUrl || "/images/default-car.jpg"}
-                alt={chosenCar.model}
-                style={{ width: "100%", borderRadius: 10, objectFit: "cover" }}
-              />
-            </Col>
-            <Col xs={24} sm={14} md={16}>
-              <Text strong style={{ fontSize: 18 }}>
-                {chosenCar.brand} {chosenCar.model}
-              </Text>
-              <br />
-              <Text type="secondary">
-                Biển số: {chosenCar.plateNumber || "—"} • Năm: {chosenCar.year || "?"}
-              </Text>
-              <div style={{ marginTop: 12 }}>
-                <Tag color={chosenCar.status === "available" ? "green" : "orange"}>
-                  {chosenCar.status || "unknown"}
-                </Tag>
+        <div className={`chosen-car ${fade ? "fade-out" : "fade-in"}`}>
+          {/* Image & overlay */}
+          <div className="image-wrap">
+            <img src={chosenCar.imageUrl} alt={chosenCar.model} />
+            <div className="overlay">
+              <div className="left">
+                <Title level={3} className="car-name">
+                  {chosenCar.brand} {chosenCar.model}
+                </Title>
+                <Text className="plate">Biển số xe: {chosenCar.plateNumber}</Text>
+                <div className="status-tag">
+                  <Tag
+                    color={chosenCar.vehicleStatus?.toLowerCase() === "available" ? "green" : "orange"}
+                  >
+                    {chosenCar.vehicleStatus}
+                  </Tag>
+                </div>
               </div>
-              <div style={{ marginTop: 16 }}>
-                <Progress
-                  percent={Math.min(chosenCar.batteryCapacityKwh || 0, 100)}
-                  size="small"
-                  strokeColor="#1677ff"
-                  showInfo={false}
-                />
-                <Text type="secondary">
-                  ⚡ Dung lượng pin: {chosenCar.batteryCapacityKwh || "?"} kWh
-                </Text>
-                <br />
-                <Text type="secondary">
-                  💰 Chi phí: {chosenCar.operatingCostPerDay || 0}₫ / ngày •{" "}
-                  {chosenCar.operatingCostPerKm || 0}₫ / km
-                </Text>
+
+              <div className="right">
+                <div className="buttons-row">
+                  <Button
+                    type="primary"
+                    icon={<CalendarOutlined />}
+                    onClick={() => handleBook(chosenCar)}
+                    disabled={chosenCar.vehicleStatus.toLowerCase() !== "available"}
+                  >
+                    Booking
+                  </Button>
+
+                  <Button icon={<LikeOutlined />}>Voting</Button>
+                  <Button icon={<EyeOutlined />}>View Detail</Button>
+                </div>
               </div>
-              <Button
-                type="primary"
-                icon={<ThunderboltOutlined />}
-                style={{ marginTop: 16 }}
-                onClick={() => handleBookCar(chosenCar)}
-                disabled={chosenCar.status !== "available"}
-              >
-                Đặt xe
-              </Button>
-            </Col>
-          </Row>
-        </Card>
+            </div>
+          </div>
+
+          {/* Specs */}
+          <div className="specs-row">
+            <Row gutter={[16, 16]}>
+              <Col xs={12} sm={6}>
+                <Statistic title="Năm SX" value={chosenCar.year} prefix={<CalendarOutlined />} valueStyle={{ fontSize: 20 }} />
+              </Col>
+              <Col xs={12} sm={6}>
+                <Statistic title="Dung lượng pin" value={chosenCar.batteryCapacityKwh} suffix="kWh" prefix={<ThunderboltOutlined />} valueStyle={{ fontSize: 20 }} />
+              </Col>
+              <Col xs={12} sm={6}>
+                <Statistic title="Chi phí / km" value={chosenCar.operatingCostPerKm} suffix="₫" prefix={<DollarOutlined />} valueStyle={{ fontSize: 20 }} />
+              </Col>
+              <Col xs={12} sm={6}>
+                <Statistic title="Chi phí / ngày" value={chosenCar.operatingCostPerDay} suffix="₫" prefix={<DollarOutlined />} valueStyle={{ fontSize: 20 }} />
+              </Col>
+            </Row>
+          </div>
+
+          {/* Ownership */}
+          <div className="ownership-row ownership-row--fixed">
+            <Row align="middle" gutter={[16, 16]}>
+              <Col xs={12} sm={6} md={6}>
+                <div className="ownership-block">
+                  <div className="ownership-title">Số km đã dùng / tháng</div>
+                  <div className="ownership-value">
+                    <Statistic value={`${chosenCar.usedKmThisMonth} / ${chosenCar.allowedKmThisMonth}`} prefix={<DashboardOutlined />} valueStyle={{ fontSize: 18 }} />
+                  </div>
+                </div>
+              </Col>
+
+              <Col xs={12} sm={6} md={6}>
+                <div className="ownership-block">
+                  <div className="ownership-title">Số ngày đã dùng / tháng</div>
+                  <div className="ownership-value">
+                    <Statistic value={`${chosenCar.usedDaysThisMonth} / ${chosenCar.allowedDaysThisMonth}`} prefix={<CalendarOutlined />} valueStyle={{ fontSize: 18 }} />
+                  </div>
+                </div>
+              </Col>
+
+              <Col xs={12} sm={6} md={6}>
+                <div className="ownership-block">
+                  <div className="ownership-title">Tỷ lệ sở hữu của bạn</div>
+                  <div className="ownership-value percent-style">
+                    <span className="pct-number">{chosenCar.totalSharePercentage}</span>
+                    <PercentageOutlined /> / 100
+                  </div>
+                </div>
+              </Col>
+
+              <Col xs={12} sm={6} md={6}>
+                <div className="ownership-block">
+                  <div className="ownership-title">Tổng số xe của bạn</div>
+                  <div className="ownership-value">
+                    <Statistic value={Object.keys(carsObj).length} prefix={<CarOutlined />} valueStyle={{ fontSize: 18 }} />
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+        </div>
       )}
 
-      {/* 🔹 Danh sách xe khác */}
-      <Row gutter={[16, 16]}>
-        {cars.map((car) => (
-          <Col xs={24} sm={12} md={8} key={car.id}>
-            <Card
-              hoverable
-              variant="outlined"
-              onClick={() => setCurrentCar(car.id)}
-              style={{
-                border: car.id === currentCar ? "2px solid #1677ff" : "1px solid #f0f0f0",
-                borderRadius: 10,
-              }}
-              cover={
-                <img
-                  src={car.imageUrl || "/images/default-car.jpg"}
-                  alt={car.model}
-                  style={{ height: 160, objectFit: "cover", borderRadius: "10px 10px 0 0" }}
-                />
-              }
-            >
-              <Text strong>
-                {car.brand} {car.model}
-              </Text>
-              <br />
-              <Text type="secondary">{car.plateNumber}</Text>
-              <div style={{ marginTop: 8 }}>
-                <Tag color={car.status === "available" ? "green" : "orange"}>
-                  {car.status}
-                </Tag>
-                {car.id === currentCar && (
-                  <Tag color="blue" style={{ marginLeft: 6 }}>
-                    Xe hiện tại
-                  </Tag>
-                )}
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      {/* Car List */}
+      <div className="car-list">
+        <Row gutter={[16, 16]}>
+          {Object.values(carsObj).map((car) => (
+            <Col key={car.vehicleId} xs={24} sm={12} md={8} lg={6}>
+              <Card
+                hoverable
+                onClick={() => handleChangeCar(car.vehicleId)}
+                className={`mini-card ${car.vehicleId === currentCarId ? "active" : ""}`}
+                cover={
+                  <div className="mini-card-cover">
+                    <img src={car.imageUrl} alt={car.model} />
+                    <div className="overlay">
+                      <div className="mini-title">{car.brand} {car.model}</div>
+                      <div className="mini-tags">
+                        <Tag color={car.vehicleStatus?.toLowerCase() === "available" ? "green" : "orange"}>{car.vehicleStatus}</Tag>
+                        {car.vehicleId === currentCarId && <Tag color="geekblue">Đang chọn</Tag>}
+                      </div>
+                    </div>
+                  </div>
+                }
+              />
+            </Col>
+          ))}
+        </Row>
+      </div>
     </div>
   );
-}
+};
 
 export default MyCars;

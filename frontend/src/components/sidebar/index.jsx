@@ -10,7 +10,7 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // 🧠 Lấy role từ localStorage
+  // 🧠 Lấy role từ redux
   const currentUser = useSelector((state) => state.user.current);
   const role = currentUser.role || "USER";
 
@@ -33,6 +33,9 @@ const Sidebar = () => {
         key: "/admin/staffchecking",
         icon: <CheckCircleOutlined />,
         label: <Link to="/admin/staffchecking">Staff Checking</Link>,
+        key: "/admin/vote",
+        icon: <LikeOutlined />,
+        label: <Link to="/admin/vote">Vote Management</Link>,
       },
       {
         key: "/admin/vehicles",
@@ -56,6 +59,11 @@ const Sidebar = () => {
         key: "/owner/carbooking",
         icon: <CalendarOutlined />,
         label: <Link to="/owner/carbooking">Book Cars</Link>,
+      },
+      {
+        key: "/owner/vote",
+        icon: <LikeOutlined />,
+        label: <Link to="/owner/vote">Vote</Link>,
       },
     ];
   }
