@@ -5,6 +5,8 @@ import {
   CalendarOutlined,
   BookOutlined,
   DashboardOutlined,
+  FileTextOutlined,
+  CheckCircleOutlined,
   LikeOutlined,
 } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -18,35 +20,54 @@ const Sidebar = () => {
 
   // 🧠 Lấy role từ redux
   const currentUser = useSelector((state) => state.user.current);
-  const role = currentUser?.role || "USER";
+  const role = currentUser.role || "USER";
 
   let menuItems = [];
 
-  // 🧩 Menu theo role
   if (role === "STAFF") {
     menuItems = [
+      {
+        key: "/admin",
+        icon: <DashboardOutlined />,
+        label: <Link to="/admin">Dashboard</Link>,
+      },
       {
         key: "/admin/bookingmanage",
         icon: <BookOutlined />,
         label: <Link to="/admin/bookingmanage">Bookings</Link>,
       },
       {
-        key: "/admin/vote",
-        icon: <LikeOutlined />,
-        label: <Link to="/admin/vote">Vote Management</Link>,
+        key: "/admin/staffchecking",
+        icon: <CheckCircleOutlined />,
+        label: <Link to="/admin/staffchecking">Staff Checking</Link>,
+      },
+      {
+        key: "invoicemanagement",
+        icon: <BookOutlined />,
+        label: <Link to="/admin/invoice"> Hóa đơn</Link>,
+      },
+      {
+        key: "vote",
+        icon: <BookOutlined />,
+        label: <Link to="/admin/vote"> Bình chọn </Link>,
       },
     ];
   } else if (role === "USER") {
     menuItems = [
       {
-        key: "/owner/mycar",
+        key: "mycar",
         icon: <HomeOutlined />,
-        label: <Link to="/owner/mycar">My Car</Link>,
+        label: <Link to="/owner/mycar">Xe của tôi </Link>,
       },
       {
-        key: "/owner/carbooking",
+        key: "booking",
         icon: <CalendarOutlined />,
-        label: <Link to="/owner/carbooking">Book Cars</Link>,
+        label: <Link to="/owner/carbooking">Đặt xe</Link>,
+      },
+      {
+        key: "invoice",
+        icon: <FileTextOutlined />,
+        label: <Link to="/owner/invoice">Hóa đơn</Link>,
       },
       {
         key: "/owner/vote",
@@ -58,12 +79,10 @@ const Sidebar = () => {
 
   return (
     <div className="owner-sidebar">
-      {/* Logo */}
       <div className="sidebar-logo" onClick={() => navigate("/")}>
         <img src={logoFull} alt="CoEV Logo" className="logo-img" />
       </div>
 
-      {/* Menu */}
       <div className="menu-wrapper">
         <Menu
           mode="inline"

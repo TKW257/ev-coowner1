@@ -4,6 +4,10 @@ import {
   Navigate,
 } from "react-router-dom";
 import { App as AntdApp } from "antd";
+
+// ===== Layouts =====
+import DashboardLayout from "./components/layouts/Dashboard";
+import GuestLayout from "./components/layouts/GuestLayout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 // ===== Guest Pages =====
@@ -12,27 +16,27 @@ import LoginPage from "./pages/guest/auth/login";
 import HomePage from "./pages/guest/Home/HomePage";
 import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
 import OurTerms from "./pages/guest/Home/OurTerms";
-import GuestLayout from "./components/layouts/GuestLayout";
 
 // ===== Owner Pages =====
-import MyCar from "./pages/co-owner/MyCar";
+import MyCarPage from "./pages/co-owner/MyCarPage";
 import CarBooking from "./pages/co-owner/CarBooking";
+import InvoicePage from "./pages/co-owner/InvoicePage";
 import OwnerVoteListPage from "./pages/co-owner/votes/OwnerVoteListPage";
 
 // ===== Admin Pages =====
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import BookingManage from "./pages/admin/BookingManagement";
-import AdminVoteListPage from "./pages/admin/BookingManagement/votes/AdminVoteListPage";
-import AdminCreateTopicPage from "./pages/admin/BookingManagement/votes/AdminCreateTopicPage";
-import TopicDetailPage from "./pages/admin/BookingManagement/votes/TopicDetailPage";
-import DashboardLayout from "./components/layouts/Dashboard";
+import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
+import VehicleManagement from "./pages/admin/VehicleManagement";
+import UserManagement from "./pages/admin/UserManagement";
+import InvoiceManagement from "./pages/admin/InvoiceManagement";
 
-// ===== Test =====
-import TestVehicles from "./test";
+import AdminVoteListPage from "./pages/admin/VotesManagement/AdminVoteListPage";
+import AdminCreateTopicPage from "./pages/admin/VotesManagement/AdminCreateTopicPage";
+import TopicDetailPage from "./pages/admin/VotesManagement/TopicDetailPage";
 
-// ===== Router =====
+// ===== Router Configuration =====
 const router = createBrowserRouter([
-  { path: "/test", element: <TestVehicles /> },
-
   // ===== GUEST =====
   {
     path: "/",
@@ -55,11 +59,10 @@ const router = createBrowserRouter([
       // </ProtectedRoute>
     ),
     children: [
-      { path: "mycar", element: <MyCar /> },
+      { path: "mycar", element: <MyCarPage /> },
       { path: "carbooking", element: <CarBooking /> },
-      { path: "carbooking/:id", element: <CarBooking /> },
-
-      // ✅ Vote page for Owner (đồng bộ với Sidebar)
+      { path: "carbooking/:vehicleId", element: <CarBooking /> },
+      { path: "invoice", element: <InvoicePage /> },
       { path: "vote", element: <OwnerVoteListPage /> },
     ],
   },
@@ -68,14 +71,19 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      // <ProtectedRoute allowedRoles={["STAFF"]}>
+      // <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
       <DashboardLayout />
       // </ProtectedRoute>
     ),
     children: [
+      { index: true, element: <AdminDashboard /> },
       { path: "bookingmanage", element: <BookingManage /> },
+      { path: "staffchecking", element: <StaffCheckingManage /> },
+      { path: "vehicles", element: <VehicleManagement /> },
+      { path: "users", element: <UserManagement /> },
+      { path: "invoice", element: <InvoiceManagement /> },
 
-      // ✅ Vote pages for Admin (đồng bộ với Sidebar)
+      // Votes Management
       { path: "vote", element: <AdminVoteListPage /> },
       { path: "vote/create", element: <AdminCreateTopicPage /> },
       { path: "vote/:id", element: <TopicDetailPage /> },
@@ -83,10 +91,7 @@ const router = createBrowserRouter([
   },
 
   // ===== 404 Redirect =====
-  {
-    path: "*",
-    element: <Navigate to="/" replace />,
-  },
+  { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
 // ===== App =====
