@@ -1,13 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Table, Tag, Space, Button, message, Select, Card, Statistic, Row, Col, Modal, Descriptions } from "antd";
-import { 
-  CheckCircleOutlined, 
-  ClockCircleOutlined, 
-  CarOutlined, 
-  UserOutlined,
-  CalendarOutlined,
-  EyeOutlined
-} from "@ant-design/icons";
+import { Table, Tag, Space, Button, message, Select, Card, Statistic, Row, Col, Modal, Descriptions, Dropdown } from "antd";
+import { CheckCircleOutlined, ClockCircleOutlined, CarOutlined, UserOutlined, CalendarOutlined, EyeOutlined, DownloadOutlined, MailOutlined, CheckOutlined, DownOutlined } from "@ant-design/icons";
 import bookingApi from "../../../api/bookingApi";
 import StorageKeys from "../../../constants/storage-key";
 
@@ -28,6 +21,7 @@ const StaffCheckingManagement = () => {
     setLoading(true);
     try {
       const response = await bookingApi.getAllStaffCheckings();
+      
       const checkingsData = Array.isArray(response) ? response : [];
       setCheckings(checkingsData);
       calculateStats(checkingsData);
@@ -87,6 +81,222 @@ const StaffCheckingManagement = () => {
     setDetailModalVisible(false);
     setSelectedChecking(null);
   };
+
+  // Xử lý download PDF
+  const handleDownloadPDF = () => {
+    if (!selectedChecking) {
+      message.error("Không có dữ liệu để xuất PDF!");
+      return;
+    }
+
+    message.success("Đang tạo file PDF...");
+    
+    // Tạo nội dung HTML cho form PDF
+    const pdfContent = generatePDFContent(selectedChecking);
+    
+    // Tạo window mới để in PDF
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Staff Checking Report - ${selectedChecking.checkingId || selectedChecking.id}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+              color: #333;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 30px;
+              border-bottom: 2px solid #1890ff;
+              padding-bottom: 20px;
+            }
+            .header h1 {
+              color: #1890ff;
+              margin: 0;
+            }
+            .form-container {
+              max-width: 800px;
+              margin: 0 auto;
+            }
+            .form-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+            }
+            .form-table th, .form-table td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: left;
+            }
+            .form-table th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+              width: 30%;
+            }
+            .form-table td {
+              background-color: #fff;
+            }
+            .status-badge {
+              display: inline-block;
+              padding: 4px 8px;
+              border-radius: 4px;
+              color: white;
+              font-size: 12px;
+            }
+            .status-checkin {
+              background-color: #52c41a;
+            }
+            .status-checkout {
+              background-color: #1890ff;
+            }
+            .status-damage-yes {
+              background-color: #ff4d4f;
+            }
+            .status-damage-no {
+              background-color: #52c41a;
+            }
+            .signature-section {
+              margin-top: 50px;
+              display: flex;
+              justify-content: space-between;
+            }
+            .signature-box {
+              width: 45%;
+              text-align: center;
+            }
+            .signature-line {
+              border-bottom: 1px solid #333;
+              height: 40px;
+              margin-bottom: 10px;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          ${pdfContent}
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(() => window.close(), 1000);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  // Tạo nội dung HTML cho PDF
+  const generatePDFContent = (checking) => {
+    return `
+      <div class="header">
+        <h1>BÁO CÁO STAFF CHECKING</h1>
+        <p>Ngày tạo: ${new Date().toLocaleString('vi-VN')}</p>
+      </div>
+      
+      <div class="form-container">
+        <table class="form-table">
+          <tr>
+            <th>Checking ID</th>
+            <td>${checking.checkingId || checking.id || '-'}</td>
+          </tr>
+          <tr>
+            <th>Loại Checking</th>
+            <td>
+              <span class="status-badge ${checking.checkingType === "CheckIn" ? 'status-checkin' : 'status-checkout'}">
+                ${checking.checkingType === "CheckIn" ? "Check-in" : "Check-out"}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <th>Vehicle Model</th>
+            <td>${checking.vehicleModel || '-'}</td>
+          </tr>
+          <tr>
+            <th>Tên User</th>
+            <td>${checking.userName || '-'}</td>
+          </tr>
+          <tr>
+            <th>Tên Staff</th>
+            <td>${checking.staffName || '-'}</td>
+          </tr>
+          <tr>
+            <th>Thời gian</th>
+            <td>${formatCheckTime(checking.checkTime)}</td>
+          </tr>
+          <tr>
+            <th>Số km đồng hồ</th>
+            <td>${checking.odometer ? `${checking.odometer} km` : '-'}</td>
+          </tr>
+          <tr>
+            <th>Phần trăm pin</th>
+            <td>${checking.batteryPercent ? `${checking.batteryPercent}%` : '-'}</td>
+          </tr>
+          <tr>
+            <th>Có hư hỏng</th>
+            <td>
+              <span class="status-badge ${checking.damageReported ? 'status-damage-yes' : 'status-damage-no'}">
+                ${checking.damageReported ? "Có" : "Không"}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <th>Quãng đường đã đi</th>
+            <td>${checking.distanceTraveled ? `${checking.distanceTraveled} km` : '-'}</td>
+          </tr>
+          <tr>
+            <th>Phần trăm pin đã dùng</th>
+            <td>${checking.batteryUsedPercent ? `${checking.batteryUsedPercent}%` : '-'}</td>
+          </tr>
+          <tr>
+            <th>Ghi chú</th>
+            <td>${checking.notes || '-'}</td>
+          </tr>
+        </table>
+
+        <div class="signature-section">
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p><strong>Ký tên Staff</strong></p>
+            <p>(${checking.staffName || '-'})</p>
+          </div>
+          <div class="signature-box">
+            <div class="signature-line"></div>
+            <p><strong>Ký tên User</strong></p>
+            <p>(${checking.userName || '-'})</p>
+          </div>
+        </div>
+      </div>
+    `;
+  };
+
+  // Xử lý gửi mail
+  const handleSendEmail = () => {
+    message.info("Tính năng gửi mail đang được phát triển...");
+    // TODO: Implement email sending
+    console.log("Send email for checking:", selectedChecking);
+  };
+
+  // Menu items cho dropdown
+  const getConfirmMenuItems = () => [
+    {
+      key: 'pdf',
+      icon: <DownloadOutlined />,
+      label: 'Download file PDF',
+      onClick: () => handleDownloadPDF()
+    },
+    {
+      key: 'email',
+      icon: <MailOutlined />,
+      label: 'Gửi mail (đang phát triển)',
+      onClick: () => handleSendEmail()
+    }
+  ];
 
   const columns = [
     { 
@@ -219,7 +429,15 @@ const StaffCheckingManagement = () => {
         footer={[
           <Button key="close" onClick={handleCloseModal}>
             Đóng
-          </Button>
+          </Button>,
+          <Dropdown key="confirm" menu={{ items: getConfirmMenuItems() }} placement="topRight">
+            <Button 
+              type="primary" 
+              icon={<CheckOutlined />}
+            >
+              Xác nhận checking <DownOutlined />
+            </Button>
+          </Dropdown>
         ]}
         width={800}
       >

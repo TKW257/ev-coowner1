@@ -38,6 +38,11 @@ const ManageBookings = () => {
     setLoading(true);
     try {
       const response = await bookingApi.getAllBookings();
+      
+      console.log("📊 BookingManagement - API Response:", response);
+      console.log("📋 Response Type:", typeof response);
+      console.log("📋 Is Array:", Array.isArray(response));
+      
       const bookingsData = Array.isArray(response) ? response : [];
       setBookings(bookingsData);
     } catch (error) {
@@ -51,9 +56,11 @@ const ManageBookings = () => {
   const fetchUserBookings = async () => {
     setLoading(true);
     try {
-      const response = await bookingApi.getAllBookings();
-      const userBookings = Array.isArray(response) ? response : [];
-      setBookings(userBookings);
+      const response = await bookingApi.getAllStaffCheckings();
+      
+      const checkingsData = Array.isArray(response) ? response : [];
+      setStaffCheckings(checkingsData);
+      console.log("📋 Staff Checkings:", checkingsData);
     } catch (error) {
       message.error("Không tải được booking của user!");
       console.error("Error fetching user bookings:", error);
