@@ -8,28 +8,28 @@ const { Title, Paragraph } = Typography;
 const steps = [
   {
     icon: <CarOutlined />,
-    title: "Sign Up & Choose Your Car",
-    desc: "Register online, explore our EV collection, and choose the car you want to co-own.",
+    title: "Đăng ký và Chọn xe đồng sở hữu ",
+    desc: "Đăng ký trực tuyến, Khám phá bộ sưu tập xe điện (EV) và chọn chiếc xe bạn muốn đồng sở hữu.",
   },
   {
     icon: <FileProtectOutlined />,
-    title: "Confirm Ownership Share",
-    desc: "Select your investment amount and confirm your ownership share securely.",
+    title: "Xác nhận phần sở hữu",
+    desc: "Chọn và xác nhận phần sở hữu của bạn một cách an toàn và bảo mật.",
   },
   {
     icon: <SolutionOutlined />,
-    title: "Smart Contract & Verification",
-    desc: "We handle all digital agreements and identity checks for transparency.",
+    title: "Ký hợp đồng & Thanh toán",
+    desc: "Các thỏa thuận được thực hiện bằng hợp đồng điện tử minh bạch. Thanh toán được xử lý thông qua các kênh an toàn và đã được xác minh. ",
   },
   {
     icon: <ThunderboltOutlined />,
-    title: "Access & Use",
-    desc: "Enjoy flexible car usage based on your schedule and preferences.",
+    title: "Xác nhận sở hữu & Đặt lịch sử dụng xe",
+    desc: "Sau khi hoàn tất toàn bộ thủ tục, bạn có thể linh hoạt đặt lịch sử dụng xe theo nhu cầu và thời gian của mình.",
   },
   {
     icon: <LineChartOutlined />,
-    title: "Earn & Manage",
-    desc: "Track your share, earnings, and usage through our real-time dashboard.",
+    title: "Quản lý quyền sở hữu",
+    desc: "Theo dõi phần sở hữu và lịch sử sử dụng của bạn qua bảng điều khiển theo thời gian thực.",
   },
 ];
 

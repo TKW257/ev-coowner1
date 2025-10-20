@@ -20,14 +20,39 @@ const StaffCheckingManagement = () => {
   const fetchStaffCheckings = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await bookingApi.getAllStaffCheckings();
+      const response = await bookingApi.viewAllStaffCheckings();
       
-      const checkingsData = Array.isArray(response) ? response : [];
+      console.log("📊 StaffCheckingManagement - API Response:", response);
+      console.log("📋 Response Type:", typeof response);
+      console.log("📋 Is Array:", Array.isArray(response));
+      console.log("📋 Response.data:", response?.data);
+      
+      // Handle different response structures
+      let checkingsData = [];
+      if (Array.isArray(response)) {
+        checkingsData = response;
+      } else if (response?.data) {
+        if (Array.isArray(response.data)) {
+          checkingsData = response.data;
+        } else {
+          checkingsData = [response.data];
+        }
+      }
+      
+      console.log("📋 Processed checkingsData:", checkingsData);
+      console.log("📋 Total checkings:", checkingsData.length);
+      
+      if (checkingsData.length > 0) {
+        console.log("📋 First checking sample:", checkingsData[0]);
+        console.log("📋 All checking fields:", Object.keys(checkingsData[0]));
+      }
+      
       setCheckings(checkingsData);
       calculateStats(checkingsData);
     } catch (error) {
       message.error("Không tải được danh sách staff checking!");
       console.error("Error fetching staff checkings:", error);
+      console.error("Error details:", error.response);
     } finally {
       setLoading(false);
     }
@@ -81,6 +106,7 @@ const StaffCheckingManagement = () => {
     setDetailModalVisible(false);
     setSelectedChecking(null);
   };
+
 
   // Xử lý download PDF
   const handleDownloadPDF = () => {
@@ -170,6 +196,16 @@ const StaffCheckingManagement = () => {
               border-bottom: 1px solid #333;
               height: 40px;
               margin-bottom: 10px;
+            }
+            .signature-display {
+              border: 1px solid #ddd;
+              padding: 15px;
+              border-radius: 8px;
+              background: linear-gradient(135deg, #f9f9f9, #ffffff);
+              min-height: 100px;
+            }
+            .signature-display p {
+              margin: 5px 0;
             }
             @media print {
               body { margin: 0; }
@@ -261,14 +297,28 @@ const StaffCheckingManagement = () => {
 
         <div class="signature-section">
           <div class="signature-box">
-            <div class="signature-line"></div>
-            <p><strong>Ký tên Staff</strong></p>
-            <p>(${checking.staffName || '-'})</p>
+            <div class="signature-display">
+              <div style="font-family: 'Brush Script MT', cursive; font-size: 20px; font-style: italic; color: #1890ff; margin-bottom: 10px; border-bottom: 2px solid #1890ff; padding-bottom: 5px;">
+                ${checking.staffSignature || checking.staffName || 'Staff'}
+              </div>
+              <p><strong>Chữ ký Staff</strong></p>
+              <p>(${checking.staffName || '-'})</p>
+              <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                ${checking.staffSignature ? 'Đã ký từ hệ thống' : 'Chữ ký tự động'}
+              </p>
+            </div>
           </div>
           <div class="signature-box">
-            <div class="signature-line"></div>
-            <p><strong>Ký tên User</strong></p>
-            <p>(${checking.userName || '-'})</p>
+            <div class="signature-display">
+              <div style="font-family: 'Brush Script MT', cursive; font-size: 20px; font-style: italic; color: #52c41a; margin-bottom: 10px; border-bottom: 2px solid #52c41a; padding-bottom: 5px;">
+                ${checking.userSignature || checking.userName || 'User'}
+              </div>
+              <p><strong>Chữ ký User</strong></p>
+              <p>(${checking.userName || '-'})</p>
+              <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                ${checking.userSignature ? 'Đã ký từ hệ thống' : 'Chữ ký tự động'}
+              </p>
+            </div>
           </div>
         </div>
       </div>

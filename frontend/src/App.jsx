@@ -30,7 +30,7 @@ import InvoiceManagement from "./pages/admin/InvoiceManagement";
 import DashboardLayout from "./components/layouts/Dashboard";
 import GuestLayout from "./components/layouts/GuestLayout";
 
-
+// ===== Router =====
 const router = createBrowserRouter([
 
   // ===== GUEST =====
@@ -90,6 +90,7 @@ const router = createBrowserRouter([
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
+// ===== App =====
 function App() {
   return (
     <AntdApp>
