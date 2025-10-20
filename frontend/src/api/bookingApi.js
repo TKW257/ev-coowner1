@@ -27,6 +27,10 @@ const bookingApi = {
   },
 
   // STAFF CHECKING API
+  getAllBookings() {
+    return axiosClient.get("/bookings/viewAllBooking");
+  },
+
   createStaffChecking(data) {
     return axiosClient.post("/staff-checkings/createStaffChecking", data);
   },
