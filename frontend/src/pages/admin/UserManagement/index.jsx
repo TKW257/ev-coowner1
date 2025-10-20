@@ -183,7 +183,7 @@ const UserManagement = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: "black"}}>
         <h2>Quản lý người dùng</h2>
         <Button 
           type="primary" 

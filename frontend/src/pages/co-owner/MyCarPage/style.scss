@@ -1,0 +1,180 @@
+.mycars-root {
+  padding: 24px;
+  min-height: 100vh;
+  color: #222;
+
+  .chosen-car {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    background: white;
+    box-shadow: 0 8px 28px rgba(20, 20, 40, 0.06);
+
+    .image-wrap {
+      position: relative;
+      height: 44vh;
+      min-height: 320px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 22px;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0) 30%, rgba(0, 0, 0, 0.55) 100%);
+
+        .left {
+          color: #fff;
+
+          .car-name {
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+          }
+
+          .plate {
+            color: rgba(255, 255, 255, 0.9);
+            display: block;
+            margin: 6px 0 8px;
+            font-weight: 500;
+          }
+        }
+
+        .right {
+          .buttons-row {
+            display: flex;
+            gap: 10px;
+          }
+        }
+      }
+    }
+
+    .specs-row {
+      padding: 18px 22px;
+      border-top: 1px solid #f0f0f0;
+      background: #fff;
+    }
+
+    /* ---------- Ownership area ---------- */
+    .ownership-row {
+      padding: 12px 22px 20px;
+      background: #fff;
+      border-top: 1px solid #eef2f6;
+
+      .ownership-block {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .ownership-title {
+          color: #7a8188;
+          font-size: 14px;
+        }
+
+        .ownership-value {
+          font-weight: 500;
+          font-size: 20px;
+        }
+      }
+
+      &--fixed {
+        .percent-style {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .pct-number {
+          font-size: 22px;
+          font-weight: 500;
+          color: #52c41a;
+        }
+      }
+    }
+  }
+
+  /* mini list */
+  .car-list {
+    margin-top: 12px;
+    padding-bottom: 0;
+
+    .mini-card {
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+
+      .ant-card-body {
+        display: none;
+        padding: 0;
+      }
+
+      &:hover {
+        transform: scale(1.02);
+      }
+
+      &.active {
+        border: 2px solid #52c41a;
+      }
+
+      .mini-card-cover {
+        position: relative;
+        width: 100%;
+        height: 220px; 
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+          color: #fff;
+          padding: 10px 12px;
+          backdrop-filter: blur(2px);
+
+          .mini-title {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+          }
+
+          .mini-tags {
+            display: flex;
+            gap: 6px;
+
+            .ant-tag {
+              margin: 0;
+              font-size: 12px;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .mycar-empty {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+}

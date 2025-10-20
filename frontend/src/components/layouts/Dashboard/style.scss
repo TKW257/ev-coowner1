@@ -1,6 +1,5 @@
 .dashboard-layout {
   min-height: 100vh;
-  background: #000;
   display: flex;
   flex-direction: row;
 }
@@ -35,7 +34,7 @@
 .dashboard-content {
   margin-top: 40px; 
   padding: 24px;
-  background: #000;
+  background:#F5F5F5;
   min-height: calc(100vh - 64px);
 
   .content-inner {

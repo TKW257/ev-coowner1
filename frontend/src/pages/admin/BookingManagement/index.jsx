@@ -76,7 +76,7 @@ const ManageBookings = () => {
       setAllBookings(bookingsData); 
       
       const usersFromBookings = extractUsersFromBookings(bookingsData);
-      setUsers(usersFromBookings);
+setUsers(usersFromBookings);
       console.log("📋 Users from bookings:", usersFromBookings);
     } catch (error) {
       message.error("Không tải được danh sách booking!");
@@ -171,7 +171,7 @@ const ManageBookings = () => {
         errorMessage = error.response?.data?.message || "Dữ liệu đầu vào không hợp lệ!";
       } else if (error.response?.status >= 500) {
         errorMessage = "Lỗi máy chủ! Vui lòng thử lại sau.";
-      } else if (error.response?.data?.message) {
+} else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = `Lỗi: ${error.message}`;
@@ -275,7 +275,7 @@ const ManageBookings = () => {
       render: (timeArray) => {
         if (!timeArray || !Array.isArray(timeArray)) return '-';
         const [year, month, day, hour, minute] = timeArray;
-        return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
+return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
       }
     },
     { 
@@ -356,7 +356,7 @@ const ManageBookings = () => {
                     onClick={() => handleCheckInOut(record, "checkin")}
                   >
                     Check-in
-                  </Button>
+</Button>
                 )}
               </>
             )}
@@ -452,7 +452,7 @@ const ManageBookings = () => {
             name="batteryPercent" 
             label="Phần trăm pin (%)"
             rules={[{ required: true, message: 'Vui lòng nhập phần trăm pin!' }]}
-          >
+>
             <InputNumber 
               placeholder="Nhập phần trăm pin"
               style={{ width: '100%' }}

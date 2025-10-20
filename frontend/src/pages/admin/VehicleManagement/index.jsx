@@ -26,8 +26,6 @@ const VehicleManagement = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [deletingVehicle, setDeletingVehicle] = useState(null);
-  const [selectedBrand, setSelectedBrand] = useState(null);
-  const [selectedBrandUpdate, setSelectedBrandUpdate] = useState(null);
   const [form] = Form.useForm();
   const [updateForm] = Form.useForm();
 
@@ -37,54 +35,6 @@ const VehicleManagement = () => {
     { value: "Unavailable", label: "Unavailable" },
     { value: "Maintenance", label: "Maintenance" },
   ];
-
-  // Vehicle brand options
-  const brandOptions = [
-    { value: "Audi", label: "Audi" },
-    { value: "BMW", label: "BMW" },
-    { value: "BYD", label: "BYD" },
-    { value: "Chery", label: "Chery" },
-    { value: "Honda", label: "Honda" },
-    { value: "Hyundai", label: "Hyundai" },
-    { value: "Kia", label: "Kia" },
-    { value: "Leapmotor", label: "Leapmotor" },
-    { value: "MG", label: "MG" },
-    { value: "Mercedes-Benz", label: "Mercedes-Benz" },
-    { value: "Nissan", label: "Nissan" },
-    { value: "Ora", label: "Ora" },
-    { value: "Porche", label: "Porche" },
-    { value: "Tesla", label: "Tesla" },
-    { value: "VinFast", label: "VinFast" },
-    { value: "Xpeng", label: "Xpeng" },
-    { value: "Zeekr", label: "Zeekr" },
-  ];
-
-  // Brand to models mapping
-  const brandModelsMap = {
-    "VinFast": ["VF 3", "VF 5 Plus", "VF 6", "VF 7", "VF 8", "VF 9", "VF e34"],
-    "BYD": ["Dolphin", "Seal", "Atto 3"],
-    "Ora": ["Good Cat"],
-    "Chery": ["Omoda E5"],
-    "Leapmotor": ["T03", "C10"],
-    "Zeekr": ["X"],
-    "Xpeng": ["G6"],
-    "Hyundai": ["Ioniq 5", "Ioniq 6"],
-    "Kia": ["EV6", "EV9"],
-    "Mercedes-Benz": ["EQB", "EQE", "EQS"],
-    "BMW": ["iX3", "i4", "i7"],
-    "Audi": ["e-tron GT", "Q8 e-tron"],
-    "Porche": ["Taycan", "Macan Electric (2025)"],
-    "Nissan": ["Leaf"],
-    "Toyota": ["bZ4X"],
-    "Honda": ["e:Ny1"],
-    "Tesla": ["Model 3", "Model Y", "Model S", "Model X"],
-    "MG": ["ZS EV", "EHS", "Marvel R"]
-  };
-
-  // Get model options based on selected brand
-  const getModelOptions = (brand) => {
-    return brandModelsMap[brand] || [];
-  };
 
   useEffect(() => {
     fetchVehicles();
@@ -106,25 +56,7 @@ const VehicleManagement = () => {
 
   const handleAddVehicle = () => {
     setModalVisible(true);
-    setSelectedBrand(null);
     form.resetFields();
-  };
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setSelectedBrand(null);
-  };
-
-  const handleBrandChange = (brand) => {
-    setSelectedBrand(brand);
-    // Reset model when brand changes
-    form.setFieldsValue({ model: undefined });
-  };
-
-  const handleBrandChangeUpdate = (brand) => {
-    setSelectedBrandUpdate(brand);
-    // Reset model when brand changes
-    updateForm.setFieldsValue({ model: undefined });
   };
 
   const handleSubmit = async () => {
@@ -133,7 +65,6 @@ const VehicleManagement = () => {
       await vehiclesApi.createVehicle(values);
       message.success("Thêm xe thành công!");
       setModalVisible(false);
-      setSelectedBrand(null);
       form.resetFields();
       fetchVehicles(); // Refresh danh sách
     } catch (error) {
@@ -155,7 +86,6 @@ const VehicleManagement = () => {
   const handleEditVehicle = (vehicle) => {
     setEditingVehicle(vehicle);
     setUpdateModalVisible(true);
-    setSelectedBrandUpdate(vehicle.brand);
     
     // Điền dữ liệu vào form update (chỉ các trường cần thiết theo API)
     updateForm.setFieldsValue({
@@ -169,11 +99,10 @@ const VehicleManagement = () => {
       status: vehicle.status,
     });
   };
-  //update ở đây nha
+
   const handleCloseUpdateModal = () => {
     setUpdateModalVisible(false);
     setEditingVehicle(null);
-    setSelectedBrandUpdate(null);
     updateForm.resetFields();
   };
 
@@ -202,7 +131,6 @@ const VehicleManagement = () => {
       message.success("Cập nhật xe thành công!");
       setUpdateModalVisible(false);
       setEditingVehicle(null);
-      setSelectedBrandUpdate(null);
       updateForm.resetFields();
       fetchVehicles(); 
     } catch (error) {
@@ -240,7 +168,7 @@ const VehicleManagement = () => {
       message.error(`Không thể xóa xe! ${errorMessage}`);
     }
   };
-//table ở đây nè
+
   const columns = [
     {
       title: "ID",
@@ -324,7 +252,7 @@ const VehicleManagement = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: "black" }}>
         <h2>Quản lý xe</h2>
         <Button 
           type="primary" 
@@ -348,7 +276,7 @@ const VehicleManagement = () => {
         title="Thêm xe mới"
         open={modalVisible}
         onOk={handleSubmit}
-        onCancel={handleCloseModal}
+        onCancel={() => setModalVisible(false)}
         okText="Thêm xe"
         cancelText="Hủy"
         width={600}
@@ -357,35 +285,17 @@ const VehicleManagement = () => {
           <Form.Item
             name="brand"
             label="Thương hiệu"
-            rules={[{ required: true, message: 'Vui lòng chọn thương hiệu!' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập thương hiệu!' }]}
           >
-            <Select 
-              placeholder="Chọn thương hiệu xe"
-              onChange={handleBrandChange}
-            >
-              {brandOptions.map(option => (
-                <Select.Option key={option.value} value={option.value}>
-                  {option.label}
-                </Select.Option>
-              ))}
-            </Select>
+            <Input placeholder="Nhập thương hiệu xe" />
           </Form.Item>
 
           <Form.Item
             name="model"
             label="Mẫu xe"
-            rules={[{ required: true, message: 'Vui lòng chọn mẫu xe!' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập mẫu xe!' }]}
           >
-            <Select 
-              placeholder="Chọn mẫu xe"
-              disabled={!selectedBrand}
-            >
-              {getModelOptions(selectedBrand).map(model => (
-                <Select.Option key={model} value={model}>
-                  {model}
-                </Select.Option>
-              ))}
-            </Select>
+            <Input placeholder="Nhập mẫu xe" />
           </Form.Item>
 
           <Form.Item
@@ -575,35 +485,17 @@ const VehicleManagement = () => {
           <Form.Item
             name="brand"
             label="Thương hiệu"
-            rules={[{ required: true, message: 'Vui lòng chọn thương hiệu!' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập thương hiệu!' }]}
           >
-            <Select 
-              placeholder="Chọn thương hiệu xe"
-              onChange={handleBrandChangeUpdate}
-            >
-              {brandOptions.map(option => (
-                <Select.Option key={option.value} value={option.value}>
-                  {option.label}
-                </Select.Option>
-              ))}
-            </Select>
+            <Input placeholder="Nhập thương hiệu xe" />
           </Form.Item>
 
           <Form.Item
             name="model"
             label="Mẫu xe"
-            rules={[{ required: true, message: 'Vui lòng chọn mẫu xe!' }]}
+            rules={[{ required: true, message: 'Vui lòng nhập mẫu xe!' }]}
           >
-            <Select 
-              placeholder="Chọn mẫu xe"
-              disabled={!selectedBrandUpdate}
-            >
-              {getModelOptions(selectedBrandUpdate).map(model => (
-                <Select.Option key={model} value={model}>
-                  {model}
-                </Select.Option>
-              ))}
-            </Select>
+            <Input placeholder="Nhập mẫu xe" />
           </Form.Item>
 
           <Form.Item

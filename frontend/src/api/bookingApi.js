@@ -2,22 +2,20 @@ import axiosClient from "./axiosClient";
 
 const bookingApi = {
 
-  // USER API
   createBooking(data) {
-    return axiosClient.post("/bookings/createBooking", data);
+    return axiosClient.post(`/bookings/createBooking`, data);
   },
 
-  getMyBookings() {
-    return axiosClient.get("/bookings/my");
+  getBookingsByVehicle(vehicleId) {
+    return axiosClient.get(`/bookings/byVehicle/${vehicleId}`);
   },
 
-  cancelBooking(id) {
-    return axiosClient.delete("/bookings/" + id); //chưa
+  getVehicleSchedule(vehicleId) {
+    return axiosClient.get(`/bookings/vehicle/${vehicleId}/schedule`);
   },
 
-  // STAFF API
-  getAllBookings() {
-    return axiosClient.get("/bookings/viewAllBooking");
+  cancelBooking(bookingId) {
+    return axiosClient.delete(`/bookings/${bookingId}`);
   },
 
   updateStatus(id, status) {
@@ -29,6 +27,10 @@ const bookingApi = {
   },
 
   // STAFF CHECKING API
+  getAllBookings() {
+    return axiosClient.get("/bookings/viewAllBooking");
+  },
+
   createStaffChecking(data) {
     return axiosClient.post("/staff-checkings/createStaffChecking", data);
   },
@@ -42,13 +44,6 @@ const bookingApi = {
     return this.viewAllStaffCheckings();
   },
 
-
-
-  /*
-    getBookingById: function(id) {
-      return axiosClient.get("/api/bookings/" + id);
-    }
-  */
 
 };
 
