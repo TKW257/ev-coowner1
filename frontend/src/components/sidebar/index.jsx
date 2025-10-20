@@ -1,6 +1,6 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, FileTextOutlined, CheckCircleOutlined, LikeOutlined } from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, FileTextOutlined, CheckCircleOutlined, LikeOutlined, CarOutlined, UserOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -29,14 +29,47 @@ const Sidebar = () => {
         label: <Link to="/admin/bookingmanage">Bookings</Link>,
       },
       {
+        key: "/admin/vehicles",
+        icon: <CarOutlined />,
+        label: <Link to="/admin/vehicles">Vehicle Management</Link>,
+      },
+      {
+        key: "/admin/users",
+        icon: <UserOutlined />,
+        label: <Link to="/admin/users">User Management</Link>,
+      },
+      {
         key: "/admin/staffchecking",
         icon: <CheckCircleOutlined />,
         label: <Link to="/admin/staffchecking">Staff Checking</Link>,
       },
       {
-        key: "invoicemanagement",
+        key: "/admin/invoice",
+        icon: <FileTextOutlined />,
+        label: <Link to="/admin/invoice">Hóa đơn</Link>,
+      },
+    ];
+  } else if (role === "STAFF") {
+    menuItems = [
+      {
+        key: "/admin",
+        icon: <DashboardOutlined />,
+        label: <Link to="/admin">Dashboard</Link>,
+      },
+      {
+        key: "/admin/bookingmanage",
         icon: <BookOutlined />,
-        label: <Link to="/admin/invoice"> Hóa đơn</Link>,
+        label: <Link to="/admin/bookingmanage">Bookings</Link>,
+      },
+      {
+        key: "/admin/staffchecking",
+        icon: <CheckCircleOutlined />,
+        label: <Link to="/admin/staffchecking">Staff Checking</Link>,
+      },
+      {
+        key: "/admin/invoice",
+        icon: <FileTextOutlined />,
+        label: <Link to="/admin/invoice">Hóa đơn</Link>,
       },
     ];
     

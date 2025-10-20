@@ -1,14 +1,18 @@
 // src/pages/admin/ManageBookings.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, InputNumber, Switch } from "antd";
+import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, InputNumber, Switch, Typography } from "antd";
 import bookingApi from "../../../api/bookingApi";
 import StorageKeys from "../../../constants/storage-key";
+
+const { Title } = Typography;
 
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([]);
   const [allBookings, setAllBookings] = useState([]); 
+  const [filteredBookings, setFilteredBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userFilter, setUserFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest"); // "newest" hoặc "oldest"
   const [users, setUsers] = useState([]);
   const [staffCheckings, setStaffCheckings] = useState([]);
   
@@ -52,6 +56,16 @@ const ManageBookings = () => {
     return bookingsData.filter(booking => {
       const bookingUserId = booking.userId || booking.user_id || booking.userName;
       return bookingUserId === userId;
+    });
+  }, []);
+
+  // Hàm sắp xếp bookings theo ID
+  const sortBookingsById = useCallback((bookingsData, order) => {
+    return [...bookingsData].sort((a, b) => {
+      const aId = parseInt(a.bookingId) || 0;
+      const bId = parseInt(b.bookingId) || 0;
+      
+      return order === "newest" ? bId - aId : aId - bId;
     });
   }, []);
 
@@ -105,10 +119,12 @@ setUsers(usersFromBookings);
 
   useEffect(() => {
     fetchStaffCheckings(); 
-    const filteredBookings = filterBookingsByUser(allBookings, userFilter);
-    setBookings(filteredBookings);
-    console.log("📋 Filtered bookings:", filteredBookings);
-  }, [userFilter, allBookings, filterBookingsByUser, fetchStaffCheckings]);
+    const filteredByUser = filterBookingsByUser(allBookings, userFilter);
+    const sortedAndFiltered = sortBookingsById(filteredByUser, sortOrder);
+    setBookings(sortedAndFiltered);
+    setFilteredBookings(sortedAndFiltered);
+    console.log("📋 Filtered and sorted bookings:", sortedAndFiltered);
+  }, [userFilter, sortOrder, allBookings, filterBookingsByUser, sortBookingsById, fetchStaffCheckings]);
 
   // Handle setting form values when modal opens and currentBooking has userEmail
   useEffect(() => {
@@ -147,7 +163,7 @@ setUsers(usersFromBookings);
         return;
       }
       
-      const validStatuses = ["Pending", "Completed", "Cancelled"];
+      const validStatuses = ["Pending", "Confirmed", "Completed", "Cancelled"];
       if (!validStatuses.includes(newStatus)) {
         message.error(`Trạng thái không hợp lệ: ${newStatus}`);
         return;
@@ -292,11 +308,19 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
       title: "Trạng thái",
       dataIndex: "bookingStatus",
       key: "bookingStatus",
-      render: (status) => (
-        <Tag color={status === "Completed" ? "green" : status === "Pending" ? "orange" : "red"}>
-          {status.toUpperCase()}
-        </Tag>
-      ),
+      render: (status) => {
+        const colorMap = {
+          Confirmed: "blue",
+          Completed: "green", 
+          Pending: "orange",
+          Cancelled: "red"
+        };
+        return (
+          <Tag color={colorMap[status] || "default"}>
+            {status.toUpperCase()}
+          </Tag>
+        );
+      },
     },
     {
       title: "Hành động",
@@ -318,7 +342,7 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
                 <Button 
                   type="primary" 
                   size="small"
-                  onClick={() => handleStatusUpdateClick(record.bookingId, "Completed", "Xác nhận")}
+                  onClick={() => handleStatusUpdateClick(record.bookingId, "Confirmed", "Xác nhận")}
                 >
                   Xác nhận
                 </Button>
@@ -332,6 +356,18 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
               </>
             )}
             
+            {/* Trạng thái Confirmed: Hiển thị nút để chuyển sang Completed */}
+            {record.bookingStatus === "Confirmed" && (
+              <Button 
+                type="primary" 
+                size="small"
+                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                onClick={() => handleStatusUpdateClick(record.bookingId, "Completed", "Hoàn thành")}
+              >
+                Hoàn thành
+              </Button>
+            )}
+
             {/* Trạng thái Completed: Logic hiển thị nút theo trạng thái check-in/check-out */}
             {record.bookingStatus === "Completed" && (
               <>
@@ -356,7 +392,7 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
                     onClick={() => handleCheckInOut(record, "checkin")}
                   >
                     Check-in
-</Button>
+                  </Button>
                 )}
               </>
             )}
@@ -373,7 +409,11 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <Title level={2} style={{ marginBottom: 24, textAlign: "left" }}>
+        Đặt xe
+      </Title>
+      
+      <div style={{ marginBottom: 16, display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
         <Select
           style={{ width: 200 }}
           placeholder="Chọn user để lọc"
@@ -388,6 +428,15 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
           ))}
         </Select>
         
+        <Select
+          style={{ width: 200 }}
+          placeholder="Sắp xếp theo ID"
+          value={sortOrder}
+          onChange={setSortOrder}
+        >
+          <Select.Option value="newest">Mới nhất</Select.Option>
+          <Select.Option value="oldest">Cũ nhất</Select.Option>
+        </Select>
       </div>
       <Table
         rowKey="bookingId"
@@ -498,8 +547,10 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
         }}
       >
         <p>
-          {pendingAction?.newStatus === "Completed" && 
+          {pendingAction?.newStatus === "Confirmed" && 
             `Bạn có chắc chắn muốn xác nhận booking này?`}
+          {pendingAction?.newStatus === "Completed" && 
+            `Bạn có chắc chắn muốn hoàn thành booking này?`}
           {pendingAction?.newStatus === "Cancelled" && 
             `Bạn có chắc chắn muốn hủy booking này?`}
         </p>
