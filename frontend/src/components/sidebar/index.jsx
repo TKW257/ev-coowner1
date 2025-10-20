@@ -32,9 +32,6 @@ const Sidebar = () => {
         key: "/admin/staffchecking",
         icon: <CheckCircleOutlined />,
         label: <Link to="/admin/staffchecking">Staff Checking</Link>,
-        key: "/admin/vote",
-        icon: <LikeOutlined />,
-        label: <Link to="/admin/vote">Vote Management</Link>,
       },
       {
         key: "invoicemanagement",
@@ -42,6 +39,7 @@ const Sidebar = () => {
         label: <Link to="/admin/invoice"> Hóa đơn</Link>,
       },
     ];
+    
   } else if (role === "USER") {
     menuItems = [
       {
