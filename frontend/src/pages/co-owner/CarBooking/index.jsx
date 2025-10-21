@@ -9,7 +9,7 @@ const VehicleBookingPage = () => {
 
   const handleBookingSuccess = (res) => {
     console.log("🎉 Booking success callback:", res);
-    setRefreshKey(prev => prev + 1); // trigger refresh for Calendar & BookingHistory
+    setRefreshKey((prev) => prev + 1); // trigger refresh for Calendar & BookingHistory
   };
 
   return (

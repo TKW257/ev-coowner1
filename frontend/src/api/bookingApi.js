@@ -1,7 +1,6 @@
 import axiosClient from "./axiosClient";
 
 const bookingApi = {
-
   createBooking(data) {
     return axiosClient.post(`/bookings/createBooking`, data);
   },
@@ -21,7 +20,7 @@ const bookingApi = {
   updateStatus(id, status) {
     const requestData = {
       id: id,
-      status: status
+      status: status,
     };
     return axiosClient.put("/bookings/updateStatus", requestData);
   },
@@ -35,16 +34,9 @@ const bookingApi = {
     return axiosClient.post("/staff-checkings/createStaffChecking", data);
   },
 
-  viewAllStaffCheckings() {
+  getAllStaffCheckings() {
     return axiosClient.get("/staff-checkings/viewAllStaffChecking");
   },
-
-  getAllStaffCheckings() {
-    // Alias for viewAllStaffCheckings for backward compatibility
-    return this.viewAllStaffCheckings();
-  },
-
-
 };
 
 export default bookingApi;

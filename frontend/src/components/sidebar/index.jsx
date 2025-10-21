@@ -1,6 +1,16 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, FileTextOutlined, CheckCircleOutlined, LikeOutlined, CarOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  CalendarOutlined,
+  BookOutlined,
+  DashboardOutlined,
+  FileTextOutlined,
+  CheckCircleOutlined,
+  LikeOutlined,
+  CarOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -12,7 +22,7 @@ const Sidebar = () => {
 
   // 🧠 Lấy role từ redux
   const currentUser = useSelector((state) => state.user.current);
-  const role = currentUser.role || "USER";
+  const role = currentUser?.role || "USER";
 
   let menuItems = [];
 
@@ -48,47 +58,28 @@ const Sidebar = () => {
         icon: <FileTextOutlined />,
         label: <Link to="/admin/invoice">Hóa đơn</Link>,
       },
-    ];
-  } else if (role === "STAFF") {
-    menuItems = [
       {
-        key: "/admin",
-        icon: <DashboardOutlined />,
-        label: <Link to="/admin">Dashboard</Link>,
-      },
-      {
-        key: "/admin/bookingmanage",
-        icon: <BookOutlined />,
-        label: <Link to="/admin/bookingmanage">Bookings</Link>,
-      },
-      {
-        key: "/admin/staffchecking",
-        icon: <CheckCircleOutlined />,
-        label: <Link to="/admin/staffchecking">Staff Checking</Link>,
-      },
-      {
-        key: "/admin/invoice",
-        icon: <FileTextOutlined />,
-        label: <Link to="/admin/invoice">Hóa đơn</Link>,
+        key: "/admin/vote",
+        icon: <LikeOutlined />,
+        label: <Link to="/admin/vote">Bình chọn</Link>,
       },
     ];
-    
   } else if (role === "USER") {
     menuItems = [
       {
         key: "mycar",
         icon: <HomeOutlined />,
-        label: <Link to="/owner/mycar">Xe của tôi </Link>,
+        label: <Link to="/owner/mycar">Xe của tôi</Link>,
       },
       {
         key: "booking",
         icon: <CalendarOutlined />,
-        label: <Link to="/owner/carbooking" >Đặt xe</Link>,
+        label: <Link to="/owner/carbooking">Đặt xe</Link>,
       },
-        {
+      {
         key: "invoice",
         icon: <FileTextOutlined />,
-        label: <Link to="/owner/invoice" >Hóa đơn</Link>,
+        label: <Link to="/owner/invoice">Hóa đơn</Link>,
       },
       {
         key: "/owner/vote",
@@ -100,7 +91,6 @@ const Sidebar = () => {
 
   return (
     <div className="owner-sidebar">
-
       <div className="sidebar-logo" onClick={() => navigate("/")}>
         <img src={logoFull} alt="CoEV Logo" className="logo-img" />
       </div>
