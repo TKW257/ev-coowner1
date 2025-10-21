@@ -19,8 +19,6 @@ import "./style.scss";
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // 🧠 Lấy role từ redux
   const currentUser = useSelector((state) => state.user.current);
   const role = currentUser?.role || "USER";
 
