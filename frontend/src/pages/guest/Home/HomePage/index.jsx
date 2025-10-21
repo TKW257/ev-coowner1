@@ -17,10 +17,10 @@ const HomePage = () => {
         <div className="banner-overlay">
           <div className="banner-content">
             <Text className="banner-subtitle">
-              Tìm kiếm xe điện để cùng sở hữu
+              Tham gia mô hình đồng sở hữu xe điện – tiết kiệm hơn, thân thiện hơn, vì một hành tinh xanh hơn.
             </Text>
             <Title level={1} className="banner-title">
-              Cùng Sở Hữu Chiếc Xe Điện Mơ Ước
+              Cùng Sở Hữu, Cùng Hướng Đến Tương Lai Xanh
             </Title>
             <Text className="banner-desc">
               Hoặc khám phá các mẫu xe điện nổi bật
@@ -39,7 +39,7 @@ const HomePage = () => {
           {[
             { name: "Tesla", img: "https://tse4.mm.bing.net/th/id/OIP.mthtoWZ8AXcJRR8o8pXD2wHaHa?cb=12&rs=1&pid=ImgDetMain&o=7&rm=3" },
             { name: "BMW", img: "https://th.bing.com/th/id/R.d45479756a9d282b98cbb989c5465471?rik=6w1MsZS1pekLOQ&riu=http%3a%2f%2fwallsdesk.com%2fwp-content%2fuploads%2f2016%2f05%2fLogo-Of-BMW.png&ehk=80VGTDIukdAFsBp64eEKUyPmyOJR4dQWRTpi5qAWSDE%3d&risl=&pid=ImgRaw&r=0" },
-            { name: "Nissan", img: "https://tse1.mm.bing.net/th/id/OIP.leSSaZ4ptQPVOerm9RGPhgHaEK?cb=12&w=650&h=366&rs=1&pid=ImgDetMain&o=7&rm=3" },
+            { name: "Lexus", img: "https://i.pinimg.com/originals/4c/87/3d/4c873da036d4e98171bea1cf37363fc0.jpg" },
             { name: "VinFast ", img: "https://th.bing.com/th/id/OIP.E8iG97u0gt7cY0UNbhbouAHaHH?o=7&cb=12rm=3&rs=1&pid=ImgDetMain&o=7&rm=3" },
           ].map((brand, index) => (
 

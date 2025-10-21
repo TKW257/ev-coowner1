@@ -1,6 +1,12 @@
 import React from "react";
 import { Row, Col, Typography, Space, Card } from "antd";
-import { CarOutlined, FileProtectOutlined, SolutionOutlined, ThunderboltOutlined, LineChartOutlined, } from "@ant-design/icons";
+import {
+  CarOutlined,
+  FileProtectOutlined,
+  SolutionOutlined,
+  ThunderboltOutlined,
+  LineChartOutlined,
+} from "@ant-design/icons";
 import "./style.scss";
 
 const { Title, Paragraph } = Typography;
@@ -8,28 +14,28 @@ const { Title, Paragraph } = Typography;
 const steps = [
   {
     icon: <CarOutlined />,
-    title: "Đăng ký và Chọn xe đồng sở hữu ",
-    desc: "Đăng ký trực tuyến, Khám phá bộ sưu tập xe điện (EV) và chọn chiếc xe bạn muốn đồng sở hữu.",
+    title: "Đăng Ký & Chọn Mẫu Xe Yêu Thích",
+    desc: "Tạo tài khoản trên nền tảng của chúng tôi và khám phá danh sách các mẫu xe điện hiện đại. Lựa chọn chiếc xe phù hợp với nhu cầu và phong cách của bạn.",
   },
   {
     icon: <FileProtectOutlined />,
-    title: "Xác nhận phần sở hữu",
-    desc: "Chọn và xác nhận phần sở hữu của bạn một cách an toàn và bảo mật.",
+    title: "Xác Nhận Phần Đồng Sở Hữu",
+    desc: "Chọn tỷ lệ sở hữu mong muốn. Mọi thông tin được xác minh và bảo mật tuyệt đối, đảm bảo quyền lợi của bạn trong suốt quá trình sử dụng.",
   },
   {
     icon: <SolutionOutlined />,
-    title: "Ký hợp đồng & Thanh toán",
-    desc: "Các thỏa thuận được thực hiện bằng hợp đồng điện tử minh bạch. Thanh toán được xử lý thông qua các kênh an toàn và đã được xác minh. ",
+    title: "Ký Hợp Đồng & Thanh Toán Linh Hoạt",
+    desc: "Hoàn tất quy trình bằng hợp đồng điện tử minh bạch. Thanh toán qua các phương thức an toàn và được chứng thực bởi hệ thống của chúng tôi.",
   },
   {
     icon: <ThunderboltOutlined />,
-    title: "Xác nhận sở hữu & Đặt lịch sử dụng xe",
-    desc: "Sau khi hoàn tất toàn bộ thủ tục, bạn có thể linh hoạt đặt lịch sử dụng xe theo nhu cầu và thời gian của mình.",
+    title: "Kích Hoạt Quyền Sở Hữu & Đặt Lịch Sử Dụng",
+    desc: "Ngay sau khi hoàn tất thủ tục, bạn có thể đặt lịch sử dụng xe linh hoạt – thuận tiện cho công việc, du lịch hay nhu cầu cá nhân.",
   },
   {
     icon: <LineChartOutlined />,
-    title: "Quản lý quyền sở hữu",
-    desc: "Theo dõi phần sở hữu và lịch sử sử dụng của bạn qua bảng điều khiển theo thời gian thực.",
+    title: "Theo Dõi & Quản Lý Thông Minh",
+    desc: "Quản lý phần sở hữu, lịch sử sử dụng và tình trạng xe dễ dàng qua bảng điều khiển trực tuyến – minh bạch, nhanh chóng, mọi lúc mọi nơi.",
   },
 ];
 
@@ -37,9 +43,8 @@ const HowToCoOwn = () => {
   return (
     <section className="how-to-coown">
       <div className="container">
-
         <Title level={2} className="section-title text-center">
-          Làm Thế Nào Để Cùng Sở Hữu Xe Điện
+          Cách Thức Cùng Sở Hữu Xe Điện
         </Title>
 
         <Row gutter={[48, 48]} align="middle">

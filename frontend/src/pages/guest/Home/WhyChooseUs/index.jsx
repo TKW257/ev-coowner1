@@ -8,7 +8,7 @@ const { Title } = Typography;
 const features = [
   {
     icon: <DollarOutlined />,
-    title: "Đầu tư thông minh vào xe điện",
+    title: "Đầu tư thông minh",
     desc: "Cùng sở hữu xe điện giúp bạn đầu tư hiệu quả và thu lợi nhuận từ xu hướng di chuyển xanh bền vững.",
     color: "green",
   },
@@ -26,7 +26,7 @@ const features = [
   },
   {
     icon: <ToolOutlined />,
-    title: "Bảo trì xe điện chuyên nghiệp",
+    title: "Bảo trì chuyên nghiệp",
     desc: "Xe của bạn được bảo dưỡng bởi đội ngũ kỹ thuật viên chuyên môn, đảm bảo hiệu suất tối ưu.",
     color: "purple",
   },

@@ -1,16 +1,16 @@
 .dashboard-header {
   position: fixed;
   top: 0;
-  right: 0;
   left: 220px;
+  right: 0;
   height: 64px;
   z-index: 200;
-  background: #111111;
+  background: #111;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  border-bottom: 1px solid #555555;
+  border-bottom: 1px solid #555;
   transition: left 0.3s ease;
 
   &.collapsed {
@@ -26,34 +26,6 @@
       color: #aaa;
       font-size: 16px;
       font-weight: 500;
-    }
-  }
-
-  .header-search {
-    flex: 1;
-    max-width: 400px;
-    margin: 0 24px;
-
-    .search-input {
-      background: #111;
-      border: 1px solid #333;
-      color: #fff;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-
-      input {
-        color: #fff;
-      }
-
-      .ant-input-prefix {
-        color: #888;
-      }
-
-      &:hover,
-      &:focus-within {
-        border-color: #52c41a;
-        box-shadow: 0 0 0 2px rgba(82, 196, 26, 0.3);
-      }
     }
   }
 
@@ -112,16 +84,11 @@
       display: contents;
     }
 
-    .header-search {
-      display: none;
-    }
-
     .header-right .username {
       display: contents;
     }
   }
 }
-
 .user-dropdown {
   .ant-dropdown-menu {
     background: #0f0f0f !important;

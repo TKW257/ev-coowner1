@@ -32,34 +32,35 @@ const Sidebar = () => {
         label: <Link to="/admin">Bảng Điều Khiển</Link>,
       },
       {
-        key: "/admin/bookingmanage",
-        icon: <BookOutlined />,
-        label: <Link to="/admin/bookingmanage">Quản Lý Đặt Xe</Link>,
+        key: "/admin/users",
+        icon: <UserOutlined />,
+        label: <Link to="/admin/users">Quản Lý Người Dùng</Link>,
       },
       {
         key: "/admin/vehicles",
         icon: <CarOutlined />,
         label: <Link to="/admin/vehicles">Quản Lý Xe</Link>,
       },
+
       {
-        key: "/admin/users",
-        icon: <UserOutlined />,
-        label: <Link to="/admin/users">Quản Lý Người Dùng</Link>,
+        key: "/admin/vote",
+        icon: <LikeOutlined />,
+        label: <Link to="/admin/vote">Bình Chọn</Link>,
+      },
+      {
+        key: "/admin/bookingmanage",
+        icon: <BookOutlined />,
+        label: <Link to="/admin/bookingmanage">Quản Lý Đặt Xe</Link>,
       },
       {
         key: "/admin/staffchecking",
         icon: <CheckCircleOutlined />,
-        label: <Link to="/admin/staffchecking">Điểm Danh Nhân Viên</Link>,
+        label: <Link to="/admin/staffchecking">Biên bản giao nhận xe</Link>,
       },
       {
         key: "/admin/invoice",
         icon: <FileTextOutlined />,
         label: <Link to="/admin/invoice">Quản Lý Hóa Đơn</Link>,
-      },
-      {
-        key: "/admin/vote",
-        icon: <LikeOutlined />,
-        label: <Link to="/admin/vote">Bình Chọn</Link>,
       },
     ];
   } else if (role === "USER") {
@@ -75,15 +76,16 @@ const Sidebar = () => {
         label: <Link to="/owner/carbooking">Đặt Xe</Link>,
       },
       {
-        key: "invoice",
-        icon: <FileTextOutlined />,
-        label: <Link to="/owner/invoice">Hóa Đơn</Link>,
-      },
-      {
         key: "/owner/vote",
         icon: <LikeOutlined />,
         label: <Link to="/owner/vote">Bình Chọn</Link>,
       },
+      {
+        key: "invoice",
+        icon: <FileTextOutlined />,
+        label: <Link to="/owner/invoice">Hóa Đơn</Link>,
+      },
+
     ];
   }
 
