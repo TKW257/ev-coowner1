@@ -8,26 +8,26 @@ const { Title } = Typography;
 const features = [
   {
     icon: <DollarOutlined />,
-    title: "Smart Investment in EVs",
-    desc: "Co-owning an electric car lets you invest smartly and earn from sustainable mobility.",
+    title: "Đầu tư thông minh vào xe điện",
+    desc: "Cùng sở hữu xe điện giúp bạn đầu tư hiệu quả và thu lợi nhuận từ xu hướng di chuyển xanh bền vững.",
     color: "green",
   },
   {
     icon: <SafetyOutlined />,
-    title: "Verified Co-ownership System",
-    desc: "We ensure transparent agreements and secure management through our digital platform.",
+    title: "Hệ thống đồng sở hữu minh bạch",
+    desc: "Chúng tôi đảm bảo các thỏa thuận rõ ràng và quản lý an toàn thông qua nền tảng số.",
     color: "blue",
   },
   {
     icon: <BarChartOutlined />,
-    title: "Transparent Usage & Revenue",
-    desc: "All trips and earnings are tracked in real-time, ensuring fair profit sharing.",
+    title: "Minh bạch trong sử dụng & chi tiêu",
+    desc: "Mọi chuyến đi và chi tiêu đều được theo dõi theo thời gian thực, đảm bảo chia sẻ công bằng.",
     color: "indigo",
   },
   {
     icon: <ToolOutlined />,
-    title: "Expert EV Maintenance",
-    desc: "Your EV is maintained by professional technicians to guarantee optimal performance.",
+    title: "Bảo trì xe điện chuyên nghiệp",
+    desc: "Xe của bạn được bảo dưỡng bởi đội ngũ kỹ thuật viên chuyên môn, đảm bảo hiệu suất tối ưu.",
     color: "purple",
   },
 ];
@@ -38,7 +38,7 @@ const WhyChooseUs = () => {
       <div className="container">
 
         <Title level={2} className="title">
-          Why Choose Us?
+          Tại Sao Nên Chọn CoEV?
         </Title>
 
         <div className="features">

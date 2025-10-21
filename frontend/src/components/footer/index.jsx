@@ -11,20 +11,22 @@ const Footer = () => {
     <FooterLayout className="app-footer">
       <Row gutter={[16, 16]} justify="center" align="middle">
         <Col xs={24} md={8} className="footer-logo">
-           <img src={logo} alt="CoEV logo" />
+          <img src={logo} alt="CoEV logo" />
         </Col>
 
         <Col xs={24} md={8} className="footer-links">
-          <a href="/guest/aboutus">About</a> | <a href="/guest/terms">Terms</a> | <a href="/contact">Contact</a>
+          <a href="/guest/aboutus">Về Chúng Tôi</a> |{" "}
+          <a href="/guest/terms">Điều Khoản</a> |{" "}
+          <a href="/contact">Liên Hệ</a>
         </Col>
 
         <Col xs={24} md={8} className="footer-contact">
-          <MailOutlined /> support@coev.com
+          <MailOutlined /> hỗ trợ@coev.com
         </Col>
       </Row>
 
       <div className="footer-copy">
-        ©2025 CoEV. All rights reserved.
+        ©2025 CoEV. Bản quyền thuộc về CoEV.
       </div>
     </FooterLayout>
   );

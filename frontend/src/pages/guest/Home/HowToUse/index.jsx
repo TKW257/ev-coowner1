@@ -39,7 +39,7 @@ const HowToCoOwn = () => {
       <div className="container">
 
         <Title level={2} className="section-title text-center">
-          How to Co-Own an Electric Car
+          Làm Thế Nào Để Cùng Sở Hữu Xe Điện
         </Title>
 
         <Row gutter={[48, 48]} align="middle">
@@ -67,7 +67,7 @@ const HowToCoOwn = () => {
                 className="ev-image main"
               />
               <img
-                src="https://vinfastlongbien.com/wp-content/uploads/2023/07/vinfast-vf3-mau-bac.jpg"
+                src="https://media.suara.com/pictures/653x366/2023/12/01/85263-vinfast.jpg"
                 alt="Electric car side"
                 className="ev-image secondary"
               />

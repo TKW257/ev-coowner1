@@ -36,7 +36,7 @@ const OurTerms = () => {
     <section className="our-terms">
       <div className="container">
         <Title level={2} className="title">
-          Our Terms
+         Điều Khoản Của Chúng Tôi
         </Title>
 
         <div className="terms-grid">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Typography, Button, Skeleton } from "antd"; // ✅ Thêm Col
+import { Card, Row, Col, Typography, Button, Skeleton } from "antd"; 
 import { ThunderboltOutlined } from "@ant-design/icons";
 import vehiclesApi from "../../../../api/vehiclesApi";
 import "./style.scss";
@@ -34,7 +34,6 @@ const ExploreCars = () => {
     window.location.href = "/cars";
   };
 
-  // ✅ Tối ưu renderSkeletons
   const renderSkeletons = Array.from({ length: 4 }, (_, index) => (
     <Col xs={24} sm={12} md={12} lg={6} key={`skeleton-${index}`}>
       <Card className="car-card">
@@ -47,7 +46,6 @@ const ExploreCars = () => {
     </Col>
   ));
 
-  // ✅ Tối ưu renderCars
   const renderCars = cars.map((car) => {
     const statusText = car.status || "Unknown";
     const statusLower = statusText.toLowerCase();
@@ -98,7 +96,7 @@ const ExploreCars = () => {
     <section className="explore-section">
       <div className="explore-header">
         <Title level={2} className="section-title">
-          Featured Electric Vehicles
+          Các mẫu xe điện tiêu biểu
         </Title>
         <Button type="primary" size="large" onClick={handleViewAll}>
           View All →
