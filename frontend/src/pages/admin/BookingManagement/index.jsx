@@ -8,8 +8,7 @@ const { Title } = Typography;
 
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([]);
-  const [allBookings, setAllBookings] = useState([]); 
-  const [filteredBookings, setFilteredBookings] = useState([]);
+  const [allBookings, setAllBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userFilter, setUserFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest"); // "newest" hoặc "oldest"
@@ -122,7 +121,6 @@ setUsers(usersFromBookings);
     const filteredByUser = filterBookingsByUser(allBookings, userFilter);
     const sortedAndFiltered = sortBookingsById(filteredByUser, sortOrder);
     setBookings(sortedAndFiltered);
-    setFilteredBookings(sortedAndFiltered);
     console.log("📋 Filtered and sorted bookings:", sortedAndFiltered);
   }, [userFilter, sortOrder, allBookings, filterBookingsByUser, sortBookingsById, fetchStaffCheckings]);
 
