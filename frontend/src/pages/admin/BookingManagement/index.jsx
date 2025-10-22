@@ -1,4 +1,3 @@
-// src/pages/admin/ManageBookings.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, InputNumber, Switch, Typography } from "antd";
 import bookingApi from "../../../api/bookingApi";
