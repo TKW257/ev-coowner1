@@ -11,8 +11,7 @@ import {
   Statistic,
 } from "antd";
 import {
-  ThunderboltOutlined,
-  EyeOutlined,
+  ThunderboltOutlined, 
   LikeOutlined,
   DollarOutlined,
   CalendarOutlined,
@@ -147,9 +146,6 @@ const MyCars = () => {
                   >
                     Booking
                   </Button>
-
-                  <Button icon={<LikeOutlined />}>Voting</Button>
-                  <Button icon={<EyeOutlined />}>View Detail</Button>
                 </div>
               </div>
             </div>
@@ -232,7 +228,7 @@ const MyCars = () => {
                     <span className="pct-number">
                       {chosenCar.totalSharePercentage}
                     </span>
-                    <PercentageOutlined /> / 100
+                   / 100  <PercentageOutlined /> 
                   </div>
                 </div>
               </Col>

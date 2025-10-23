@@ -1,37 +1,45 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Row, Col, Card, Statistic, Table, Tag, Button, Modal, Descriptions, message, Spin, Empty } from "antd";
-import { DollarOutlined, FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, DownloadOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Table,
+  Button,
+  Modal,
+  Descriptions,
+  message,
+  Spin,
+  Empty,
+  Row,
+  Col,
+} from "antd";
+import {
+  DollarOutlined,
+  FileTextOutlined,
+  DownloadOutlined,
+  ClockCircleOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import dayjs from "dayjs";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import invoiceApi from "../../../api/invoiceApi";
 
 const UserInvoiceDashboard = () => {
-  const [invoices, setInvoices] = useState([]);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [monthlyData, setMonthlyData] = useState([]); 
+  const [selectedMonth, setSelectedMonth] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(false);
   const pdfRef = useRef();
 
-
-  const handleView = (record) => {
-    setSelectedInvoice(record);
-    setOpen(true);
-  };
-
   const handleDownloadPDF = async () => {
-    const element = pdfRef.current;
-    if (!element) return;
-    const canvas = await html2canvas(element, { scale: 2 });
+    if (!pdfRef.current) return;
+    const canvas = await html2canvas(pdfRef.current, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
-
     const imgWidth = 190;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-    pdf.save(`Invoice_INV-${selectedInvoice.invoiceId}.pdf`);
+    pdf.save(`Invoice_Report_${selectedMonth.month}.pdf`);
   };
-
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -39,42 +47,30 @@ const UserInvoiceDashboard = () => {
         setLoading(true);
         const res = await invoiceApi.getMyInvoices();
 
-        if (!Array.isArray(res)) throw new Error("Invalid data format");
+        if (!res || !Array.isArray(res.invoices)) {
+          throw new Error("Invalid data format");
+        }
 
-        const formatted = res.map((inv) => ({
-          invoiceId: inv.invoiceId,
-          userId: inv.userId,
-          userName: inv.fullName,
-          email: inv.email,
-          phone: inv.phone,
-          vehicleId: inv.vehicleId,
-          vehicleName: inv.model,
-          plateNumber: inv.plateNumber,
-          invoiceMonth: dayjs(
-            new Date(
-              inv.issuedDate[0],
-              inv.issuedDate[1] - 1, // tháng trong JS bắt đầu từ 0
-              inv.issuedDate[2]
-            )
-          ).format("YYYY-MM"),
-          totalAmount: inv.totalAmount,
-          status: inv.status,
-          issuedDate: new Date(...inv.issuedDate.slice(0, 6)),
-          dueDate: new Date(...inv.dueDate.slice(0, 6)),
-          note: "Tổng hợp chi phí tháng này",
-          details: inv.details.map((d) => ({
-            detailId: d.detailId,
-            feeType: d.feeType,
-            sourceType: d.sourceType,
-            description: d.description,
-            amount: d.amount,
-          })),
-        }));
+        // ✅ Gom nhóm theo tháng
+        const grouped = {};
+        const monthKey = res.month || dayjs().format("YYYY-MM");
+        if (!grouped[monthKey]) {
+          grouped[monthKey] = {
+            month: monthKey,
+            totalAmount: 0,
+            count: 0,
+            userName: res.userName,
+            invoices: [],
+          };
+        }
+        grouped[monthKey].invoices = res.invoices;
+        grouped[monthKey].totalAmount = res.totalAmount;
+        grouped[monthKey].count = res.invoices.length;
 
-        setInvoices(formatted);
+        setMonthlyData(Object.values(grouped));
       } catch (err) {
         console.error(err);
-        message.error("Không thể tải danh sách hóa đơn.");
+        message.error("Không thể tải dữ liệu hóa đơn.");
       } finally {
         setLoading(false);
       }
@@ -83,138 +79,119 @@ const UserInvoiceDashboard = () => {
     fetchInvoices();
   }, []);
 
-  // === Stats ===
-  const totalInvoices = invoices.length;
-  const openInvoices = invoices.filter((i) => i.status === "OPEN").length;
-  const paidInvoices = invoices.filter(
-    (i) => i.status === "SETTLED" || i.status === "PAID"
-  ).length;
-  const totalSpent = invoices.reduce((sum, i) => sum + i.totalAmount, 0);
+  if (loading)
+    return (
+      <div style={{ textAlign: "center", padding: 50 }}>
+        <Spin size="large" tip="Đang tải dữ liệu..." />
+      </div>
+    );
 
-  // === Columns ===
-  const columns = [
+  if (!monthlyData.length)
+    return <Empty description="Không có dữ liệu hóa đơn" style={{ padding: 50 }} />;
+
+  // ==== Bảng tổng hợp theo tháng ====
+  const monthColumns = [
+    { title: "Tháng", dataIndex: "month", key: "month" },
     {
-      title: "Invoice ID",
-      dataIndex: "invoiceId",
-      key: "invoiceId",
-      render: (id) => `#INV-${id}`,
+      title: "Số hóa đơn",
+      dataIndex: "count",
+      key: "count",
+      render: (v) => `${v} hóa đơn`,
     },
     {
-      title: "Month",
-      dataIndex: "invoiceMonth",
-      key: "invoiceMonth",
-    },
-    {
-      title: "Total (₫)",
+      title: "Tổng tiền",
       dataIndex: "totalAmount",
       key: "totalAmount",
-      render: (val) =>
-        val.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
+      render: (v) =>
+        v.toLocaleString("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }),
     },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      render: (status, record) => {
-        const isOverdue =
-          status === "OPEN" && dayjs(record.dueDate).isBefore(dayjs());
-        let color = "orange";
-        if (status === "SETTLED" || status === "PAID") color = "green";
-        else if (isOverdue) color = "red";
-        return <Tag color={color}>{isOverdue ? "OVERDUE" : status}</Tag>;
-      },
-    },
-    {
-      title: "Issued",
-      dataIndex: "issuedDate",
-      key: "issuedDate",
-      render: (date) => dayjs(date).format("DD/MM/YYYY"),
-    },
-    {
-      title: "Due",
-      dataIndex: "dueDate",
-      key: "dueDate",
-      render: (date) => dayjs(date).format("DD/MM/YYYY"),
-    },
-    {
-      title: "Action",
+      title: "Thao tác",
       key: "action",
       render: (_, record) => (
-        <Button type="link" onClick={() => handleView(record)}>
-          View
+        <Button type="link" onClick={() => openMonthDetail(record)}>
+          Xem chi tiết
         </Button>
       ),
     },
   ];
 
-  const detailColumns = [
-    { title: "Fee Type", dataIndex: "feeType", key: "feeType" },
-    { title: "Source", dataIndex: "sourceType", key: "sourceType" },
-    { title: "Description", dataIndex: "description", key: "description" },
+  const openMonthDetail = (record) => {
+    setSelectedMonth(record);
+    setOpen(true);
+  };
+
+  // ==== Cột bảng hóa đơn con ====
+  const invoiceColumns = [
     {
-      title: "Amount (₫)",
+      title: "Mã HĐ",
+      dataIndex: "invoiceId",
+      render: (id) => `#${id}`,
+    },
+    { title: "Xe", dataIndex: "model" },
+    { title: "Biển số", dataIndex: "plateNumber" },
+    {
+      title: "Tổng tiền",
+      dataIndex: "totalAmount",
+      render: (v) => v.toLocaleString("vi-VN"),
+    },
+    {
+      title: "Ngày lập",
+      dataIndex: "issuedDate",
+      render: (d) =>
+        dayjs(new Date(...d.slice(0, 6))).format("DD/MM/YYYY"),
+    },
+    {
+      title: "Hạn TT",
+      dataIndex: "dueDate",
+      render: (d) =>
+        dayjs(new Date(...d.slice(0, 6))).format("DD/MM/YYYY"),
+    },
+  ];
+
+  // ==== Cột bảng chi tiết gộp ====
+  const detailColumns = [
+    { title: "STT", dataIndex: "stt", key: "stt", width: 60 },
+    { title: "Xe", dataIndex: "vehicle", key: "vehicle" },
+    { title: "Biển số", dataIndex: "plateNumber", key: "plateNumber" },
+    { title: "Loại phí", dataIndex: "feeType", key: "feeType" },
+    { title: "Mô tả", dataIndex: "description", key: "description" },
+    {
+      title: "Số tiền",
       dataIndex: "amount",
       key: "amount",
-      render: (val) =>
-        val.toLocaleString("vi-VN", { style: "currency", currency: "VND" }),
+      render: (v) =>
+        v.toLocaleString("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }),
     },
   ];
 
   return (
     <div style={{ padding: 24 }}>
-      {/* === Summary === */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Total Invoices" value={totalInvoices} prefix={<FileTextOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Open" value={openInvoices} valueStyle={{ color: "#faad14" }} prefix={<ClockCircleOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic title="Paid" value={paidInvoices} valueStyle={{ color: "#3f8600" }} prefix={<CheckCircleOutlined />} />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card>
-            <Statistic
-              title="Total Amount"
-              value={totalSpent.toLocaleString("vi-VN")}
-              valueStyle={{ color: "#1677ff" }}
-              prefix={<DollarOutlined />}
+        <Col span={24}>
+          <Card title="📅 Báo cáo hóa đơn theo tháng">
+            <Table
+              columns={monthColumns}
+              dataSource={monthlyData}
+              rowKey="month"
+              pagination={false}
             />
           </Card>
         </Col>
       </Row>
 
-      {/* === Table === */}
-      <Card>
-        {loading ? (
-          <div style={{ textAlign: "center", padding: 50 }}>
-            <Spin size="large" tip="Đang tải hóa đơn..." />
-          </div>
-        ) : invoices.length === 0 ? (
-          <Empty description="Không có hóa đơn nào" style={{ padding: 50 }} />
-        ) : (
-          <Table
-            columns={columns}
-            dataSource={invoices}
-            rowKey="invoiceId"
-            pagination={{ pageSize: 5 }}
-          />
-        )}
-      </Card>
-
-      {/* === Modal === */}
+      {/* Modal chi tiết */}
       <Modal
         open={open}
-        title={`Hóa đơn #INV-${selectedInvoice?.invoiceId || ""}`}
+        title={`Chi tiết hóa đơn tháng ${selectedMonth?.month}`}
         onCancel={() => setOpen(false)}
-        width={850}
+        width={900}
         footer={[
           <Button key="close" onClick={() => setOpen(false)}>
             Đóng
@@ -229,37 +206,55 @@ const UserInvoiceDashboard = () => {
           </Button>,
         ]}
       >
-        {selectedInvoice && (
-          <div ref={pdfRef} style={{ padding: 10, background: "white" }}>
-            <Descriptions bordered column={1} size="small" title="Thông tin người dùng">
-              <Descriptions.Item label="Họ tên">{selectedInvoice.userName}</Descriptions.Item>
-              <Descriptions.Item label="Email">{selectedInvoice.email}</Descriptions.Item>
-              <Descriptions.Item label="Số điện thoại">{selectedInvoice.phone}</Descriptions.Item>
-            </Descriptions>
-
-            <Descriptions bordered column={1} size="small" title="Thông tin xe" style={{ marginTop: 16 }}>
-              <Descriptions.Item label="Tên xe">{selectedInvoice.vehicleName}</Descriptions.Item>
-              <Descriptions.Item label="Biển số">{selectedInvoice.plateNumber}</Descriptions.Item>
-            </Descriptions>
-
-            <Descriptions bordered column={1} size="small" title="Thông tin hóa đơn" style={{ marginTop: 16 }}>
-              <Descriptions.Item label="Mã hóa đơn">#INV-{selectedInvoice.invoiceId}</Descriptions.Item>
-              <Descriptions.Item label="Tháng">{selectedInvoice.invoiceMonth}</Descriptions.Item>
-              <Descriptions.Item label="Ngày phát hành">{dayjs(selectedInvoice.issuedDate).format("DD/MM/YYYY")}</Descriptions.Item>
-              <Descriptions.Item label="Hạn thanh toán">{dayjs(selectedInvoice.dueDate).format("DD/MM/YYYY")}</Descriptions.Item>
-              <Descriptions.Item label="Trạng thái">
-                <Tag color={selectedInvoice.status === "OPEN" ? "orange" : "green"}>{selectedInvoice.status}</Tag>
+        {selectedMonth && (
+          <div ref={pdfRef} style={{ padding: 10, background: "#fff" }}>
+            <Descriptions bordered column={1} size="small">
+              <Descriptions.Item label={<UserOutlined />}>
+                <b>{selectedMonth.userName}</b>
               </Descriptions.Item>
-              <Descriptions.Item label="Ghi chú">{selectedInvoice.note}</Descriptions.Item>
+              <Descriptions.Item label="Tháng">
+                {selectedMonth.month}
+              </Descriptions.Item>
+              <Descriptions.Item label="Tổng tháng">
+                {selectedMonth.totalAmount.toLocaleString("vi-VN", {
+                  style: "currency",
+                  currency: "VND",
+                })}
+              </Descriptions.Item>
             </Descriptions>
 
-            <h3 style={{ marginTop: 20 }}>Chi tiết phí</h3>
-            <Table columns={detailColumns} dataSource={selectedInvoice.details} pagination={false} rowKey="detailId" size="small" />
+            <h3 style={{ marginTop: 20 }}>📄 Các hóa đơn con</h3>
+            <Table
+              columns={invoiceColumns}
+              dataSource={selectedMonth.invoices}
+              pagination={false}
+              size="small"
+              rowKey="invoiceId"
+            />
+
+            <h3 style={{ marginTop: 30 }}>💡 Chi tiết gộp tất cả hóa đơn</h3>
+            <Table
+              columns={detailColumns}
+              dataSource={selectedMonth.invoices.flatMap((inv) =>
+                inv.details.map((d, i) => ({
+                  key: `${inv.invoiceId}-${i}`,
+                  stt: i + 1,
+                  vehicle: inv.model,
+                  plateNumber: inv.plateNumber,
+                  feeType: d.feeType,
+                  description: d.description,
+                  amount: d.amount,
+                }))
+              )}
+              pagination={false}
+              size="small"
+              bordered
+            />
 
             <h4 style={{ marginTop: 20, textAlign: "right" }}>
               <strong>
-                Tổng cộng:{" "}
-                {selectedInvoice.totalAmount.toLocaleString("vi-VN", {
+                Tổng cộng tháng {selectedMonth.month}:{" "}
+                {selectedMonth.totalAmount.toLocaleString("vi-VN", {
                   style: "currency",
                   currency: "VND",
                 })}

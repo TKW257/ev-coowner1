@@ -7,6 +7,8 @@ import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import "./style.scss";
 dayjs.extend(isBetween);
+
+const now = dayjs();
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
 
@@ -100,15 +102,26 @@ const BookingPage = ({ onBookingSuccess }) => {
     await createBooking(payload);
   };
 
-
+  // ❌ Chặn chọn ngoài tháng hiện tại
+  const disabledDate = (current) => {
+    return !current.isSame(now, "month");
+  };
 
   // ✅ Xác định trạng thái theo ngày
   const getStatusByDate = (date) => {
     for (const booking of bookings) {
-      const start = dayjs(booking.startTime);
-      const end = dayjs(booking.endTime);
+      // ✅ convert mảng thời gian thành dayjs
+      const startArray = booking.startTime;
+      const endArray = booking.endTime;
+
+      if (!Array.isArray(startArray) || !Array.isArray(endArray)) continue;
+
+      const start = dayjs(new Date(...startArray));
+      const end = dayjs(new Date(...endArray));
+      const status = booking.bookingStatus?.toLowerCase();
+
       if (date.isBetween(start, end, "day", "[]")) {
-        return booking.status;
+        return status;
       }
     }
     return null;
@@ -120,23 +133,26 @@ const BookingPage = ({ onBookingSuccess }) => {
     if (!status) return null;
 
     const colors = {
-      pending: "gold",
-      confirmed: "blue",
+      inprogress: "blue",
       completed: "green",
+      pending: "gold",
     };
 
     return (
       <div style={{ textAlign: "center" }}>
-        <Tag color={colors[status]} style={{ fontSize: 11, borderRadius: 6 }}>
-          {status === "pending"
-            ? "Chờ"
-            : status === "confirmed"
-              ? "Xác nhận"
-              : "Hoàn tất"}
+        <Tag color={colors[status] || "default"} style={{ fontSize: 11, borderRadius: 6 }}>
+          {status === "inprogress"
+            ? "Đang chạy"
+            : status === "completed"
+              ? "Hoàn tất"
+              : status === "pending"
+                ? "Chờ duyệt"
+                : status}
         </Tag>
       </div>
     );
   };
+
 
 
   if (!vehicle)
@@ -172,6 +188,7 @@ const BookingPage = ({ onBookingSuccess }) => {
 
               <div className="booking-actions">
                 <RangePicker
+                  disabledDate={disabledDate}
                   format="DD/MM/YYYY"
                   value={
                     startDate && endDate
