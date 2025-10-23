@@ -1,8 +1,17 @@
 import axiosClient from "./axiosClient";
 
 const bookingApi = {
+
   createBooking(data) {
     return axiosClient.post(`/bookings/createBooking`, data);
+  },
+
+  getAllBookings() {
+    return axiosClient.get("/bookings/viewAllBooking");
+  },
+
+  getMyBooking() {
+    return axiosClient.get('/bookings/my');
   },
 
   getBookingsByVehicle(vehicleId) {
@@ -26,8 +35,8 @@ const bookingApi = {
   },
 
   // STAFF CHECKING API
-  getAllBookings() {
-    return axiosClient.get("/bookings/viewAllBooking");
+  confirmStaffChecking(id, data) {
+    return axiosClient.post(`/staff-checkings/${id}/confirm`, data);
   },
 
   createStaffChecking(data) {
@@ -36,6 +45,10 @@ const bookingApi = {
 
   getAllStaffCheckings() {
     return axiosClient.get("/staff-checkings/viewAllStaffChecking");
+  },
+
+  getStaffCheckingsByBookingId(id) {
+    return axiosClient.get(`/staff-checkings/booking/${id}`)
   },
 };
 

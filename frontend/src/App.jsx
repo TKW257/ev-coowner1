@@ -19,7 +19,8 @@ import OurTerms from "./pages/guest/Home/OurTerms";
 
 // ===== Owner Pages =====
 import MyCarPage from "./pages/co-owner/MyCarPage";
-import CarBooking from "./pages/co-owner/BookingPage";
+import BookingPage from "./pages/co-owner/BookingPage";
+import BookingTrackingPage from "./pages/co-owner/BookingTrackingPage"
 import InvoicePage from "./pages/co-owner/InvoicePage";
 import OwnerVoteListPage from "./pages/co-owner/VotingPage/OwnerVoteListPage";
 
@@ -60,8 +61,9 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: "mycar", element: <MyCarPage /> },
-      { path: "carbooking", element: <CarBooking /> },
-      { path: "carbooking/:vehicleId", element: <CarBooking /> },
+      { path: "bookingtracking", element: <BookingTrackingPage /> },
+      { path: "carbooking/:vehicleId", element: <BookingPage /> },
+      { path: "carbooking", element: <BookingPage /> },
       { path: "invoice", element: <InvoicePage /> },
       { path: "vote", element: <OwnerVoteListPage /> },
     ],
