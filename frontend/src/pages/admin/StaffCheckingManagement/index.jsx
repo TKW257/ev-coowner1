@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Table, Tag, Space, Button, message, Select, Card, Statistic, Row, Col, Modal, Descriptions, Dropdown } from "antd";
 import { CheckCircleOutlined, ClockCircleOutlined, CarOutlined, UserOutlined, CalendarOutlined, EyeOutlined, DownloadOutlined, MailOutlined, CheckOutlined, DownOutlined } from "@ant-design/icons";
 import bookingApi from "../../../api/bookingApi";
-import StorageKeys from "../../../constants/storage-key";
+
 
 const StaffCheckingManagement = () => {
   const [checkings, setCheckings] = useState([]);

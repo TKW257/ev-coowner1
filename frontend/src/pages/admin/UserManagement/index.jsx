@@ -140,25 +140,27 @@ const UserManagement = () => {
       message.warning("Vui lòng chọn ít nhất một người dùng!");
       return;
     }
-
+  
     try {
       setLoading(true);
       const promises = selectedUserIds.map(userId => {
         const user = users.find(u => u.id === userId);
-        return invoiceApi.createInvoice({ userEmail: user.email });
+        return invoiceApi.createInvoice({ email: user.email }); // ✅ Đổi lại thành "email"
       });
-      
+  
       await Promise.all(promises);
+  
       message.success(`Tạo hóa đơn thành công cho ${selectedUserIds.length} người dùng!`);
       setInvoiceModalVisible(false);
       setSelectedUserIds([]);
     } catch (error) {
-      message.error("Tạo hóa đơn thất bại!");
       console.error("Error creating invoices:", error);
+      message.error("Tạo hóa đơn thất bại!");
     } finally {
       setLoading(false);
     }
   };
+  
 
   const getRoleColor = (role) => {
     switch (role) {
