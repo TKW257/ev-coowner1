@@ -53,7 +53,7 @@ const GuestHeader = () => {
     items: [
       {
         key: "profile",
-        label: <NavLink to="/profile">Trang cá nhân</NavLink>,
+        label: <NavLink to="/owner/profile">Trang cá nhân</NavLink>,
         icon: <UserOutlined />,
       },
       {

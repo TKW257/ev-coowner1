@@ -45,7 +45,7 @@ const BookingPage = ({ onBookingSuccess }) => {
   }, [vehicleId]);
 
 
-  // ✅  lấy status của all owner 
+  // ✅  lấy status ngày của all owner 
   useEffect(() => {
     if (!vehicleId) return;
 
@@ -80,27 +80,30 @@ const BookingPage = ({ onBookingSuccess }) => {
     }
   };
 
-  // ✅ Submit booking
-  const handleBooking = async () => {
-    if (!startDate || !endDate) {
-      message.warning("Vui lòng chọn ngày bắt đầu và kết thúc!");
-      return;
-    }
+ // ✅ Submit booking
+const handleBooking = async () => {
+  if (!startDate || !endDate) {
+    message.warning("Vui lòng chọn ngày bắt đầu và kết thúc!");
+    return;
+  }
 
-    if (!vehicleId) {
-      message.error("Không có vehicleId hợp lệ!");
-      return;
-    }
+  if (!vehicleId) {
+    message.error("Không có vehicleId hợp lệ!");
+    return;
+  }
 
-    const payload = {
-      vehicleId: Number(vehicleId),
-      startTime: dayjs(startDate).format("YYYY-MM-DD HH:mm:ss"),
-      endTime: dayjs(endDate).format("YYYY-MM-DD HH:mm:ss"),
-    };
+  const startTime = dayjs(startDate).hour(4).minute(0).second(0);
+  const endTime = dayjs(endDate).hour(23).minute(0).second(0);
 
-    console.log("%c🚀 Sending booking request:", "color:#ff9800", payload);
-    await createBooking(payload);
+  const payload = {
+    vehicleId: Number(vehicleId),
+    startTime: startTime.format("YYYY-MM-DD HH:mm:ss"),
+    endTime: endTime.format("YYYY-MM-DD HH:mm:ss"),
   };
+
+  console.log("%c🚀 Sending booking request:", "color:#52c41a", payload);
+  await createBooking(payload);
+};
 
   // ❌ Chặn chọn ngoài tháng hiện tại
   const disabledDate = (current) => {
@@ -109,23 +112,31 @@ const BookingPage = ({ onBookingSuccess }) => {
 
   // ✅ Xác định trạng thái theo ngày
   const getStatusByDate = (date) => {
+    const dayOnly = date.startOf("day");
+
     for (const booking of bookings) {
-      // ✅ convert mảng thời gian thành dayjs
       const startArray = booking.startTime;
       const endArray = booking.endTime;
-
       if (!Array.isArray(startArray) || !Array.isArray(endArray)) continue;
 
-      const start = dayjs(new Date(...startArray));
-      const end = dayjs(new Date(...endArray));
+      const start = dayjs(
+        new Date(startArray[0], startArray[1] - 1, startArray[2])
+      ).startOf("day");
+      const end = dayjs(
+        new Date(endArray[0], endArray[1] - 1, endArray[2])
+      ).endOf("day");
+
       const status = booking.bookingStatus?.toLowerCase();
 
-      if (date.isBetween(start, end, "day", "[]")) {
-        return status;
+      // ✅ so sánh theo ngày (bao gồm ranh giới)
+      if (dayOnly.isBetween(start, end, "day", "[]")) {
+        return status; // ngừng vòng lặp ngay khi match
       }
     }
+
     return null;
   };
+
 
   // ✅ Render trạng thái trong lịch
   const renderCell = (date) => {
@@ -174,7 +185,7 @@ const BookingPage = ({ onBookingSuccess }) => {
               {vehicle.brand} {vehicle.model}
             </Title>
             <Text className="car-subtitle">
-              Năm {vehicle.year} • Biển số: {vehicle.licensePlate}
+              Năm {vehicle.year} • Biển số: {vehicle.plateNumber}
             </Text>
             <Tag color="blue" className="status-tag">
               {vehicle.status}
@@ -221,7 +232,7 @@ const BookingPage = ({ onBookingSuccess }) => {
       <Card style={{ borderRadius: 12, marginTop: 24 }}>
         {bookingsLoading ? (
           <div style={{ textAlign: "center", padding: 50 }}>
-            <Spin size="large" tip="Đang tải lịch xe..." />
+            <Spin size="large" />
           </div>
         ) : (
           <>
@@ -233,12 +244,24 @@ const BookingPage = ({ onBookingSuccess }) => {
                     ? `Ngày bắt đầu: ${startDate.format("YYYY-MM-DD")}`
                     : "Chưa chọn ngày nào"
               }
-              style={{ marginBottom: 16 }}
+                style={{ marginBottom: 16 }}
             />
             <Calendar
               fullscreen={false}
               cellRender={renderCell}
-              onSelect={handleDateChange} />
+              disabledDate={(date) => {
+                const isSameMonth = date.month() === now.month();
+                const isSameYear = date.year() === now.year();
+                return !(isSameMonth && isSameYear);
+              }}
+              onSelect={(date) => {
+                if (!date.isSame(now, "month") || !date.isSame(now, "year")) {
+                  message.warning("Chỉ được chọn trong tháng và năm hiện tại!");
+                  return;
+                }
+                handleDateChange(date);
+              }}
+            />
           </>
         )}
       </Card>

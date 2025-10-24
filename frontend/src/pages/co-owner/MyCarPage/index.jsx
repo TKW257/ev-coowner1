@@ -121,7 +121,7 @@ const MyCars = () => {
                 <Text className="plate">
                   Biển số xe: {chosenCar.plateNumber}
                 </Text>
-                <div className="status-tag">
+                <div>
                   <Tag
                     color={
                       chosenCar.vehicleStatus?.toLowerCase() === "available"
@@ -144,7 +144,7 @@ const MyCars = () => {
                       chosenCar.vehicleStatus.toLowerCase() !== "available"
                     }
                   >
-                    Booking
+                    Đặt Lịch
                   </Button>
                 </div>
               </div>

@@ -6,6 +6,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 import StaffCheckingReport from "./StaffCheckingReport";
+import "./style.scss";
 
 const { Title, Text } = Typography;
 const { Step } = Steps;
@@ -37,9 +38,9 @@ const BookingTracking = () => {
 
   const statusColor = {
     Pending: "orange",
-    Confirmed: "blue",
-    InProgress: "blue",
-    Completed: "green",
+    Confirmed: "#1890ff",
+    InProgress: "#1890ff",
+    Completed: "#52c41a",
     Cancelled: "red",
   };
 
@@ -50,14 +51,11 @@ const BookingTracking = () => {
     );
   };
 
-
-  //Get My Bookings
   const fetchBookings = useCallback(async () => {
     setLoading(true);
     try {
       const res = await bookingApi.getMyBooking();
       const data = Array.isArray(res) ? res : res.data || [];
-
       const normalized = data.map((b) => ({
         ...b,
         bookingStatus: b.bookingStatus?.trim(),
@@ -65,7 +63,6 @@ const BookingTracking = () => {
         endTime: convertDateArray(b.endTime),
         createdAt: convertDateArray(b.createdAt),
       }));
-
       setBookings(normalized);
     } catch (error) {
       console.error("❌ Lỗi khi tải lịch sử đặt xe:", error);
@@ -78,7 +75,6 @@ const BookingTracking = () => {
     fetchBookings();
   }, [fetchBookings]);
 
-  // Cancel
   const handleCancelBooking = async (bookingId) => {
     try {
       setProcessingId(bookingId);
@@ -91,29 +87,18 @@ const BookingTracking = () => {
     }
   };
 
-  // Xác nhận biên bản kiểm tra
   const handleConfirmChecking = async () => {
-    if (!staffCheckings || staffCheckings.length === 0) {
-      console.error("❌ Không tìm thấy biên bản để xác nhận");
-      return;
-    }
-
+    if (!staffCheckings || staffCheckings.length === 0) return;
     const checking = staffCheckings[0];
     const checkingId = checking.checkingId || checking.id || checking.staffCheckingId;
-
-    if (!checkingId) {
-      console.error("❌ Không có ID hợp lệ trong staffChecking:", checking);
-      return;
-    }
+    if (!checkingId) return;
 
     try {
-      console.log("📤 Gửi confirm cho ID:", checkingId);
       await bookingApi.confirmStaffChecking(checkingId, {
         id: checkingId,
         approved: confirmApproved,
         userComment: confirmComment,
       });
-
       setIsConfirmModalVisible(false);
       setIsModalVisible(false);
       setConfirmComment("");
@@ -123,9 +108,6 @@ const BookingTracking = () => {
     }
   };
 
-
-
-  // 🟩 Mở modal & lọc biên bản theo type (CheckIn / CheckOut)
   const openModal = async (booking, type) => {
     setSelectedBooking(booking);
     setModalType(type);
@@ -139,27 +121,17 @@ const BookingTracking = () => {
         : Array.isArray(res.data)
           ? res.data
           : [];
-
-      // 🔍 Lọc chính xác không phân biệt hoa/thường
       const filtered = allCheckings.filter(
         (c) => c.checkingType?.toLowerCase() === type?.toLowerCase()
       );
-
-      console.log("✅ API trả về:", allCheckings);
-      console.log("🧩 Loại cần lọc:", type);
-      console.log("🎯 Kết quả lọc:", filtered);
-
       setStaffCheckings(filtered.length > 0 ? filtered : []);
     } catch (err) {
       console.error("❌ Lỗi khi gọi API:", err);
     } finally {
       setLoadingStaffCheckings(false);
     }
-
   };
 
-
-  // 🧾 Xuất PDF
   const generatePDF = async () => {
     const element = document.getElementById("pdf-content");
     if (!element) return;
@@ -186,22 +158,13 @@ const BookingTracking = () => {
         (b) => statusStepIndex[b.bookingStatus] === selectedStatus
       );
 
-
-
-
-
   return (
-    <div style={{ margin: 24 }}>
-      {/* Bộ lọc trạng thái */}
-      <Card style={{ borderRadius: 12, marginBottom: 20 }}>
-        <Space
-          style={{
-            justifyContent: "space-between",
-            width: "100%",
-            alignItems: "center",
-          }}
-        >
+    <div className="booking-tracking-container">
+      {/* Bộ lọc */}
+      <Card className="booking-filter-card">
+        <Space className="booking-filter-space">
           <Steps
+            className="booking-steps"
             onChange={handleStatusChange}
             current={selectedStatus ?? -1}
             responsive
@@ -222,27 +185,19 @@ const BookingTracking = () => {
         </Space>
       </Card>
 
-      {/* Modal hiển thị biên bản */}
+      {/* Modal biên bản */}
       <Modal
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={800}
+        className="checking-modal"
       >
-
-        <div id="pdf-content" style={{ background: "#fff", padding: 16 }}>
+        <div id="pdf-content" className="checking-content">
           {loadingStaffCheckings ? (
             <p>Đang tải biên bản...</p>
           ) : staffCheckings.length === 0 ? (
-            <Card
-              style={{
-                border: "1px dashed #bbb",
-                borderRadius: 12,
-                textAlign: "center",
-                padding: 32,
-                color: "#666",
-              }}
-            >
+            <Card className="empty-report-card">
               <Title level={5}>Chưa có biên bản cho loại này</Title>
               <p>Vui lòng chờ nhân viên cập nhật biên bản kiểm tra xe.</p>
             </Card>
@@ -253,17 +208,15 @@ const BookingTracking = () => {
           )}
         </div>
 
-        <div style={{ textAlign: "right", marginTop: 20 }}>
+        <div className="modal-footer">
           <Space>
             <Button onClick={() => setIsModalVisible(false)}>Đóng</Button>
-
             <Button
               onClick={generatePDF}
               disabled={loadingStaffCheckings || staffCheckings.length === 0}
             >
               Xuất PDF
             </Button>
-
             <Button
               type="primary"
               onClick={() => setIsConfirmModalVisible(true)}
@@ -277,10 +230,9 @@ const BookingTracking = () => {
             </Button>
           </Space>
         </div>
-
       </Modal>
 
-      {/* Modal con xác nhận */}
+      {/* Modal xác nhận */}
       <Modal
         title="Xác nhận Staff Checking"
         open={isConfirmModalVisible}
@@ -289,7 +241,7 @@ const BookingTracking = () => {
         cancelText="Hủy"
         onOk={handleConfirmChecking}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="confirm-modal-content">
           <div>
             <label>
               <input
@@ -313,7 +265,7 @@ const BookingTracking = () => {
           <div>
             <label>Ghi chú / bình luận:</label>
             <textarea
-              style={{ width: "100%", minHeight: 80, marginTop: 4 }}
+              className="confirm-textarea"
               value={confirmComment}
               onChange={(e) => setConfirmComment(e.target.value)}
             />
@@ -323,7 +275,7 @@ const BookingTracking = () => {
 
       {/* Danh sách booking */}
       {loading ? (
-        <div style={{ textAlign: "center", marginTop: 80 }}>
+        <div className="loading-state">
           <Spin size="large" />
         </div>
       ) : filteredBookings.length === 0 ? (
@@ -334,14 +286,7 @@ const BookingTracking = () => {
         />
       ) : (
         filteredBookings.map((b) => (
-          <Card
-            key={b.bookingId}
-            style={{
-              borderRadius: 16,
-              marginBottom: 20,
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-            }}
-          >
+          <Card key={b.bookingId} className="booking-card">
             <Row gutter={16} align="middle">
               <Col xs={24} sm={8} md={6}>
                 <img
@@ -350,12 +295,7 @@ const BookingTracking = () => {
                     "https://via.placeholder.com/250x150?text=No+Image"
                   }
                   alt={b.vehicleName}
-                  style={{
-                    width: "100%",
-                    height: 150,
-                    objectFit: "cover",
-                    borderRadius: 12,
-                  }}
+                  className="booking-card-image"
                 />
               </Col>
 
@@ -363,29 +303,31 @@ const BookingTracking = () => {
                 <Row justify="space-between" align="middle">
                   <Col>
                     <Text strong>Booking #{b.bookingId}</Text>
-                    <Tag color={statusColor[b.bookingStatus]} style={{ marginLeft: 8 }}>
+                    <Tag
+                      color={statusColor[b.bookingStatus]}
+                      className="booking-status-tag"
+                    >
                       {b.bookingStatus}
                     </Tag>
                   </Col>
                   <Col>
                     <Text type="secondary">
-                      Đặt vào {b.createdAt?.format("YYYY-MM-DD")}
+                      Đặt vào {b.createdAt?.format("DD-MM-YYYY (HH:mm)")}
                     </Text>
                   </Col>
                 </Row>
 
-                <div style={{ marginTop: 8 }}>
-                  <Title level={4} style={{ marginBottom: 4 }}>
-                    {b.vehicleName}
-                  </Title>
+                <div className="booking-info">
+                  <Title level={4}>{b.vehicleName}</Title>
                   <Text>
-                    <CalendarOutlined /> {b.startTime?.format("YYYY-MM-DD")} →{" "}
-                    {b.endTime?.format("YYYY-MM-DD")}
+                    <CalendarOutlined />{" "}
+                    {b.startTime?.format("DD-MM-YYYY (HH:mm)")} →{" "}
+                    {b.endTime?.format("DD-MM-YYYY (HH:mm)")}
                   </Text>
                 </div>
 
-                {/* Nút hành động */}
-                <div style={{ marginTop: 12, textAlign: "right" }}>
+
+                <div className="booking-actions">
                   {b.bookingStatus === "Cancelled" && (
                     <Text type="secondary">Đơn hàng đã bị hủy</Text>
                   )}
@@ -411,7 +353,6 @@ const BookingTracking = () => {
                         {b.bookingStatus === "Confirmed" && (
                           <Button
                             type="primary"
-                            icon={<CarOutlined />}
                             onClick={() => openModal(b, "CheckOut")}
                           >
                             Nhận xe
@@ -425,14 +366,13 @@ const BookingTracking = () => {
                       <Space>
                         <Button
                           type="primary"
-                          icon={<CarOutlined />}
                           onClick={() => openModal(b, "CheckOut")}
                         >
                           Nhận xe
                         </Button>
-
                         <Button
                           type="dashed"
+                          className="return-btn"
                           icon={<SwapOutlined />}
                           onClick={() => openModal(b, "CheckIn")}
                         >
@@ -441,11 +381,6 @@ const BookingTracking = () => {
                       </Space>
                     )}
 
-                  {b.bookingStatus === "Completed" && (
-                    <div style={{ marginTop: 8 }}>
-                      <Text type="secondary">Đã hoàn tất, cảm ơn bạn!</Text>
-                    </div>
-                  )}
                 </div>
               </Col>
             </Row>

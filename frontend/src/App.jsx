@@ -23,6 +23,7 @@ import BookingPage from "./pages/co-owner/BookingPage";
 import BookingTrackingPage from "./pages/co-owner/BookingTrackingPage"
 import InvoicePage from "./pages/co-owner/InvoicePage";
 import OwnerVoteListPage from "./pages/co-owner/VotingPage/OwnerVoteListPage";
+import ProfilePage from "./pages/co-owner/ProfilePage";
 
 // ===== Admin Pages =====
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
       // </ProtectedRoute>
     ),
     children: [
+      { path: "profile", element: <ProfilePage /> },
       { path: "mycar", element: <MyCarPage /> },
       { path: "bookingtracking", element: <BookingTrackingPage /> },
       { path: "carbooking/:vehicleId", element: <BookingPage /> },

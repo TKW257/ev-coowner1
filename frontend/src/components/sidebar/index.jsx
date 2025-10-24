@@ -66,6 +66,11 @@ const Sidebar = () => {
   } else if (role === "USER") {
     menuItems = [
       {
+        key: "/owner/profile",
+        icon: <UserOutlined />,
+        label: <Link to="/owner/profile">Người dùng</Link>,
+      },
+      {
         key: "/owner/mycar",
         icon: <HomeOutlined />,
         label: <Link to="/owner/mycar">Xe Của Tôi</Link>,

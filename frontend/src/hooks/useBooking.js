@@ -43,7 +43,7 @@ export const useBooking = (onSuccess) => {
       console.error("Data:", error.response?.data);
       console.groupEnd();
 
-      const errMsg = error.response?.data?.message || "Đặt xe thất bại, vui lòng thử lại!";
+      const errMsg = error.response?.data?.message || "Vui lòng không chọn ngày trong quá khứ và ngày đã đặt!";
 
       notification.error({
         message: "Đặt xe thất bại",
