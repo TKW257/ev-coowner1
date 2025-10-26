@@ -1,72 +1,84 @@
 import { useEffect, useState } from "react";
-import { Button, message, Spin } from "antd";
-import voteApi from "../../../api/voteApi";
-import TopicCard from "../../../components/vote/TopicCard.jsx";
-
+import { Breadcrumb, Card, Row, Col, Spin, Button, message } from "antd";
+import { HomeOutlined, CarOutlined, PlusOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import vehiclesApi from "../../../api/vehiclesApi";
 
 export default function AdminVoteListPage() {
-  const [topics, setTopics] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchTopics = async () => {
-    try {
-      const res = await voteApi.getAllTopics();
-      console.log("Admin voteApi response:", res);
-      // Support both: API may return an array directly or an object with .data / .content
-      const data = Array.isArray(res) ? res : res?.data ?? res?.content;
-      setTopics(Array.isArray(data) ? data : []);
-    } catch {
-      message.error("Failed to load topics");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCalculate = async (id) => {
-    try {
-      await voteApi.calculateResult(id);
-      message.success("Result calculated");
-      fetchTopics();
-    } catch {
-      message.error("Failed to calculate");
-    }
-  };
-
   useEffect(() => {
-    fetchTopics();
+    const fetchAll = async () => {
+      try {
+        const res = await vehiclesApi.getAllVehicles();
+        console.log("✅ API trả về:", res);
+
+        // trường hợp backend trả về dạng array
+        const data = Array.isArray(res?.data) ? res.data : res;
+        setVehicles(data || []);
+      } catch (err) {
+        console.error(err);
+        message.error("Không thể tải danh sách xe");
+        setVehicles([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
   }, []);
 
-  return (
-    <Spin spinning={loading} tip="Loading topics...">
-      <div className="container mt-4">
-        <h2>Voting Topics (Staff)</h2>
-        <Button
-          type="primary"
-          onClick={() => navigate("/admin/vote/create")}
-          className="mb-3"
-        >
-          + Create Topic
-        </Button>
+  if (loading)
+    return <Spin className="flex justify-center mt-10" size="large" />;
 
-        {console.log("Rendering admin topics:", topics)}
-        {(!topics || topics.length === 0) && !loading ? (
-          <div>No topics found.</div>
-        ) : (
-          topics.map((t) => {
-            const id = t.topicId ?? t.id ?? t.topic_id;
-            return (
-              <TopicCard
-                key={id ?? JSON.stringify(t)}
-                topic={t}
-                onDetail={(id) => navigate(`/admin/vote/${id}`)}
-                onCalculate={handleCalculate}
-              />
-            );
-          })
-        )}
+  return (
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <Breadcrumb
+        items={[
+          { title: <HomeOutlined /> },
+          { title: <CarOutlined /> },
+          { title: "Danh sách xe" },
+        ]}
+      />
+
+      <div className="flex justify-between items-center mt-3 mb-5">
+        <h1 className="text-xl font-semibold text-gray-700 colour text  black">
+          Chọn xe để tạo chủ đề bình chọn
+        </h1>
       </div>
-    </Spin>
+
+      <Row gutter={[16, 16]}>
+        {Array.isArray(vehicles) && vehicles.length > 0 ? (
+          vehicles.map((v) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={v.vehicleId}>
+              <Card
+                title={v.model || v.name || `Xe #${v.vehicleId}`}
+                className="shadow-md hover:shadow-lg transition-all bg-white"
+                actions={[
+                  <Button
+                    type="primary"
+                    onClick={() =>
+                      navigate(`/admin/vote/create?vehicleId=${v.vehicleId}`)
+                    }
+                  >
+                    Tạo bình chọn
+                  </Button>,
+                ]}
+              >
+                <p>Màu: {v.color}</p>
+                <p>Trạng thái: {v.status}</p>
+              </Card>
+            </Col>
+          ))
+        ) : (
+          <Col span={24}>
+            <p className="text-gray-500 text-center mt-10">
+              Không có xe nào để hiển thị.
+            </p>
+          </Col>
+        )}
+      </Row>
+    </div>
   );
 }

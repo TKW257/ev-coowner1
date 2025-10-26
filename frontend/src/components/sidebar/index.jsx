@@ -51,6 +51,11 @@ const Sidebar = () => {
         icon: <BookOutlined />,
         label: <Link to="/admin/vote"> Bình chọn </Link>,
       },
+      {
+        key: "vote/all",
+        icon: <CheckCircleOutlined />,
+        label: <Link to="/admin/vote/all">Tất cả Votes</Link>,
+      },
     ];
   } else if (role === "USER") {
     menuItems = [

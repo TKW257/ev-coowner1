@@ -4,6 +4,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { App as AntdApp } from "antd";
+import { PieChartOutlined } from "@ant-design/icons";
 
 // ===== Layouts =====
 import DashboardLayout from "./components/layouts/Dashboard";
@@ -30,10 +31,10 @@ import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
-
+import AdminVoteDetailPage from "./pages/admin/VotesManagement/AdminVoteDetailPage";
 import AdminVoteListPage from "./pages/admin/VotesManagement/AdminVoteListPage";
 import AdminCreateTopicPage from "./pages/admin/VotesManagement/AdminCreateTopicPage";
-import TopicDetailPage from "./pages/admin/VotesManagement/TopicDetailPage";
+import AdminAllVotesPage from "./pages/admin/VotesManagement/AdminAllVotesPage";
 
 // ===== Router Configuration =====
 const router = createBrowserRouter([
@@ -83,10 +84,11 @@ const router = createBrowserRouter([
       { path: "users", element: <UserManagement /> },
       { path: "invoice", element: <InvoiceManagement /> },
 
-      // Votes Management
+      // ✅ Votes Management
       { path: "vote", element: <AdminVoteListPage /> },
       { path: "vote/create", element: <AdminCreateTopicPage /> },
-      { path: "vote/:id", element: <TopicDetailPage /> },
+      { path: "vote-detail/:id", element: <AdminVoteDetailPage /> },
+      { path: "vote/all", element: <AdminAllVotesPage /> },
     ],
   },
 
