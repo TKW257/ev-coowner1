@@ -130,7 +130,7 @@ const ProfileForm = () => {
                 padding: "0 40px",
               }}
             >
-              Add Now
+              Cập Nhật
             </Button>
           </Form.Item>
         </Form>

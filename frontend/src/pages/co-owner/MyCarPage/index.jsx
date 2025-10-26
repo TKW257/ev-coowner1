@@ -1,24 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Card,
-  Row,
-  Col,
-  Tag,
-  Typography,
-  Button,
-  Empty,
-  Statistic,
-} from "antd";
-import {
-  ThunderboltOutlined, 
-  LikeOutlined,
-  DollarOutlined,
-  CalendarOutlined,
-  DashboardOutlined,
-  PercentageOutlined,
-  CarOutlined,
-} from "@ant-design/icons";
+import { Card, Row, Col, Tag, Typography, Button, Statistic } from "antd";
+import { ThunderboltOutlined,  DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined } from "@ant-design/icons";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import "./style.scss";
 
@@ -110,6 +93,7 @@ const MyCars = () => {
     <div className="mycars-root">
       {chosenCar && (
         <div className={`chosen-car ${fade ? "fade-out" : "fade-in"}`}>
+
           {/* Image & overlay */}
           <div className="image-wrap">
             <img src={chosenCar.imageUrl} alt={chosenCar.model} />
@@ -121,12 +105,19 @@ const MyCars = () => {
                 <Text className="plate">
                   Biển số xe: {chosenCar.plateNumber}
                 </Text>
+                 <Text className="plate">
+                  Năm sản xuất: {chosenCar.year}
+                </Text>
                 <div>
                   <Tag
                     color={
                       chosenCar.vehicleStatus?.toLowerCase() === "available"
                         ? "green"
-                        : "orange"
+                        : chosenCar.vehicleStatus?.toLowerCase() === "rented"
+                          ? "blue"
+                          : chosenCar.vehicleStatus?.toLowerCase() === "maintenance"
+                            ? "red"
+                            : "default"
                     }
                   >
                     {chosenCar.vehicleStatus}
@@ -156,14 +147,6 @@ const MyCars = () => {
             <Row gutter={[16, 16]}>
               <Col xs={12} sm={6}>
                 <Statistic
-                  title="Năm SX"
-                  value={chosenCar.year}
-                  prefix={<CalendarOutlined />}
-                  valueStyle={{ fontSize: 20 }}
-                />
-              </Col>
-              <Col xs={12} sm={6}>
-                <Statistic
                   title="Dung lượng pin"
                   value={chosenCar.batteryCapacityKwh}
                   suffix="kWh"
@@ -173,8 +156,8 @@ const MyCars = () => {
               </Col>
               <Col xs={12} sm={6}>
                 <Statistic
-                  title="Chi phí / km"
-                  value={chosenCar.operatingCostPerKm}
+                  title="Phí sac mỗi kWh"
+                  value={chosenCar.feeChargingPerKwh}
                   suffix="₫"
                   prefix={<DollarOutlined />}
                   valueStyle={{ fontSize: 20 }}
@@ -182,8 +165,17 @@ const MyCars = () => {
               </Col>
               <Col xs={12} sm={6}>
                 <Statistic
-                  title="Chi phí / ngày"
-                  value={chosenCar.operatingCostPerDay}
+                  title="Phí vượt quá số km giới hạn"
+                  value={chosenCar.feeOverKm}
+                  suffix="₫"
+                  prefix={<DollarOutlined />}
+                  valueStyle={{ fontSize: 20 }}
+                />
+              </Col>
+              <Col xs={12} sm={6}>
+                <Statistic
+                  title="Phí vận hành mỗi tháng"
+                  value={chosenCar.operatingCostPerKm}
                   suffix="₫"
                   prefix={<DollarOutlined />}
                   valueStyle={{ fontSize: 20 }}
@@ -258,9 +250,13 @@ const MyCars = () => {
                       <div className="mini-tags">
                         <Tag
                           color={
-                            car.vehicleStatus?.toLowerCase() === "available"
+                            chosenCar.vehicleStatus?.toLowerCase() === "available"
                               ? "green"
-                              : "orange"
+                              : chosenCar.vehicleStatus?.toLowerCase() === "rented"
+                                ? "blue"
+                                : chosenCar.vehicleStatus?.toLowerCase() === "maintenance"
+                                  ? "red"
+                                  : "default"
                           }
                         >
                           {car.vehicleStatus}

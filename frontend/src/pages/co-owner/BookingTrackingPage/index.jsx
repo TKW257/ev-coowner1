@@ -2,10 +2,12 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Steps, Card, Row, Col, Tag, Typography, Button, Space, Spin, Empty, Popconfirm, Modal } from "antd";
 import { CalendarOutlined, StopOutlined, CarOutlined, SwapOutlined } from "@ant-design/icons";
 import bookingApi from "../../../api/bookingApi";
+import StaffCheckingReport from "./StaffCheckingReport";
+import { App } from "antd";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
-import StaffCheckingReport from "./StaffCheckingReport";
+
 import "./style.scss";
 
 const { Title, Text } = Typography;
@@ -27,6 +29,7 @@ const BookingTracking = () => {
   const [isConfirmModalVisible, setIsConfirmModalVisible] = useState(false);
   const [confirmApproved, setConfirmApproved] = useState(true);
   const [confirmComment, setConfirmComment] = useState("");
+  const { message, notification } = App.useApp();
 
   const statusStepIndex = {
     Pending: 0,
@@ -62,7 +65,9 @@ const BookingTracking = () => {
         startTime: convertDateArray(b.startTime),
         endTime: convertDateArray(b.endTime),
         createdAt: convertDateArray(b.createdAt),
+
       }));
+      console.log("Lịch status:", res);
       setBookings(normalized);
     } catch (error) {
       console.error("❌ Lỗi khi tải lịch sử đặt xe:", error);
@@ -79,9 +84,11 @@ const BookingTracking = () => {
     try {
       setProcessingId(bookingId);
       await bookingApi.cancelBooking(bookingId);
+      message.success("✅ Hủy đặt xe thành công!");
       fetchBookings();
     } catch (error) {
       console.error(error);
+      message.error("❌ Hủy thất bại, thử lại sau!");
     } finally {
       setProcessingId(null);
     }
@@ -89,6 +96,7 @@ const BookingTracking = () => {
 
   const handleConfirmChecking = async () => {
     if (!staffCheckings || staffCheckings.length === 0) return;
+
     const checking = staffCheckings[0];
     const checkingId = checking.checkingId || checking.id || checking.staffCheckingId;
     if (!checkingId) return;
@@ -99,14 +107,27 @@ const BookingTracking = () => {
         approved: confirmApproved,
         userComment: confirmComment,
       });
+
+      notification.success({
+        message: "Xác nhận biên bản thành công",
+        description: confirmApproved
+          ? "Bạn đã xác nhận đồng ý biên bản kiểm tra."
+          : "Bạn đã không đồng ý biên bản và gửi phản hồi.",
+      });
+
       setIsConfirmModalVisible(false);
       setIsModalVisible(false);
       setConfirmComment("");
       fetchBookings();
     } catch (err) {
-      console.error("❌ Lỗi khi xác nhận biên bản:", err);
+      notification.error({
+        message: "Lỗi xác nhận",
+        description: "Vui lòng thử lại sau.",
+      });
+      console.error(err);
     }
   };
+
 
   const openModal = async (booking, type) => {
     setSelectedBooking(booking);
@@ -361,25 +382,38 @@ const BookingTracking = () => {
                       </Space>
                     )}
 
-                  {(b.bookingStatus === "InProgress" ||
-                    b.bookingStatus === "Completed") && (
-                      <Space>
-                        <Button
-                          type="primary"
-                          onClick={() => openModal(b, "CheckOut")}
-                        >
-                          Nhận xe
-                        </Button>
-                        <Button
-                          type="dashed"
-                          className="return-btn"
-                          icon={<SwapOutlined />}
-                          onClick={() => openModal(b, "CheckIn")}
-                        >
-                          Trả xe
-                        </Button>
-                      </Space>
-                    )}
+                  {(b.bookingStatus === "InProgress") && (
+                    <Space>
+                      <Button
+                        type="dashed"
+                        className="return-btn"
+                        icon={<SwapOutlined />}
+                        onClick={() => openModal(b, "CheckIn")}
+                      >
+                        Trả xe
+                      </Button>
+                    </Space>
+                  )}
+
+                  {(b.bookingStatus === "Completed") && (
+                    <Space>
+                      <Button
+                        type="primary"
+                        onClick={() => openModal(b, "CheckOut")}
+                      >
+                        Biên Bản Nhận Xe
+                      </Button>
+                      <Button
+                        type="dashed"
+                        className="return-btn"
+                        icon={<SwapOutlined />}
+                        onClick={() => openModal(b, "CheckIn")}
+                      >
+                        Biên Bản Trả Xe
+                      </Button>
+                    </Space>
+                  )}
+
 
                 </div>
               </Col>
