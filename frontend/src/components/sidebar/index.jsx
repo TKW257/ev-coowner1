@@ -66,14 +66,19 @@ const Sidebar = () => {
   } else if (role === "USER") {
     menuItems = [
       {
-        key: "mycar",
+        key: "/owner/mycar",
         icon: <HomeOutlined />,
         label: <Link to="/owner/mycar">Xe Của Tôi</Link>,
       },
       {
-        key: "booking",
+        key: "/owner/bookingtracking",
         icon: <CalendarOutlined />,
-        label: <Link to="/owner/carbooking">Đặt Xe</Link>,
+        label: <Link to="/owner/bookingtracking">Lịch Đặt Xe</Link>,
+      },
+      {
+        key: "/owner/invoice",
+        icon: <FileTextOutlined />,
+        label: <Link to="/owner/invoice">Thanh Toán</Link>,
       },
       {
         key: "/owner/vote",
@@ -81,9 +86,9 @@ const Sidebar = () => {
         label: <Link to="/owner/vote">Bình Chọn</Link>,
       },
       {
-        key: "invoice",
-        icon: <FileTextOutlined />,
-        label: <Link to="/owner/invoice">Hóa Đơn</Link>,
+        key: "/owner/profile",
+        icon: <UserOutlined />,
+        label: <Link to="/owner/profile">Người dùng</Link>,
       },
 
     ];

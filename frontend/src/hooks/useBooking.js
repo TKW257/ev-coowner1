@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { App } from "antd"; // dùng notification từ AntdApp
+import { App } from "antd"; 
 import bookingApi from "../api/bookingApi";
+
 
 export const useBooking = (onSuccess) => {
   const [loading, setLoading] = useState(false);
-  const { notification } = App.useApp(); // ✅ lấy notification từ AntdApp
+  const { notification } = App.useApp();
 
-  const createBooking = async ({ vehicleId, startTime }) => {
-    if (!vehicleId || !startTime) {
+  const createBooking = async ({ vehicleId, startTime, endTime }) => {
+    if (!vehicleId || !startTime || !endTime) {
       notification.warning({
         message: "Thiếu thông tin đặt xe",
-        description: "Vui lòng chọn xe và ngày bắt đầu!",
+        description: "Vui lòng chọn xe và khoảng thời gian!",
         placement: "topRight",
       });
       return;
@@ -21,19 +22,18 @@ export const useBooking = (onSuccess) => {
       console.log("%c📦 Booking payload gửi lên server:", "color:#03a9f4", {
         vehicleId,
         startTime,
+        endTime,
       });
 
-      const res = await bookingApi.createBooking({ vehicleId, startTime });
+      const res = await bookingApi.createBooking({ vehicleId, startTime, endTime });
       console.log("%c✅ Booking thành công:", "color:#4caf50", res);
 
-      // Hiển thị notification thành công
       notification.success({
         message: "Đặt xe thành công!",
         description: res?.message || "Bạn đã đặt xe thành công.",
         placement: "topRight",
       });
 
-      // Giữ nguyên logic cũ
       onSuccess?.(res);
       return res;
     } catch (error) {
@@ -43,10 +43,8 @@ export const useBooking = (onSuccess) => {
       console.error("Data:", error.response?.data);
       console.groupEnd();
 
-      const errMsg =
-        error.response?.data?.message || "Đặt xe thất bại, vui lòng thử lại!";
+      const errMsg = error.response?.data?.message || "Vui lòng không chọn ngày trong quá khứ và ngày đã đặt!";
 
-      // Hiển thị notification lỗi
       notification.error({
         message: "Đặt xe thất bại",
         description: errMsg,
@@ -59,3 +57,16 @@ export const useBooking = (onSuccess) => {
 
   return { createBooking, loading };
 };
+
+
+
+
+
+
+
+
+
+
+
+
+

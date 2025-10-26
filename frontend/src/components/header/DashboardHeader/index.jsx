@@ -36,7 +36,7 @@ const DashboardHeader = ({ children }) => {
         key: "profile",
         label: <span>Trang cá nhân</span>,
         icon: <UserOutlined />,
-        onClick: () => navigate("/profile"),
+        onClick: () => navigate("/owner/profile"),
       },
       {
         key: "dashboard",

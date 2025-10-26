@@ -1,15 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  Row,
-  Col,
-  Card,
-  Statistic,
-  Table,
-  Tag,
+import { Row, Col, Card, Statistic, Table, Tag,
   Button,
   Modal,
-  Input,
-  Form,
   Descriptions,
   message,
   Spin,
@@ -27,16 +19,12 @@ import dayjs from "dayjs";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import invoiceApi from "../../../api/invoiceApi";
-import useCreateInvoice from "../../../hooks/useCreateInvoice";
 
 const AdminInvoiceDashboard = () => {
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [openCreate, setOpenCreate] = useState(false);
-  const [form] = Form.useForm();
-  const { createInvoice, creating } = useCreateInvoice();
   const pdfRef = useRef();
 
   const handleView = (record) => {
@@ -44,21 +32,6 @@ const AdminInvoiceDashboard = () => {
     setOpen(true);
   };
 
-  const handleCreateInvoice = async () => {
-    try {
-      const values = await form.validateFields();
-      const res = await createInvoice(values);
-      if (res) {
-        message.success("Tạo hóa đơn thành công!");
-        setOpenCreate(false);
-        form.resetFields();
-        const updated = await invoiceApi.getAllInvoices();
-        setInvoices(updated);
-      }
-    } catch (err) {
-      console.error("❌ Create failed:", err);
-    }
-  };
 
   const handleDownloadPDF = async () => {
     const element = pdfRef.current;
@@ -211,17 +184,6 @@ const AdminInvoiceDashboard = () => {
 
       {/* === Table + Button === */}
       <Card>
-        <Row justify="end" style={{ marginBottom: 12 }}>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            loading={creating}
-            onClick={() => setOpenCreate(true)}
-          >
-            Tạo hóa đơn
-          </Button>
-        </Row>
-
         {loading ? (
           <div style={{ textAlign: "center", padding: 50 }}>
             <Spin size="large" tip="Đang tải danh sách hóa đơn..." />
@@ -233,28 +195,6 @@ const AdminInvoiceDashboard = () => {
         )}
       </Card>
 
-      {/* === Modal tạo hóa đơn === */}
-      <Modal
-        title="Tạo hóa đơn mới"
-        open={openCreate}
-        onCancel={() => setOpenCreate(false)}
-        onOk={handleCreateInvoice}
-        okText="Tạo"
-        cancelText="Hủy"
-        confirmLoading={creating}
-      >
-        <Form layout="vertical" form={form}>
-          <Form.Item label="Mã người dùng" name="userId" rules={[{ required: true, message: "Nhập userId!" }]}>
-            <Input placeholder="Nhập ID người dùng" />
-          </Form.Item>
-          <Form.Item label="Mã xe" name="vehicleId" rules={[{ required: true, message: "Nhập vehicleId!" }]}>
-            <Input placeholder="Nhập ID xe" />
-          </Form.Item>
-          <Form.Item label="Ghi chú" name="note">
-            <Input.TextArea rows={3} placeholder="Ghi chú (nếu có)" />
-          </Form.Item>
-        </Form>
-      </Modal>
 
       {/* === Modal xem chi tiết === */}
       <Modal
