@@ -1,15 +1,46 @@
 import React from "react";
 import { Form, Input, Button, Upload, Row, Col, Typography, Card } from "antd";
 import { UploadOutlined, CameraOutlined } from "@ant-design/icons";
+import { useEffect, useState } from "react";
+import userApi from "../../../api/userApi";
 
 const { Title } = Typography;
 
 const ProfileForm = () => {
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (values) => {
-    console.log("Form values:", values);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await userApi.getProfile(); // gọi API getMe
+        form.setFieldsValue({
+          fullName: res.fullName,
+          email: res.email,
+          phone: res.phone,
+        });
+        console.log(res);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
+  }, [form]);
+
+
+  const handleUpdate = async (values) => {
+    try {
+      setLoading(true);
+      await userApi.update(values.id, values);
+    } catch (err) {
+      console.error("F update", err);
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <div
@@ -58,40 +89,37 @@ const ProfileForm = () => {
           </Upload>
         </div>
 
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" onFinish={handleUpdate}>
+          <Form.Item name="id" hidden>
+            <Input />
+          </Form.Item>
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item
-                label="Full Name"
+                label="Họ và Tên"
                 name="fullName"
-                rules={[{ required: true, message: "Please enter your name" }]}
+                rules={[{ required: true, message: "Vui lòng nhập họ tên" }]}
               >
-                <Input placeholder="Enter your full name" size="large" />
+                <Input size="large" placeholder="Nhập họ tên" />
               </Form.Item>
             </Col>
           </Row>
 
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item
-                label="Email"
-                name="email"
-                rules={[
-                  { required: true, message: "Please enter your email" },
-                  { type: "email", message: "Invalid email" },
-                ]}
-              >
-                <Input placeholder="Enter your email" size="large" />
+              <Form.Item label="Email" name="email">
+                <Input size="large" readOnly style={{ background: "#f1f3f5", cursor: "not-allowed" }} />
               </Form.Item>
+
             </Col>
 
             <Col span={12}>
               <Form.Item
-                label="Phone Number"
+                label="Số điện thoại"
                 name="phone"
-                rules={[{ required: true, message: "Please enter your phone number" }]}
+                rules={[{ required: true, message: "Vui lòng nhập số điện thoại" }]}
               >
-                <Input placeholder="Enter your phone number" size="large" />
+                <Input size="large" placeholder="Nhập số điện thoại" />
               </Form.Item>
             </Col>
           </Row>
@@ -122,6 +150,7 @@ const ProfileForm = () => {
             <Button
               type="primary"
               htmlType="submit"
+              loading={loading}
               size="large"
               style={{
                 backgroundColor: "#52c41a",
@@ -140,3 +169,5 @@ const ProfileForm = () => {
 };
 
 export default ProfileForm;
+
+

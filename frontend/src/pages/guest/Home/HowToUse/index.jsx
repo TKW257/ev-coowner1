@@ -76,6 +76,11 @@ const HowToCoOwn = () => {
                 alt="Electric car side"
                 className="ev-image secondary"
               />
+               <img
+                src="https://tse2.mm.bing.net/th/id/OIP.0sAlfje-yr5Uh5JSNVlz2QHaE_?w=1900&h=1280&rs=1&pid=ImgDetMain&o=7&rm=3"
+                alt="Electric car"
+                className="ev-image main"
+              />
             </div>
           </Col>
         </Row>

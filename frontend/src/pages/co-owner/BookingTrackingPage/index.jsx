@@ -145,6 +145,7 @@ const BookingTracking = () => {
       const filtered = allCheckings.filter(
         (c) => c.checkingType?.toLowerCase() === type?.toLowerCase()
       );
+      console.log("staff:", res);
       setStaffCheckings(filtered.length > 0 ? filtered : []);
     } catch (err) {
       console.error("❌ Lỗi khi gọi API:", err);
@@ -413,8 +414,6 @@ const BookingTracking = () => {
                       </Button>
                     </Space>
                   )}
-
-
                 </div>
               </Col>
             </Row>
