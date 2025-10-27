@@ -27,93 +27,211 @@ import dayjs from "dayjs";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import invoiceApi from "../../../api/invoiceApi";
-import useCreateInvoice from "../../../hooks/useCreateInvoice";
 
 const AdminInvoiceDashboard = () => {
+  console.log("🏗️ [InvoiceManagement] Component initialized");
+  
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
   const [form] = Form.useForm();
-  const { createInvoice, creating } = useCreateInvoice();
   const pdfRef = useRef();
 
+  console.log("🏗️ [InvoiceManagement] State initialized:", {
+    invoicesCount: invoices.length,
+    selectedInvoice: selectedInvoice?.invoiceId,
+    open,
+    loading,
+    openCreate,
+    creating
+  });
+
   const handleView = (record) => {
+    console.log("👁️ [InvoiceManagement] handleView called with record:", record);
     setSelectedInvoice(record);
     setOpen(true);
+    console.log("👁️ [InvoiceManagement] Modal opened for invoice:", record.invoiceId);
   };
 
   const handleCreateInvoice = async () => {
+    console.log("🚀 [InvoiceManagement] handleCreateInvoice started");
     try {
+      setCreating(true);
+      console.log("📝 [InvoiceManagement] Getting form values...");
       const values = await form.validateFields();
-      const res = await createInvoice(values);
+      console.log("📝 [InvoiceManagement] Form values:", values);
+      
+      console.log("📤 [InvoiceManagement] Calling createAutoInvoiceByEmail with email:", values.email);
+      const res = await invoiceApi.createAutoInvoiceByEmail(values.email);
+      console.log("📥 [InvoiceManagement] createAutoInvoiceByEmail response:", res);
+      
       if (res) {
+        console.log("✅ [InvoiceManagement] Invoice created successfully");
         message.success("Tạo hóa đơn thành công!");
         setOpenCreate(false);
         form.resetFields();
-        const updated = await invoiceApi.getAllInvoices();
-        setInvoices(updated);
+        
+        console.log("🔄 [InvoiceManagement] Refreshing suma invoice list...");
+        // Refresh danh sách hóa đơn suma
+        const updated = await invoiceApi.getAllSumaInvoices();
+        console.log("📥 [InvoiceManagement] getAllSumaInvoices response:", updated);
+        
+        if (!Array.isArray(updated)) {
+          console.error("❌ [InvoiceManagement] Invalid data format:", typeof updated, updated);
+          throw new Error("Invalid data format");
+        }
+        
+        console.log("🔄 [InvoiceManagement] Formatting suma invoice data...");
+        const formatted = updated.map((sumaInv) => {
+          console.log("📋 [InvoiceManagement] Processing suma invoice:", sumaInv);
+          return {
+            sumaInvoiceId: sumaInv.sumaInvoiceId,
+            userName: sumaInv.userName,
+            month: sumaInv.month,
+            totalAmount: sumaInv.totalAmount,
+            status: sumaInv.status,
+            invoices: sumaInv.invoices || [],
+            // Thêm các field để tương thích với UI hiện tại
+            invoiceId: sumaInv.sumaInvoiceId, // Sử dụng sumaInvoiceId làm invoiceId
+            invoiceMonth: sumaInv.month,
+            // Lấy thông tin từ invoice đầu tiên nếu có
+            email: sumaInv.invoices?.[0]?.email || '',
+            phone: sumaInv.invoices?.[0]?.phone || '',
+            vehicleName: sumaInv.invoices?.[0]?.vehicleName || '',
+            plateNumber: sumaInv.invoices?.[0]?.plateNumber || '',
+            issuedDate: sumaInv.invoices?.[0]?.issuedDate ? new Date(...sumaInv.invoices[0].issuedDate.slice(0, 6)) : new Date(),
+            dueDate: sumaInv.invoices?.[0]?.dueDate ? new Date(...sumaInv.invoices[0].dueDate.slice(0, 6)) : new Date(),
+            note: `Tổng hợp hóa đơn tháng ${sumaInv.month}`,
+            details: sumaInv.invoices?.map((inv, invIndex) => ({
+              detailId: inv.invoiceId || invIndex,
+              feeType: 'Tổng hợp',
+              sourceType: 'Suma Invoice',
+              description: `Hóa đơn ${inv.invoiceId || invIndex + 1}`,
+              amount: inv.totalAmount || 0,
+            })) || [],
+          };
+        });
+        
+        console.log("📊 [InvoiceManagement] Formatted suma invoices:", formatted);
+        setInvoices(formatted);
+        console.log("✅ [InvoiceManagement] Suma invoice list updated successfully");
       }
     } catch (err) {
-      console.error("❌ Create failed:", err);
+      console.error("❌ [InvoiceManagement] Create failed:", err);
+      console.error("❌ [InvoiceManagement] Error details:", {
+        message: err.message,
+        stack: err.stack,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      message.error("Tạo hóa đơn thất bại!");
+    } finally {
+      setCreating(false);
+      console.log("🏁 [InvoiceManagement] handleCreateInvoice finished");
     }
   };
 
   const handleDownloadPDF = async () => {
+    console.log("📄 [InvoiceManagement] handleDownloadPDF started");
+    console.log("📄 [InvoiceManagement] Selected invoice:", selectedInvoice);
+    
     const element = pdfRef.current;
-    if (!element) return;
+    if (!element) {
+      console.error("❌ [InvoiceManagement] PDF element not found");
+      return;
+    }
+    
+    console.log("📄 [InvoiceManagement] Generating PDF...");
     const canvas = await html2canvas(element, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
     const pdf = new jsPDF("p", "mm", "a4");
     const imgWidth = 190;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-    pdf.save(`Invoice_INV-${selectedInvoice.invoiceId}.pdf`);
+    
+    const fileName = `Invoice_SUMA-${selectedInvoice.sumaInvoiceId}.pdf`;
+    console.log("📄 [InvoiceManagement] Saving PDF as:", fileName);
+    pdf.save(fileName);
+    console.log("✅ [InvoiceManagement] PDF downloaded successfully");
   };
 
   useEffect(() => {
+    console.log("🔄 [InvoiceManagement] useEffect triggered - fetching suma invoices");
     const fetchInvoices = async () => {
       try {
+        console.log("📤 [InvoiceManagement] Calling getAllSumaInvoices API...");
         setLoading(true);
-        const res = await invoiceApi.getAllInvoices();
-        if (!Array.isArray(res)) throw new Error("Invalid data format");
-        const formatted = res.map((inv) => ({
-          invoiceId: inv.invoiceId,
-          userId: inv.userId,
-          userName: inv.fullName,
-          email: inv.email,
-          phone: inv.phone,
-          vehicleId: inv.vehicleId,
-          vehicleName: inv.model,
-          plateNumber: inv.plateNumber,
-          invoiceMonth: dayjs(
-            new Date(inv.issuedDate[0], inv.issuedDate[1] - 1, inv.issuedDate[2])
-          ).format("YYYY-MM"),
-          totalAmount: inv.totalAmount,
-          status: inv.status,
-          issuedDate: new Date(...inv.issuedDate.slice(0, 6)),
-          dueDate: new Date(...inv.dueDate.slice(0, 6)),
-          note: inv.note || "Tổng hợp chi phí tháng này",
-          details:
-            inv.details?.map((d) => ({
-              detailId: d.detailId,
-              feeType: d.feeType,
-              sourceType: d.sourceType,
-              description: d.description,
-              amount: d.amount,
+        const res = await invoiceApi.getAllSumaInvoices();
+        console.log("📥 [InvoiceManagement] getAllSumaInvoices raw response:", res);
+        console.log("📥 [InvoiceManagement] Response type:", typeof res);
+        console.log("📥 [InvoiceManagement] Is array:", Array.isArray(res));
+        
+        if (!Array.isArray(res)) {
+          console.error("❌ [InvoiceManagement] Invalid data format:", res);
+          throw new Error("Invalid data format");
+        }
+        
+        console.log("🔄 [InvoiceManagement] Formatting suma invoice data...");
+        const formatted = res.map((sumaInv, index) => {
+          console.log(`📋 [InvoiceManagement] Processing suma invoice ${index + 1}:`, sumaInv);
+          return {
+            sumaInvoiceId: sumaInv.sumaInvoiceId,
+            userName: sumaInv.userName,
+            month: sumaInv.month,
+            totalAmount: sumaInv.totalAmount,
+            status: sumaInv.status,
+            invoices: sumaInv.invoices || [],
+            // Thêm các field để tương thích với UI hiện tại
+            invoiceId: sumaInv.sumaInvoiceId, // Sử dụng sumaInvoiceId làm invoiceId
+            invoiceMonth: sumaInv.month,
+            // Lấy thông tin từ invoice đầu tiên nếu có
+            email: sumaInv.invoices?.[0]?.email || '',
+            phone: sumaInv.invoices?.[0]?.phone || '',
+            vehicleName: sumaInv.invoices?.[0]?.vehicleName || '',
+            plateNumber: sumaInv.invoices?.[0]?.plateNumber || '',
+            issuedDate: sumaInv.invoices?.[0]?.issuedDate ? new Date(...sumaInv.invoices[0].issuedDate.slice(0, 6)) : new Date(),
+            dueDate: sumaInv.invoices?.[0]?.dueDate ? new Date(...sumaInv.invoices[0].dueDate.slice(0, 6)) : new Date(),
+            note: `Tổng hợp hóa đơn tháng ${sumaInv.month}`,
+            details: sumaInv.invoices?.map((inv, invIndex) => ({
+              detailId: inv.invoiceId || invIndex,
+              feeType: 'Tổng hợp',
+              sourceType: 'Suma Invoice',
+              description: `Hóa đơn ${inv.invoiceId || invIndex + 1}`,
+              amount: inv.totalAmount || 0,
             })) || [],
-        }));
+          };
+        });
+        
+        console.log("📊 [InvoiceManagement] Formatted suma invoices:", formatted);
+        console.log("📊 [InvoiceManagement] Total suma invoices:", formatted.length);
         setInvoices(formatted);
+        console.log("✅ [InvoiceManagement] Suma invoices loaded successfully");
       } catch (err) {
-        console.error(err);
+        console.error("❌ [InvoiceManagement] Fetch suma invoices failed:", err);
+        console.error("❌ [InvoiceManagement] Error details:", {
+          message: err.message,
+          stack: err.stack,
+          response: err.response?.data,
+          status: err.response?.status
+        });
         message.error("Không thể tải danh sách hóa đơn.");
       } finally {
         setLoading(false);
+        console.log("🏁 [InvoiceManagement] fetchSumaInvoices finished");
       }
     };
 
     fetchInvoices();
+  }, []);
+
+  // Component unmount logging
+  useEffect(() => {
+    return () => {
+      console.log("🗑️ [InvoiceManagement] Component unmounting");
+    };
   }, []);
 
   const totalInvoices = invoices.length;
@@ -123,11 +241,18 @@ const AdminInvoiceDashboard = () => {
   ).length;
   const totalAmount = invoices.reduce((sum, i) => sum + i.totalAmount, 0);
 
+  console.log("📊 [InvoiceManagement] Statistics calculated:", {
+    totalInvoices,
+    openInvoices,
+    paidInvoices,
+    totalAmount
+  });
+
   const columns = [
     {
       title: "Mã HĐ",
-      dataIndex: "invoiceId",
-      render: (id) => `#INV-${id}`,
+      dataIndex: "sumaInvoiceId",
+      render: (id) => `#SUMA-${id}`,
     },
     { title: "Người dùng", dataIndex: "userName" },
     { title: "Xe", dataIndex: "vehicleName" },
@@ -216,7 +341,10 @@ const AdminInvoiceDashboard = () => {
             type="primary"
             icon={<PlusOutlined />}
             loading={creating}
-            onClick={() => setOpenCreate(true)}
+            onClick={() => {
+              console.log("➕ [InvoiceManagement] Create invoice button clicked");
+              setOpenCreate(true);
+            }}
           >
             Tạo hóa đơn
           </Button>
@@ -229,7 +357,7 @@ const AdminInvoiceDashboard = () => {
         ) : invoices.length === 0 ? (
           <Empty description="Không có hóa đơn nào" style={{ padding: 50 }} />
         ) : (
-          <Table columns={columns} dataSource={invoices} rowKey="invoiceId" pagination={{ pageSize: 6 }} />
+          <Table columns={columns} dataSource={invoices} rowKey="sumaInvoiceId" pagination={{ pageSize: 6 }} />
         )}
       </Card>
 
@@ -237,21 +365,25 @@ const AdminInvoiceDashboard = () => {
       <Modal
         title="Tạo hóa đơn mới"
         open={openCreate}
-        onCancel={() => setOpenCreate(false)}
+        onCancel={() => {
+          console.log("❌ [InvoiceManagement] Create invoice modal cancelled");
+          setOpenCreate(false);
+        }}
         onOk={handleCreateInvoice}
         okText="Tạo"
         cancelText="Hủy"
         confirmLoading={creating}
       >
         <Form layout="vertical" form={form}>
-          <Form.Item label="Mã người dùng" name="userId" rules={[{ required: true, message: "Nhập userId!" }]}>
-            <Input placeholder="Nhập ID người dùng" />
-          </Form.Item>
-          <Form.Item label="Mã xe" name="vehicleId" rules={[{ required: true, message: "Nhập vehicleId!" }]}>
-            <Input placeholder="Nhập ID xe" />
-          </Form.Item>
-          <Form.Item label="Ghi chú" name="note">
-            <Input.TextArea rows={3} placeholder="Ghi chú (nếu có)" />
+          <Form.Item 
+            label="Email người dùng" 
+            name="email" 
+            rules={[
+              { required: true, message: "Nhập email người dùng!" },
+              { type: 'email', message: 'Email không hợp lệ!' }
+            ]}
+          >
+            <Input placeholder="Nhập email người dùng" />
           </Form.Item>
         </Form>
       </Modal>
@@ -259,11 +391,17 @@ const AdminInvoiceDashboard = () => {
       {/* === Modal xem chi tiết === */}
       <Modal
         open={open}
-        title={`Hóa đơn #INV-${selectedInvoice?.invoiceId || ""}`}
-        onCancel={() => setOpen(false)}
+        title={`Hóa đơn #SUMA-${selectedInvoice?.sumaInvoiceId || ""}`}
+        onCancel={() => {
+          console.log("❌ [InvoiceManagement] View invoice modal closed");
+          setOpen(false);
+        }}
         width={850}
         footer={[
-          <Button key="close" onClick={() => setOpen(false)}>
+          <Button key="close" onClick={() => {
+            console.log("❌ [InvoiceManagement] Close button clicked");
+            setOpen(false);
+          }}>
             Đóng
           </Button>,
           <Button
@@ -316,7 +454,7 @@ const AdminInvoiceDashboard = () => {
               style={{ marginTop: 16 }}
             >
               <Descriptions.Item label="Mã HĐ">
-                #INV-{selectedInvoice.invoiceId}
+                #SUMA-{selectedInvoice.sumaInvoiceId}
               </Descriptions.Item>
               <Descriptions.Item label="Tháng">
                 {selectedInvoice.invoiceMonth}
@@ -341,7 +479,7 @@ const AdminInvoiceDashboard = () => {
               </Descriptions.Item>
             </Descriptions>
 
-            <h3 style={{ marginTop: 20 }}>Chi tiết phí</h3>
+            <h3 style={{ marginTop: 20 }}>Chi tiết hóa đơn ({selectedInvoice.invoices?.length || 0} hóa đơn)</h3>
             <Table
               columns={detailColumns}
               dataSource={selectedInvoice.details}
@@ -349,6 +487,29 @@ const AdminInvoiceDashboard = () => {
               rowKey="detailId"
               size="small"
             />
+            
+            {selectedInvoice.invoices && selectedInvoice.invoices.length > 0 && (
+              <div style={{ marginTop: 20 }}>
+                <h4>Danh sách hóa đơn chi tiết:</h4>
+                <Table
+                  columns={[
+                    { title: "Mã HĐ", dataIndex: "invoiceId", render: (id) => `#INV-${id}` },
+                    { title: "Xe", dataIndex: "vehicleName" },
+                    { title: "Biển số", dataIndex: "plateNumber" },
+                    { 
+                      title: "Số tiền", 
+                      dataIndex: "totalAmount",
+                      render: (val) => val.toLocaleString("vi-VN", { style: "currency", currency: "VND" })
+                    },
+                    { title: "Trạng thái", dataIndex: "status" },
+                  ]}
+                  dataSource={selectedInvoice.invoices}
+                  pagination={false}
+                  rowKey="invoiceId"
+                  size="small"
+                />
+              </div>
+            )}
 
             <h4 style={{ marginTop: 20, textAlign: "right" }}>
               <strong>
