@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Row, Col, Card, Statistic, Table, Tag,
+import {
+  Row, Col, Card, Statistic, Table, Tag,
   Button,
   Modal,
   Descriptions,
+  Form, Input,
   message,
   Spin,
   Empty,
@@ -22,7 +24,7 @@ import invoiceApi from "../../../api/invoiceApi";
 
 const AdminInvoiceDashboard = () => {
   console.log("🏗️ [InvoiceManagement] Component initialized");
-  
+
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [open, setOpen] = useState(false);
@@ -55,27 +57,27 @@ const AdminInvoiceDashboard = () => {
       console.log("📝 [InvoiceManagement] Getting form values...");
       const values = await form.validateFields();
       console.log("📝 [InvoiceManagement] Form values:", values);
-      
+
       console.log("📤 [InvoiceManagement] Calling createAutoInvoiceByEmail with email:", values.email);
       const res = await invoiceApi.createAutoInvoiceByEmail(values.email);
       console.log("📥 [InvoiceManagement] createAutoInvoiceByEmail response:", res);
-      
+
       if (res) {
         console.log("✅ [InvoiceManagement] Invoice created successfully");
         message.success("Tạo hóa đơn thành công!");
         setOpenCreate(false);
         form.resetFields();
-        
+
         console.log("🔄 [InvoiceManagement] Refreshing suma invoice list...");
         // Refresh danh sách hóa đơn suma
         const updated = await invoiceApi.getAllSumaInvoices();
         console.log("📥 [InvoiceManagement] getAllSumaInvoices response:", updated);
-        
+
         if (!Array.isArray(updated)) {
           console.error("❌ [InvoiceManagement] Invalid data format:", typeof updated, updated);
           throw new Error("Invalid data format");
         }
-        
+
         console.log("🔄 [InvoiceManagement] Formatting suma invoice data...");
         const formatted = updated.map((sumaInv) => {
           console.log("📋 [InvoiceManagement] Processing suma invoice:", sumaInv);
@@ -106,7 +108,7 @@ const AdminInvoiceDashboard = () => {
             })) || [],
           };
         });
-        
+
         console.log("📊 [InvoiceManagement] Formatted suma invoices:", formatted);
         setInvoices(formatted);
         console.log("✅ [InvoiceManagement] Suma invoice list updated successfully");
@@ -129,13 +131,13 @@ const AdminInvoiceDashboard = () => {
   const handleDownloadPDF = async () => {
     console.log("📄 [InvoiceManagement] handleDownloadPDF started");
     console.log("📄 [InvoiceManagement] Selected invoice:", selectedInvoice);
-    
+
     const element = pdfRef.current;
     if (!element) {
       console.error("❌ [InvoiceManagement] PDF element not found");
       return;
     }
-    
+
     console.log("📄 [InvoiceManagement] Generating PDF...");
     const canvas = await html2canvas(element, { scale: 2 });
     const imgData = canvas.toDataURL("image/png");
@@ -143,7 +145,7 @@ const AdminInvoiceDashboard = () => {
     const imgWidth = 190;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-    
+
     const fileName = `Invoice_SUMA-${selectedInvoice.sumaInvoiceId}.pdf`;
     console.log("📄 [InvoiceManagement] Saving PDF as:", fileName);
     pdf.save(fileName);
@@ -160,12 +162,12 @@ const AdminInvoiceDashboard = () => {
         console.log("📥 [InvoiceManagement] getAllSumaInvoices raw response:", res);
         console.log("📥 [InvoiceManagement] Response type:", typeof res);
         console.log("📥 [InvoiceManagement] Is array:", Array.isArray(res));
-        
+
         if (!Array.isArray(res)) {
           console.error("❌ [InvoiceManagement] Invalid data format:", res);
           throw new Error("Invalid data format");
         }
-        
+
         console.log("🔄 [InvoiceManagement] Formatting suma invoice data...");
         const formatted = res.map((sumaInv, index) => {
           console.log(`📋 [InvoiceManagement] Processing suma invoice ${index + 1}:`, sumaInv);
@@ -196,7 +198,7 @@ const AdminInvoiceDashboard = () => {
             })) || [],
           };
         });
-        
+
         console.log("📊 [InvoiceManagement] Formatted suma invoices:", formatted);
         console.log("📊 [InvoiceManagement] Total suma invoices:", formatted.length);
         setInvoices(formatted);
@@ -367,9 +369,9 @@ const AdminInvoiceDashboard = () => {
         confirmLoading={creating}
       >
         <Form layout="vertical" form={form}>
-          <Form.Item 
-            label="Email người dùng" 
-            name="email" 
+          <Form.Item
+            label="Email người dùng"
+            name="email"
             rules={[
               { required: true, message: "Nhập email người dùng!" },
               { type: 'email', message: 'Email không hợp lệ!' }
@@ -479,7 +481,7 @@ const AdminInvoiceDashboard = () => {
               rowKey="detailId"
               size="small"
             />
-            
+
             {selectedInvoice.invoices && selectedInvoice.invoices.length > 0 && (
               <div style={{ marginTop: 20 }}>
                 <h4>Danh sách hóa đơn chi tiết:</h4>
@@ -488,8 +490,8 @@ const AdminInvoiceDashboard = () => {
                     { title: "Mã HĐ", dataIndex: "invoiceId", render: (id) => `#INV-${id}` },
                     { title: "Xe", dataIndex: "vehicleName" },
                     { title: "Biển số", dataIndex: "plateNumber" },
-                    { 
-                      title: "Số tiền", 
+                    {
+                      title: "Số tiền",
                       dataIndex: "totalAmount",
                       render: (val) => val.toLocaleString("vi-VN", { style: "currency", currency: "VND" })
                     },
