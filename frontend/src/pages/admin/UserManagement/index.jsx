@@ -145,7 +145,7 @@ const UserManagement = () => {
       setLoading(true);
       const promises = selectedUserIds.map(userId => {
         const user = users.find(u => u.id === userId);
-        return invoiceApi.createInvoice({ email: user.email }); // ✅ Đổi lại thành "email"
+        return invoiceApi.createAutoInvoiceByEmail(user.email);
       });
   
       await Promise.all(promises);
