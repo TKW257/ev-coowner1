@@ -1,7 +1,7 @@
 import React from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Layout, Input, Avatar, Dropdown, Space, Typography } from "antd";
-import { SearchOutlined, UserOutlined, DatabaseOutlined } from "@ant-design/icons";
+import { Layout, Avatar, Dropdown, Space, Typography } from "antd";
+import { UserOutlined, DatabaseOutlined } from "@ant-design/icons";
 import { logout } from "../../../features/userSlice";
 import { useNavigate } from "react-router-dom";
 import "./style.scss";
@@ -17,7 +17,7 @@ const DashboardHeader = ({ children }) => {
   const isLoggedIn = Boolean(currentUser && Object.keys(currentUser).length > 0);
 
   const role = currentUser?.role || "USER";
-  const headerTitle = role === "STAFF" ? "Admin Dashboard" : "Owner Dashboard";
+  const headerTitle = role === "STAFF" ? "Staff Dashboard" : "Owner Dashboard";
 
   const handleLogout = () => {
     dispatch(logout());
@@ -36,11 +36,11 @@ const DashboardHeader = ({ children }) => {
         key: "profile",
         label: <span>Trang cá nhân</span>,
         icon: <UserOutlined />,
-        onClick: () => navigate("/profile"),
+        onClick: () => navigate("/owner/profile"),
       },
       {
         key: "dashboard",
-        label: <span> Dashboard</span>,
+        label: <span>Dashboard</span>,
         icon: <DatabaseOutlined />,
         onClick: handleGoToDashboard,
       },
@@ -58,14 +58,6 @@ const DashboardHeader = ({ children }) => {
       <div className="header-left">
         {children}
         <Text className="title">{headerTitle}</Text>
-      </div>
-
-      <div className="header-search">
-        <Input
-          placeholder="Search or type..."
-          prefix={<SearchOutlined />}
-          className="search-input"
-        />
       </div>
 
       <div className="header-right">
@@ -88,10 +80,7 @@ const DashboardHeader = ({ children }) => {
             </Space>
           </Dropdown>
         ) : (
-          <span
-            className="login-link"
-            onClick={() => navigate("/login")}
-          >
+          <span className="login-link" onClick={() => navigate("/login")}>
             Sign In
           </span>
         )}
