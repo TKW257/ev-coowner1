@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { 
-  Table, 
-  Button, 
-  Modal, 
-  Form, 
-  Input, 
-  InputNumber, 
-  Select, 
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Select,
   message,
   Space,
   Tag,
@@ -86,19 +86,25 @@ const VehicleManagement = () => {
   const handleEditVehicle = (vehicle) => {
     setEditingVehicle(vehicle);
     setUpdateModalVisible(true);
-    
-    // Điền dữ liệu vào form update (chỉ các trường cần thiết theo API)
+
     updateForm.setFieldsValue({
       brand: vehicle.brand,
       model: vehicle.model,
+      plateNumber: vehicle.plateNumber,
       color: vehicle.color,
+      seat: vehicle.seat,
+      price: vehicle.price,
+      feeChargingPer1PercentUsed: vehicle.feeChargingPer1PercentUsed,
+      feeOverKm: vehicle.feeOverKm,
+      operationPerMonthPerShare: vehicle.operationPerMonthPerShare,
       year: vehicle.year,
-      operatingCostPerDay: vehicle.operatingCostPerDay,
-      operatingCostPerKm: vehicle.operatingCostPerKm,
-      description: vehicle.description,
+      batteryCapacityKwh: vehicle.batteryCapacityKwh,
       status: vehicle.status,
+      description: vehicle.description,
+      imageUrl: vehicle.imageUrl
     });
   };
+
 
   const handleCloseUpdateModal = () => {
     setUpdateModalVisible(false);
@@ -109,36 +115,19 @@ const VehicleManagement = () => {
   const handleUpdateSubmit = async () => {
     try {
       const values = await updateForm.validateFields();
-      
-      if (!editingVehicle.vehicleId) {
-        message.error("Không tìm thấy ID xe để cập nhật!");
-        return;
-      }
-      
-      const updateData = {
-        brand: values.brand,
-        model: values.model,
-        color: values.color,
-        year: values.year,
-        operatingCostPerDay: values.operatingCostPerDay,
-        operatingCostPerKm: values.operatingCostPerKm,
-        description: values.description || "",
-        status: values.status,
-      };
-      
-      await vehiclesApi.updateVehicle(editingVehicle.vehicleId, updateData);
-      
+
+     await vehiclesApi.updateVehicle(editingVehicle.vehicleId ?? editingVehicle.id, values);
+
+
       message.success("Cập nhật xe thành công!");
-      setUpdateModalVisible(false);
-      setEditingVehicle(null);
-      updateForm.resetFields();
-      fetchVehicles(); 
+      handleCloseUpdateModal();
+      fetchVehicles();
     } catch (error) {
       console.error("Error updating vehicle:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Unknown error";
-      message.error(`Không thể cập nhật xe! ${errorMessage}`);
+      message.error("Không thể cập nhật xe!");
     }
   };
+
 
   const handleDeleteVehicle = (vehicle) => {
     setDeletingVehicle(vehicle);
@@ -183,7 +172,7 @@ const VehicleManagement = () => {
     },
     {
       title: "Mẫu xe",
-      dataIndex: "model", 
+      dataIndex: "model",
       key: "model",
     },
     {
@@ -208,12 +197,24 @@ const VehicleManagement = () => {
       render: (value) => value ? `${value} kWh` : '-',
     },
     {
-      title: "Trạng thái",  
+      title: "Số chỗ",
+      dataIndex: "seat",
+      key: "seat",
+    },
+    {
+      title: "Giá thuê",
+      dataIndex: "price",
+      key: "price",
+      render: (v) => v?.toLocaleString() + " VND"
+    },
+
+    {
+      title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        const color = status === "Available" ? "green" : 
-                     status === "Unavailable" ? "red" : "orange";
+        const color = status === "Available" ? "green" :
+          status === "Unavailable" ? "red" : "orange";
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -224,22 +225,22 @@ const VehicleManagement = () => {
       render: (_, record) => (
         <Space size="middle">
           <Tooltip title="Xem chi tiết">
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               icon={<EyeOutlined />}
               onClick={() => handleViewDetails(record)}
             />
           </Tooltip>
           <Tooltip title="Chỉnh sửa">
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               icon={<EditOutlined />}
               onClick={() => handleEditVehicle(record)}
             />
           </Tooltip>
           <Tooltip title="Xóa xe">
-            <Button 
-              type="link" 
+            <Button
+              type="link"
               danger
               icon={<DeleteOutlined />}
               onClick={() => handleDeleteVehicle(record)}
@@ -254,8 +255,8 @@ const VehicleManagement = () => {
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: "black" }}>
         <h2>Quản lý xe</h2>
-        <Button 
-          type="primary" 
+        <Button
+          type="primary"
           icon={<PlusOutlined />}
           onClick={handleAddVehicle}
         >
@@ -315,11 +316,52 @@ const VehicleManagement = () => {
           </Form.Item>
 
           <Form.Item
+            name="seat"
+            label="Số chỗ ngồi"
+            rules={[{ required: true, message: 'Vui lòng nhập số chỗ ngồi!' }]}
+          >
+            <InputNumber style={{ width: '100%' }} min={1} />
+          </Form.Item>
+
+          <Form.Item
+            name="price"
+            label="Giá thuê"
+            rules={[{ required: true, message: 'Vui lòng nhập giá thuê!' }]}
+          >
+            <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
+          </Form.Item>
+
+          <Form.Item
+            name="feeChargingPer1PercentUsed"
+            label="Phí sạc mỗi 1% pin sử dụng"
+            rules={[{ required: true, message: 'Vui lòng nhập phí sạc!' }]}
+          >
+            <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
+          </Form.Item>
+
+          <Form.Item
+            name="feeOverKm"
+            label="Phí vượt km"
+            rules={[{ required: true, message: 'Vui lòng nhập phí vượt km!' }]}
+          >
+            <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
+          </Form.Item>
+
+          <Form.Item
+            name="operationPerMonthPerShare"
+            label="Chi phí vận hành/tháng/chia sẻ"
+            rules={[{ required: true, message: 'Vui lòng nhập chi phí vận hành!' }]}
+          >
+            <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
+          </Form.Item>
+
+
+          <Form.Item
             name="year"
             label="Năm sản xuất"
             rules={[{ required: true, message: 'Vui lòng nhập năm sản xuất!' }]}
           >
-            <InputNumber 
+            <InputNumber
               placeholder="Nhập năm sản xuất"
               style={{ width: '100%' }}
               min={1900}
@@ -332,7 +374,7 @@ const VehicleManagement = () => {
             label="Dung lượng pin (kWh)"
             rules={[{ required: true, message: 'Vui lòng nhập dung lượng pin!' }]}
           >
-            <InputNumber 
+            <InputNumber
               placeholder="Nhập dung lượng pin"
               style={{ width: '100%' }}
               min={0}
@@ -340,31 +382,7 @@ const VehicleManagement = () => {
             />
           </Form.Item>
 
-          <Form.Item
-            name="operatingCostPerDay"
-            label="Chi phí vận hành/ngày"
-            rules={[{ required: true, message: 'Vui lòng nhập chi phí vận hành/ngày!' }]}
-          >
-            <InputNumber 
-              placeholder="Nhập chi phí vận hành/ngày"
-              style={{ width: '100%' }}
-              min={0}
-              step={0.01}
-            />
-          </Form.Item>
 
-          <Form.Item
-            name="operatingCostPerKm"
-            label="Chi phí vận hành/km"
-            rules={[{ required: true, message: 'Vui lòng nhập chi phí vận hành/km!' }]}
-          >
-            <InputNumber 
-              placeholder="Nhập chi phí vận hành/km"
-              style={{ width: '100%' }}
-              min={0}
-              step={0.01}
-            />
-          </Form.Item>
 
           <Form.Item
             name="status"
@@ -385,8 +403,8 @@ const VehicleManagement = () => {
             name="description"
             label="Mô tả"
           >
-            <Input.TextArea 
-              rows={3} 
+            <Input.TextArea
+              rows={3}
               placeholder="Nhập mô tả về xe (tùy chọn)"
             />
           </Form.Item>
@@ -419,8 +437,8 @@ const VehicleManagement = () => {
             </Descriptions.Item>
             <Descriptions.Item label="Trạng thái" span={1}>
               <Tag color={
-                selectedVehicle.status === "Available" ? "green" : 
-                selectedVehicle.status === "Unavailable" ? "red" : "orange"
+                selectedVehicle.status === "Available" ? "green" :
+                  selectedVehicle.status === "Unavailable" ? "red" : "orange"
               }>
                 {selectedVehicle.status}
               </Tag>
@@ -443,19 +461,13 @@ const VehicleManagement = () => {
             <Descriptions.Item label="Dung lượng pin (kWh)" span={1}>
               {selectedVehicle.batteryCapacityKwh ? `${selectedVehicle.batteryCapacityKwh} kWh` : '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="Chi phí vận hành/ngày" span={1}>
-              {selectedVehicle.operatingCostPerDay ? `${selectedVehicle.operatingCostPerDay.toLocaleString()} VND` : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Chi phí vận hành/km" span={1}>
-              {selectedVehicle.operatingCostPerKm ? `${selectedVehicle.operatingCostPerKm.toLocaleString()} VND` : '-'}
-            </Descriptions.Item>
             <Descriptions.Item label="Mô tả" span={2}>
               {selectedVehicle.description || 'Không có mô tả'}
             </Descriptions.Item>
             {selectedVehicle.imageUrl && (
               <Descriptions.Item label="Hình ảnh" span={2}>
-                <img 
-                  src={selectedVehicle.imageUrl} 
+                <img
+                  src={selectedVehicle.imageUrl}
                   alt={`${selectedVehicle.brand} ${selectedVehicle.model}`}
                   style={{ maxWidth: '100%', height: 'auto', maxHeight: '200px' }}
                 />
@@ -482,93 +494,67 @@ const VehicleManagement = () => {
         width={600}
       >
         <Form form={updateForm} layout="vertical">
-          <Form.Item
-            name="brand"
-            label="Thương hiệu"
-            rules={[{ required: true, message: 'Vui lòng nhập thương hiệu!' }]}
-          >
-            <Input placeholder="Nhập thương hiệu xe" />
+          <Form.Item name="brand" label="Thương hiệu" rules={[{ required: true }]}>
+            <Input />
           </Form.Item>
 
-          <Form.Item
-            name="model"
-            label="Mẫu xe"
-            rules={[{ required: true, message: 'Vui lòng nhập mẫu xe!' }]}
-          >
-            <Input placeholder="Nhập mẫu xe" />
+          <Form.Item name="model" label="Mẫu xe" rules={[{ required: true }]}>
+            <Input />
           </Form.Item>
 
-          <Form.Item
-            name="color"
-            label="Màu sắc"
-            rules={[{ required: true, message: 'Vui lòng nhập màu sắc!' }]}
-          >
-            <Input placeholder="Nhập màu sắc" />
+          <Form.Item name="plateNumber" label="Biển số" rules={[{ required: true }]}>
+            <Input />
           </Form.Item>
 
-          <Form.Item
-            name="year"
-            label="Năm sản xuất"
-            rules={[{ required: true, message: 'Vui lòng nhập năm sản xuất!' }]}
-          >
-            <InputNumber 
-              placeholder="Nhập năm sản xuất"
-              style={{ width: '100%' }}
-              min={1900}
-              max={new Date().getFullYear() + 1}
-            />
+          <Form.Item name="color" label="Màu sắc" rules={[{ required: true }]}>
+            <Input />
           </Form.Item>
 
-          <Form.Item
-            name="operatingCostPerDay"
-            label="Chi phí vận hành/ngày"
-            rules={[{ required: true, message: 'Vui lòng nhập chi phí vận hành/ngày!' }]}
-          >
-            <InputNumber 
-              placeholder="Nhập chi phí vận hành/ngày"
-              style={{ width: '100%' }}
-              min={0}
-              step={0.01}
-            />
+          <Form.Item name="seat" label="Số chỗ" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={1} />
           </Form.Item>
 
-          <Form.Item
-            name="operatingCostPerKm"
-            label="Chi phí vận hành/km"
-            rules={[{ required: true, message: 'Vui lòng nhập chi phí vận hành/km!' }]}
-          >
-            <InputNumber 
-              placeholder="Nhập chi phí vận hành/km"
-              style={{ width: '100%' }}
-              min={0}
-              step={0.01}
-            />
+          <Form.Item name="price" label="Giá thuê" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={0} />
           </Form.Item>
 
-          <Form.Item
-            name="description"
-            label="Mô tả"
-          >
-            <Input.TextArea 
-              rows={3} 
-              placeholder="Nhập mô tả về xe (tùy chọn)"
-            />
+          <Form.Item name="feeChargingPer1PercentUsed" label="Phí sạc / 1% pin" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={0} />
           </Form.Item>
 
-          <Form.Item
-            name="status"
-            label="Trạng thái"
-            rules={[{ required: true, message: 'Vui lòng chọn trạng thái!' }]}
-          >
-            <Select placeholder="Chọn trạng thái">
-              {vehicleStatusOptions.map(option => (
-                <Select.Option key={option.value} value={option.value}>
-                  {option.label}
-                </Select.Option>
+          <Form.Item name="feeOverKm" label="Phí vượt km" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={0} />
+          </Form.Item>
+
+          <Form.Item name="operationPerMonthPerShare" label="Vận hành / tháng / chia sẻ" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={0} />
+          </Form.Item>
+
+          <Form.Item name="year" label="Năm sản xuất" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={1900} max={new Date().getFullYear() + 1} />
+          </Form.Item>
+
+          <Form.Item name="batteryCapacityKwh" label="Pin (kWh)" rules={[{ required: true }]}>
+            <InputNumber style={{ width: '100%' }} min={0} step={0.1} />
+          </Form.Item>
+
+          <Form.Item name="status" label="Trạng thái" rules={[{ required: true }]}>
+            <Select>
+              {vehicleStatusOptions.map(op => (
+                <Select.Option key={op.value} value={op.value}>{op.label}</Select.Option>
               ))}
             </Select>
           </Form.Item>
+
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea rows={3} />
+          </Form.Item>
+
+          <Form.Item name="imageUrl" label="Hình ảnh (URL)">
+            <Input />
+          </Form.Item>
         </Form>
+
       </Modal>
 
       {/* Delete Confirmation Modal */}
@@ -587,9 +573,9 @@ const VehicleManagement = () => {
             Bạn có chắc chắn muốn xóa xe này không?
           </p>
           {deletingVehicle && (
-            <div style={{ 
-              backgroundColor: '#f5f5f5', 
-              padding: '12px', 
+            <div style={{
+              backgroundColor: '#f5f5f5',
+              padding: '12px',
               borderRadius: '6px',
               marginTop: '12px'
             }}>

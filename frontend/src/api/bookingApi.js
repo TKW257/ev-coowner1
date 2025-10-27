@@ -50,6 +50,10 @@ const bookingApi = {
   getStaffCheckingsByBookingId(id) {
     return axiosClient.get(`/staff-checkings/booking/${id}`)
   },
+
+  viewAllStaffCheckings() {
+    return axiosClient.get("/staff-checkings/viewAllStaffChecking");
+  },
 };
 
 export default bookingApi;

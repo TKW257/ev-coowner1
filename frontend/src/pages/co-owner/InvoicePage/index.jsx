@@ -50,17 +50,22 @@ const UserInvoiceDashboard = () => {
   const handlePayment = async (sumaInvoiceId) => {
     try {
       const res = await paymentApi.createPayment(sumaInvoiceId);
-      console.log("PAYMENT RESPONSE:", res);
+      // Nếu axiosClient đã return response.data => res chính là JSON
+      const data = res.checkoutUrl ? res : res.data;
 
-      const data = res.data ?? res;
+      console.log("✅ PAYMENT DATA:", data);
 
       if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;  // 👈 chuyển sang trang PayOS
+        window.open(data.checkoutUrl, "_blank", "noopener,noreferrer");
+      }
+      else {
+        console.warn("⚠️ Không nhận được checkoutUrl:", data);
       }
     } catch (err) {
-      console.error(err);
+      console.error("❌ Lỗi khi tạo payment:", err);
     }
   };
+
 
 
   const handleDownloadPDF = async () => {

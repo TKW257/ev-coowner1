@@ -2,7 +2,7 @@ import axiosClient from "./axiosClient";
 
 const vehiclesApi = {
 
-  getAllVehicles() { 
+  getAllVehicles() {
     return axiosClient.get("/vehicles/viewAllVehicle");
   },
 
@@ -12,6 +12,18 @@ const vehiclesApi = {
 
   getById(id) {
     return axiosClient.get(`/vehicles/vehicle/${id}`);
+  },
+
+  createVehicle(data) {
+    return axiosClient.post("/vehicles/createVehicle", data);
+  },
+
+  updateVehicle(id, data) {
+    return axiosClient.put(`/vehicles/${id}`, data);
+  },
+
+  deleteVehicle(id) {
+    return axiosClient.delete(`/vehicles/${id}`);
   },
 };
 
