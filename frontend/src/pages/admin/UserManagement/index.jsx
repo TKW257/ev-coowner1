@@ -9,10 +9,12 @@ import {
   message,
   Space,
   Tag,
-  Tooltip
+  Tooltip,
+  Checkbox
 } from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, FileTextOutlined } from "@ant-design/icons";
 import userApi from "../../../api/userApi";
+import invoiceApi from "../../../api/invoiceApi";
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -20,9 +22,11 @@ const UserManagement = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [updateModalVisible, setUpdateModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [invoiceModalVisible, setInvoiceModalVisible] = useState(false);
   // const [selectedUser, setSelectedUser] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [deletingUser, setDeletingUser] = useState(null);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [form] = Form.useForm();
   const [updateForm] = Form.useForm();
 
@@ -110,6 +114,54 @@ const UserManagement = () => {
     }
   };
 
+  const handleCreateInvoice = () => {
+    setInvoiceModalVisible(true);
+    setSelectedUserIds([]);
+  };
+
+  const handleUserSelection = (userId, checked) => {
+    if (checked) {
+      setSelectedUserIds(prev => [...prev, userId]);
+    } else {
+      setSelectedUserIds(prev => prev.filter(id => id !== userId));
+    }
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedUserIds(users.map(user => user.id));
+    } else {
+      setSelectedUserIds([]);
+    }
+  };
+
+  const confirmCreateInvoice = async () => {
+    if (selectedUserIds.length === 0) {
+      message.warning("Vui lòng chọn ít nhất một người dùng!");
+      return;
+    }
+  
+    try {
+      setLoading(true);
+      const promises = selectedUserIds.map(userId => {
+        const user = users.find(u => u.id === userId);
+        return invoiceApi.createAutoInvoiceByEmail(user.email);
+      });
+  
+      await Promise.all(promises);
+  
+      message.success(`Tạo hóa đơn thành công cho ${selectedUserIds.length} người dùng!`);
+      setInvoiceModalVisible(false);
+      setSelectedUserIds([]);
+    } catch (error) {
+      console.error("Error creating invoices:", error);
+      message.error("Tạo hóa đơn thất bại!");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
   const getRoleColor = (role) => {
     switch (role) {
       case "ADMIN":
@@ -185,13 +237,22 @@ const UserManagement = () => {
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: "black"}}>
         <h2>Quản lý người dùng</h2>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />}
-          onClick={handleAddUser}
-        >
-          Thêm người dùng mới
-        </Button>
+        <Space>
+          <Button 
+            type="default" 
+            icon={<FileTextOutlined />}
+            onClick={handleCreateInvoice}
+          >
+            Tạo hóa đơn
+          </Button>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />}
+            onClick={handleAddUser}
+          >
+            Thêm người dùng mới
+          </Button>
+        </Space>
       </div>
 
       <Table
@@ -200,6 +261,12 @@ const UserManagement = () => {
         dataSource={users}
         loading={loading}
         pagination={{ pageSize: 10 }}
+        rowSelection={{
+          type: 'checkbox',
+          selectedRowKeys: selectedUserIds,
+          onSelectAll: handleSelectAll,
+          onSelect: (record, selected) => handleUserSelection(record.id, selected),
+        }}
       />
 
       {/* Add User Modal */}
@@ -318,6 +385,71 @@ const UserManagement = () => {
         okButtonProps={{ danger: true }}
       >
         <p>Bạn có chắc chắn muốn xóa người dùng <strong>{deletingUser?.full_name}</strong>?</p>
+      </Modal>
+
+      {/* Create Invoice Modal */}
+      <Modal
+        title="Tạo hóa đơn cho người dùng"
+        open={invoiceModalVisible}
+        onOk={confirmCreateInvoice}
+        onCancel={() => {
+          setInvoiceModalVisible(false);
+          setSelectedUserIds([]);
+        }}
+        okText="Tạo hóa đơn"
+        cancelText="Hủy"
+        width={800}
+        okButtonProps={{ 
+          disabled: selectedUserIds.length === 0,
+          loading: loading 
+        }}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <p><strong>Chọn người dùng để tạo hóa đơn:</strong></p>
+          <p style={{ color: '#666', fontSize: '14px' }}>
+            Đã chọn {selectedUserIds.length} người dùng
+          </p>
+        </div>
+        
+        <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid #d9d9d9', borderRadius: '6px', padding: '8px' }}>
+          {users.map(user => (
+            <div key={user.id} style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              padding: '8px 0',
+              borderBottom: '1px solid #f0f0f0'
+            }}>
+              <Checkbox
+                checked={selectedUserIds.includes(user.id)}
+                onChange={(e) => handleUserSelection(user.id, e.target.checked)}
+                style={{ marginRight: '12px' }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: '500' }}>{user.fullName || user.full_name}</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>
+                  {user.email} | {user.phone}
+                </div>
+              </div>
+              <Tag color={getRoleColor(user.role)}>
+                {roleOptions.find(r => r.value === user.role)?.label || user.role}
+              </Tag>
+            </div>
+          ))}
+        </div>
+        
+        <div style={{ marginTop: 16, textAlign: 'right' }}>
+          <Button 
+            onClick={() => setSelectedUserIds(users.map(user => user.id))}
+            style={{ marginRight: 8 }}
+          >
+            Chọn tất cả
+          </Button>
+          <Button 
+            onClick={() => setSelectedUserIds([])}
+          >
+            Bỏ chọn tất cả
+          </Button>
+        </div>
       </Modal>
     </div>
   );
