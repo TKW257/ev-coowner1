@@ -1,14 +1,16 @@
-// src/pages/admin/ManageBookings.jsx
 import React, { useState, useEffect, useCallback } from "react";
-import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, InputNumber, Switch } from "antd";
+import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, InputNumber, Switch, Typography } from "antd";
 import bookingApi from "../../../api/bookingApi";
 import StorageKeys from "../../../constants/storage-key";
 
+const { Title } = Typography;
+
 const ManageBookings = () => {
   const [bookings, setBookings] = useState([]);
-  const [allBookings, setAllBookings] = useState([]); 
+  const [allBookings, setAllBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userFilter, setUserFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest"); // "newest" hoặc "oldest"
   const [users, setUsers] = useState([]);
   const [staffCheckings, setStaffCheckings] = useState([]);
   
@@ -52,6 +54,16 @@ const ManageBookings = () => {
     return bookingsData.filter(booking => {
       const bookingUserId = booking.userId || booking.user_id || booking.userName;
       return bookingUserId === userId;
+    });
+  }, []);
+
+  // Hàm sắp xếp bookings theo ID
+  const sortBookingsById = useCallback((bookingsData, order) => {
+    return [...bookingsData].sort((a, b) => {
+      const aId = parseInt(a.bookingId) || 0;
+      const bId = parseInt(b.bookingId) || 0;
+      
+      return order === "newest" ? bId - aId : aId - bId;
     });
   }, []);
 
@@ -105,10 +117,20 @@ setUsers(usersFromBookings);
 
   useEffect(() => {
     fetchStaffCheckings(); 
-    const filteredBookings = filterBookingsByUser(allBookings, userFilter);
-    setBookings(filteredBookings);
-    console.log("📋 Filtered bookings:", filteredBookings);
-  }, [userFilter, allBookings, filterBookingsByUser, fetchStaffCheckings]);
+    const filteredByUser = filterBookingsByUser(allBookings, userFilter);
+    const sortedAndFiltered = sortBookingsById(filteredByUser, sortOrder);
+    setBookings(sortedAndFiltered);
+    console.log("📋 Filtered and sorted bookings:", sortedAndFiltered);
+  }, [userFilter, sortOrder, allBookings, filterBookingsByUser, sortBookingsById, fetchStaffCheckings]);
+
+  // Handle setting form values when modal opens and currentBooking has userEmail
+  useEffect(() => {
+    if (checkingModalVisible && currentBooking && currentBooking.userEmail) {
+      form.setFieldsValue({
+        userEmail: currentBooking.userEmail
+      });
+    }
+  }, [checkingModalVisible, currentBooking, form]);
 
   const handleStatusUpdateClick = (bookingId, newStatus, actionType) => {
     setPendingAction({
@@ -138,7 +160,7 @@ setUsers(usersFromBookings);
         return;
       }
       
-      const validStatuses = ["Pending", "Completed", "Cancelled"];
+      const validStatuses = ["Pending", "Confirmed", "InProgress", "Completed", "Cancelled"];
       if (!validStatuses.includes(newStatus)) {
         message.error(`Trạng thái không hợp lệ: ${newStatus}`);
         return;
@@ -183,14 +205,20 @@ setUsers(usersFromBookings);
   const handleCheckInOut = (booking, type) => {
     setCurrentBooking(booking);
     setCheckingType(type);
-    setHasUserEmail(!!booking.userEmail);
+    
+    // Check if userEmail is available from booking data
+    const hasUserEmailFromBooking = !!(booking.userEmail);
+    setHasUserEmail(hasUserEmailFromBooking);
     setCheckingModalVisible(true);
     
-    setTimeout(() => {
-      form.setFieldsValue({
-        userEmail: booking.userEmail || ''
-      });
-    }, 100);
+    // Set form values immediately if userEmail is available
+    if (hasUserEmailFromBooking) {
+      setTimeout(() => {
+        form.setFieldsValue({
+          userEmail: booking.userEmail
+        });
+      }, 100);
+    }
   };
 
   const handleCheckingSubmit = async () => {
@@ -209,9 +237,26 @@ setUsers(usersFromBookings);
       };
       
       await bookingApi.createStaffChecking(checkingData);
-      message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
+      
+      // Tự động cập nhật status dựa trên loại checking
+      let newStatus = null;
+      if (checkingType === "checkout" && currentBooking.bookingStatus === "Confirmed") {
+        newStatus = "InProgress";
+      } else if (checkingType === "checkin" && currentBooking.bookingStatus === "InProgress") {
+        newStatus = "Completed";
+      }
+      
+      if (newStatus) {
+        await bookingApi.updateStatus(currentBooking.bookingId, newStatus);
+        message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công và cập nhật trạng thái thành ${newStatus}!`);
+      } else {
+        message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
+      }
+      
       setCheckingModalVisible(false);
       setHasUserEmail(false);
+      setCurrentBooking(null);
+      form.resetFields();
       
       fetchStaffCheckings();
       fetchBookings();
@@ -275,11 +320,20 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
       title: "Trạng thái",
       dataIndex: "bookingStatus",
       key: "bookingStatus",
-      render: (status) => (
-        <Tag color={status === "Completed" ? "green" : status === "Pending" ? "orange" : "red"}>
-          {status.toUpperCase()}
-        </Tag>
-      ),
+      render: (status) => {
+        const colorMap = {
+          Confirmed: "blue",
+          InProgress: "purple",
+          Completed: "green", 
+          Pending: "orange",
+          Cancelled: "red"
+        };
+        return (
+          <Tag color={colorMap[status] || "default"}>
+            {status.toUpperCase()}
+          </Tag>
+        );
+      },
     },
     {
       title: "Hành động",
@@ -301,7 +355,7 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
                 <Button 
                   type="primary" 
                   size="small"
-                  onClick={() => handleStatusUpdateClick(record.bookingId, "Completed", "Xác nhận")}
+                  onClick={() => handleStatusUpdateClick(record.bookingId, "Confirmed", "Xác nhận")}
                 >
                   Xác nhận
                 </Button>
@@ -315,10 +369,9 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
               </>
             )}
             
-            {/* Trạng thái Completed: Logic hiển thị nút theo trạng thái check-in/check-out */}
-            {record.bookingStatus === "Completed" && (
+            {/* Trạng thái Confirmed: Hiển thị nút Check-out */}
+            {record.bookingStatus === "Confirmed" && (
               <>
-                {/* Sau khi xác nhận, hiển thị nút Check-out */}
                 {!hasCheckIn && !hasCheckOut && (
                   <Button 
                     type="primary" 
@@ -329,9 +382,13 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
                     Check-out
                   </Button>
                 )}
-                
-                {/* Sau khi đã check-out, hiển thị nút Check-in */}
-                {!hasCheckIn && hasCheckOut && (
+              </>
+            )}
+
+            {/* Trạng thái InProgress: Hiển thị nút Check-in */}
+            {record.bookingStatus === "InProgress" && (
+              <>
+                {hasCheckOut && !hasCheckIn && (
                   <Button 
                     type="primary" 
                     size="small"
@@ -339,7 +396,19 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
                     onClick={() => handleCheckInOut(record, "checkin")}
                   >
                     Check-in
-</Button>
+                  </Button>
+                )}
+              </>
+            )}
+
+            {/* Trạng thái Completed: Logic hiển thị nút check-in/check-out để tiện theo dõi */}
+            {record.bookingStatus === "Completed" && (
+              <>
+                {/* Hiển thị thông tin check status */}
+                {(hasCheckIn || hasCheckOut) && (
+                  <span style={{ fontSize: '12px', color: '#52c41a' }}>
+                    {hasCheckIn && hasCheckOut ? 'Đã hoàn thành' : hasCheckIn ? 'Đã check-in' : 'Đã check-out'}
+                  </span>
                 )}
               </>
             )}
@@ -356,7 +425,11 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
 
   return (
     <div>
-      <div style={{ marginBottom: 16, display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <Title level={2} style={{ marginBottom: 24, textAlign: "left" }}>
+        Đặt xe
+      </Title>
+      
+      <div style={{ marginBottom: 16, display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
         <Select
           style={{ width: 200 }}
           placeholder="Chọn user để lọc"
@@ -371,6 +444,15 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
           ))}
         </Select>
         
+        <Select
+          style={{ width: 200 }}
+          placeholder="Sắp xếp theo ID"
+          value={sortOrder}
+          onChange={setSortOrder}
+        >
+          <Select.Option value="newest">Mới nhất</Select.Option>
+          <Select.Option value="oldest">Cũ nhất</Select.Option>
+        </Select>
       </div>
       <Table
         rowKey="bookingId"
@@ -388,6 +470,8 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
         onCancel={() => {
           setCheckingModalVisible(false);
           setHasUserEmail(false);
+          setCurrentBooking(null);
+          form.resetFields();
         }}
         okText={checkingType === "checkin" ? "Check-in" : "Check-out"}
         cancelText="Hủy"
@@ -479,8 +563,12 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
         }}
       >
         <p>
-          {pendingAction?.newStatus === "Completed" && 
+          {pendingAction?.newStatus === "Confirmed" && 
             `Bạn có chắc chắn muốn xác nhận booking này?`}
+          {pendingAction?.newStatus === "InProgress" && 
+            `Bạn có chắc chắn muốn chuyển booking này sang trạng thái đang thực hiện?`}
+          {pendingAction?.newStatus === "Completed" && 
+            `Bạn có chắc chắn muốn hoàn thành booking này?`}
           {pendingAction?.newStatus === "Cancelled" && 
             `Bạn có chắc chắn muốn hủy booking này?`}
         </p>

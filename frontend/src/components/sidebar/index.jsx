@@ -8,6 +8,8 @@ import {
   FileTextOutlined,
   CheckCircleOutlined,
   LikeOutlined,
+  CarOutlined,
+  UserOutlined,
 } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -17,10 +19,8 @@ import "./style.scss";
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // 🧠 Lấy role từ redux
   const currentUser = useSelector((state) => state.user.current);
-  const role = currentUser.role || "USER";
+  const role = currentUser?.role || "USER";
 
   let menuItems = [];
 
@@ -29,56 +29,68 @@ const Sidebar = () => {
       {
         key: "/admin",
         icon: <DashboardOutlined />,
-        label: <Link to="/admin">Dashboard</Link>,
+        label: <Link to="/admin">Bảng Điều Khiển</Link>,
+      },
+      {
+        key: "/admin/users",
+        icon: <UserOutlined />,
+        label: <Link to="/admin/users">Quản Lý Người Dùng</Link>,
+      },
+      {
+        key: "/admin/vehicles",
+        icon: <CarOutlined />,
+        label: <Link to="/admin/vehicles">Quản Lý Xe</Link>,
+      },
+
+      {
+        key: "/admin/vote",
+        icon: <LikeOutlined />,
+        label: <Link to="/admin/vote">Bình Chọn</Link>,
       },
       {
         key: "/admin/bookingmanage",
         icon: <BookOutlined />,
-        label: <Link to="/admin/bookingmanage">Bookings</Link>,
+        label: <Link to="/admin/bookingmanage">Quản Lý Đặt Xe</Link>,
       },
       {
         key: "/admin/staffchecking",
         icon: <CheckCircleOutlined />,
-        label: <Link to="/admin/staffchecking">Staff Checking</Link>,
+        label: <Link to="/admin/staffchecking">Biên bản giao nhận xe</Link>,
       },
       {
-        key: "invoicemanagement",
-        icon: <BookOutlined />,
-        label: <Link to="/admin/invoice"> Hóa đơn</Link>,
-      },
-      {
-        key: "vote",
-        icon: <BookOutlined />,
-        label: <Link to="/admin/vote"> Bình chọn </Link>,
-      },
-      {
-        key: "vote/all",
-        icon: <CheckCircleOutlined />,
-        label: <Link to="/admin/vote/all">Tất cả Votes</Link>,
+        key: "/admin/invoice",
+        icon: <FileTextOutlined />,
+        label: <Link to="/admin/invoice">Quản Lý Hóa Đơn</Link>,
       },
     ];
   } else if (role === "USER") {
     menuItems = [
       {
-        key: "mycar",
+        key: "/owner/mycar",
         icon: <HomeOutlined />,
-        label: <Link to="/owner/mycar">Xe của tôi </Link>,
+        label: <Link to="/owner/mycar">Xe Của Tôi</Link>,
       },
       {
-        key: "booking",
+        key: "/owner/bookingtracking",
         icon: <CalendarOutlined />,
-        label: <Link to="/owner/carbooking">Đặt xe</Link>,
+        label: <Link to="/owner/bookingtracking">Lịch Đặt Xe</Link>,
       },
       {
-        key: "invoice",
+        key: "/owner/invoice",
         icon: <FileTextOutlined />,
-        label: <Link to="/owner/invoice">Hóa đơn</Link>,
+        label: <Link to="/owner/invoice">Thanh Toán</Link>,
       },
       {
         key: "/owner/vote",
         icon: <LikeOutlined />,
-        label: <Link to="/owner/vote">Vote</Link>,
+        label: <Link to="/owner/vote">Bình Chọn</Link>,
       },
+      {
+        key: "/owner/profile",
+        icon: <UserOutlined />,
+        label: <Link to="/owner/profile">Người dùng</Link>,
+      },
+
     ];
   }
 

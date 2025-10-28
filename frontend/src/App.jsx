@@ -4,7 +4,6 @@ import {
   Navigate,
 } from "react-router-dom";
 import { App as AntdApp } from "antd";
-import { PieChartOutlined } from "@ant-design/icons";
 
 // ===== Layouts =====
 import DashboardLayout from "./components/layouts/Dashboard";
@@ -20,9 +19,11 @@ import OurTerms from "./pages/guest/Home/OurTerms";
 
 // ===== Owner Pages =====
 import MyCarPage from "./pages/co-owner/MyCarPage";
-import CarBooking from "./pages/co-owner/CarBooking";
+import BookingPage from "./pages/co-owner/BookingPage";
+import BookingTrackingPage from "./pages/co-owner/BookingTrackingPage"
 import InvoicePage from "./pages/co-owner/InvoicePage";
-import OwnerVoteListPage from "./pages/co-owner/VotesPage/OwnerVoteListPage";
+import OwnerVoteListPage from "./pages/co-owner/VotingPage/OwnerVoteListPage";
+import ProfilePage from "./pages/co-owner/ProfilePage";
 
 // ===== Admin Pages =====
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -31,10 +32,10 @@ import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
-import AdminVoteDetailPage from "./pages/admin/VotesManagement/AdminVoteDetailPage";
+
 import AdminVoteListPage from "./pages/admin/VotesManagement/AdminVoteListPage";
 import AdminCreateTopicPage from "./pages/admin/VotesManagement/AdminCreateTopicPage";
-import AdminAllVotesPage from "./pages/admin/VotesManagement/AdminAllVotesPage";
+import TopicDetailPage from "./pages/admin/VotesManagement/TopicDetailPage";
 
 // ===== Router Configuration =====
 const router = createBrowserRouter([
@@ -60,9 +61,11 @@ const router = createBrowserRouter([
       // </ProtectedRoute>
     ),
     children: [
+      { path: "profile", element: <ProfilePage /> },
       { path: "mycar", element: <MyCarPage /> },
-      { path: "carbooking", element: <CarBooking /> },
-      { path: "carbooking/:vehicleId", element: <CarBooking /> },
+      { path: "bookingtracking", element: <BookingTrackingPage /> },
+      { path: "carbooking/:vehicleId", element: <BookingPage /> },
+      { path: "carbooking", element: <BookingPage /> },
       { path: "invoice", element: <InvoicePage /> },
       { path: "vote", element: <OwnerVoteListPage /> },
     ],
@@ -84,11 +87,10 @@ const router = createBrowserRouter([
       { path: "users", element: <UserManagement /> },
       { path: "invoice", element: <InvoiceManagement /> },
 
-      // ✅ Votes Management
+      // Votes Management
       { path: "vote", element: <AdminVoteListPage /> },
       { path: "vote/create", element: <AdminCreateTopicPage /> },
-      { path: "vote-detail/:id", element: <AdminVoteDetailPage /> },
-      { path: "vote/all", element: <AdminAllVotesPage /> },
+      { path: "vote/:id", element: <TopicDetailPage /> },
     ],
   },
 

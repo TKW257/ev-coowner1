@@ -1,183 +1,178 @@
 import { useEffect, useState } from "react";
 import {
-  Card,
-  Row,
-  Col,
   Button,
+  message,
+  Spin,
+  Tag,
+  Card,
   Modal,
   Form,
   Input,
   Select,
-  message,
-  Spin,
 } from "antd";
 import voteApi from "../../../api/voteApi";
 import vehiclesApi from "../../../api/vehiclesApi";
-import { useNavigate } from "react-router-dom";
 
-export default function AdminCreateTopicPage() {
+export default function AdminVoteListPage() {
+  const [topics, setTopics] = useState([]);
   const [vehicles, setVehicles] = useState([]);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
-  const navigate = useNavigate();
 
-  // ✅ Lấy danh sách xe khi load trang
+  // Load topics + vehicles
   useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        const res = await vehiclesApi.getAllVehicles();
-        console.log("🚗 Toàn bộ danh sách xe API:", res);
-
-        // Một số backend trả về { data: [...] } hoặc trả thẳng mảng => cần kiểm tra kỹ
-        const vehicleList = Array.isArray(res)
-          ? res
-          : Array.isArray(res?.data)
-          ? res.data
-          : [];
-
-        if (vehicleList.length === 0) {
-          message.warning("Không có xe nào để tạo biểu quyết!");
-        }
-        setVehicles(vehicleList);
-      } catch (err) {
-        console.error("❌ Lỗi khi tải danh sách xe:", err);
-        message.error("Không thể tải danh sách xe!");
-      } finally {
-        setLoading(false);
-      }
-    };
+    fetchTopics();
     fetchVehicles();
   }, []);
 
-  // ✅ Mở modal tạo vote cho xe được chọn
-  const handleOpenModal = (vehicle) => {
-    setSelectedVehicle(vehicle);
-    form.resetFields();
-    setOpen(true);
-  };
-
-  // ✅ Gửi yêu cầu tạo topic
-  const handleCreate = async (values) => {
-    if (!selectedVehicle) {
-      message.warning("Vui lòng chọn xe trước khi tạo biểu quyết");
-      return;
-    }
-
+  const fetchTopics = async () => {
+    setLoading(true);
     try {
-      console.log("📤 Dữ liệu gửi API:", {
-        ...values,
-        vehicleId: selectedVehicle.vehicleId,
-      });
-
-      await voteApi.createTopic({
-        ...values,
-        vehicleId: selectedVehicle.vehicleId,
-      });
-
-      message.success("Tạo chủ đề biểu quyết thành công!");
-      setOpen(false);
-      navigate("/admin/vote/list");
-    } catch (err) {
-      console.error("❌ Lỗi khi tạo chủ đề:", err);
-      message.error("Tạo chủ đề thất bại, vui lòng thử lại!");
+      const res = await voteApi.getAllTopics();
+      const data = Array.isArray(res) ? res : res?.data ?? res?.content;
+      setTopics(Array.isArray(data) ? data : []);
+    } catch {
+      message.error("Không thể tải danh sách chủ đề");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Hiển thị loading khi đang tải dữ liệu
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <Spin size="large" tip="Đang tải danh sách xe..." />
-      </div>
-    );
+  const fetchVehicles = async () => {
+    try {
+      const res = await vehiclesApi.getAllVehicles();
+      const data = Array.isArray(res) ? res : res?.data ?? res?.content;
+      setVehicles(Array.isArray(data) ? data : []);
+    } catch {
+      message.error("Không thể tải danh sách xe");
+    }
+  };
 
-  // ✅ Giao diện
+  const handleCreateTopic = async () => {
+    try {
+      const values = await form.validateFields();
+      await voteApi.createTopic(values);
+      message.success("Tạo chủ đề thành công!");
+      form.resetFields();
+      setModalVisible(false);
+      fetchTopics();
+    } catch (err) {
+      console.error("Create topic failed:", err);
+      message.error("Không thể tạo chủ đề");
+    }
+  };
+
+  const handleCalculate = async (id) => {
+    try {
+      await voteApi.calculateResult(id);
+      message.success("Đã tính kết quả bình chọn");
+      fetchTopics();
+    } catch {
+      message.error("Không thể tính kết quả");
+    }
+  };
+
+  const getStatusTag = (topic) => {
+    if (topic.resultCalculated || topic.status === "CALCULATED") {
+      return <Tag color="green">Đã tính kết quả</Tag>;
+    }
+    return <Tag color="orange">Chưa tính</Tag>;
+  };
+
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-semibold text-gray-700 mb-6">
-        Chọn xe để tạo biểu quyết
-      </h1>
+    <Spin spinning={loading} tip="Đang tải danh sách...">
+      <div className="container mt-4">
+        <h2 className="mb-3">Danh Sách Chủ Đề Bình Chọn (Admin)</h2>
 
-      <Row gutter={[16, 16]}>
-        {vehicles.map((v) => (
-          <Col xs={24} sm={12} md={8} lg={6} key={v.vehicleId}>
-            <Card
-              hoverable
-              cover={
-                <img
-                  alt={v.model}
-                  src={v.imageUrl || "https://via.placeholder.com/300x200"}
-                  className="h-40 w-full object-cover rounded-t-md"
-                />
-              }
-              actions={[
-                <Button type="primary" onClick={() => handleOpenModal(v)}>
-                  Tạo biểu quyết
-                </Button>,
-              ]}
-              className="shadow-md hover:shadow-lg bg-white"
+        <Button
+          type="primary"
+          onClick={() => setModalVisible(true)}
+          className="mb-3"
+        >
+          + Tạo Chủ Đề
+        </Button>
+
+        {(!topics || topics.length === 0) && !loading ? (
+          <div>Không có chủ đề nào.</div>
+        ) : (
+          topics.map((t) => {
+            const id = t.topicId ?? t.id;
+            return (
+              <Card
+                key={id}
+                className="mb-3 shadow-sm"
+                title={t.title || `Chủ đề #${id}`}
+                extra={getStatusTag(t)}
+              >
+                <p>{t.description || "Không có mô tả."}</p>
+                <p>
+                  <strong>Xe:</strong>{" "}
+                  {t.vehicleName || t.vehicle?.model || t.vehicleId || "N/A"}
+                </p>
+
+                <div className="d-flex gap-2">
+                  <Button
+                    type="default"
+                    onClick={() => message.info(`Chi tiết topic #${id}`)}
+                  >
+                    Xem chi tiết
+                  </Button>
+                  <Button
+                    type="primary"
+                    disabled={t.resultCalculated || t.status === "CALCULATED"}
+                    onClick={() => handleCalculate(id)}
+                  >
+                    Tính kết quả
+                  </Button>
+                </div>
+              </Card>
+            );
+          })
+        )}
+
+        {/* Modal Tạo Chủ Đề */}
+        <Modal
+          open={modalVisible}
+          title="Tạo Chủ Đề Bình Chọn"
+          onOk={handleCreateTopic}
+          onCancel={() => setModalVisible(false)}
+          okText="Tạo"
+          cancelText="Hủy"
+        >
+          <Form form={form} layout="vertical">
+            <Form.Item
+              name="title"
+              label="Tiêu đề chủ đề"
+              rules={[{ required: true, message: "Vui lòng nhập tiêu đề!" }]}
             >
-              <p className="font-semibold text-gray-700">
-                {v.brand} {v.model}
-              </p>
-              <p>Biển số: {v.plateNumber}</p>
-              <p>Màu: {v.color}</p>
-              <p>Trạng thái: {v.status}</p>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+              <Input placeholder="Nhập tiêu đề chủ đề" />
+            </Form.Item>
 
-      {/* Modal tạo chủ đề */}
-      <Modal
-        title={
-          selectedVehicle
-            ? `Tạo biểu quyết cho xe ${selectedVehicle.model}`
-            : "Tạo biểu quyết"
-        }
-        open={open}
-        onCancel={() => setOpen(false)}
-        onOk={() => form.submit()}
-        okText="Tạo"
-        cancelText="Hủy"
-      >
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
-          <Form.Item
-            label="Tiêu đề"
-            name="title"
-            rules={[{ required: true, message: "Vui lòng nhập tiêu đề" }]}
-          >
-            <Input placeholder="Ví dụ: Thay động cơ chính" />
-          </Form.Item>
+            <Form.Item
+              name="description"
+              label="Mô tả"
+              rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
+            >
+              <Input.TextArea rows={3} placeholder="Nhập mô tả chủ đề" />
+            </Form.Item>
 
-          <Form.Item
-            label="Mô tả"
-            name="description"
-            rules={[{ required: true, message: "Vui lòng nhập mô tả" }]}
-          >
-            <Input.TextArea rows={3} placeholder="Nhập mô tả chi tiết" />
-          </Form.Item>
-
-          <Form.Item
-            label="Loại quyết định"
-            name="decisionType"
-            rules={[
-              { required: true, message: "Vui lòng chọn loại quyết định" },
-            ]}
-          >
-            <Select
-              options={[
-                { value: "MINOR", label: "Minor" },
-                { value: "MEDIUM", label: "Medium" },
-                { value: "MAJOR", label: "Major" },
-              ]}
-              placeholder="Chọn loại quyết định"
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
-    </div>
+            <Form.Item
+              name="vehicleId"
+              label="Chọn xe áp dụng"
+              rules={[{ required: true, message: "Vui lòng chọn xe!" }]}
+            >
+              <Select placeholder="Chọn 1 xe để bình chọn">
+                {vehicles.map((v) => (
+                  <Select.Option key={v.vehicleId} value={v.vehicleId}>
+                    {v.brand} {v.model} ({v.licensePlate || v.plateNumber})
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Form>
+        </Modal>
+      </div>
+    </Spin>
   );
 }

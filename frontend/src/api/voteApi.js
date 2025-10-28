@@ -1,13 +1,17 @@
-// src/api/voteApi.js
-import axiosClient from "./axiosClient";
+import axiosClient from "../api/axiosClient";
 
 const voteApi = {
-  getAllTopics: () => axiosClient.get("/votes/viewAllTopic"),
-  getUserTopics: () => axiosClient.get("/votes/viewTopicUser"),
+  // ADMIN
   createTopic: (data) => axiosClient.post("/votes/topics", data),
-  calculateResult: (topicId) =>
-    axiosClient.post(`/votes/topics/${topicId}/calculate`),
-  getVotesByTopic: (topicId) => axiosClient.get(`/votes/topic/${topicId}/find`),
+  getAllTopics: () => axiosClient.get("/votes/viewAllTopic"),
+  calculateResult: (id) => axiosClient.post(`/votes/topics/${id}/calculate`),
+
+  // USER
+  getUserTopics: () => axiosClient.get("/votes/viewTopicUser"),
+  castVote: (data) => axiosClient.post("/votes/castVote", data),
+
+  // Common
+  getVotesByTopic: (id) => axiosClient.get(`/votes/topics/${id}`),
 };
 
 export default voteApi;

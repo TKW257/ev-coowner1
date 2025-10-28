@@ -1,7 +1,8 @@
 import axiosClient from "./axiosClient";
 
 const vehiclesApi = {
-  getAllVehicles() {
+
+  getAllVehicles() { 
     return axiosClient.get("/vehicles/viewAllVehicle");
   },
 
