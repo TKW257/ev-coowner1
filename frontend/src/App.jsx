@@ -16,6 +16,7 @@ import LoginPage from "./pages/guest/auth/login";
 import HomePage from "./pages/guest/Home/HomePage";
 import WhyChooseUs from "./pages/guest/Home/WhyChooseUs";
 import OurTerms from "./pages/guest/Home/OurTerms";
+import StockCarsPage from "./pages/guest/StockCarsPage";
 
 // ===== Owner Pages =====
 import MyCarPage from "./pages/co-owner/MyCarPage";
@@ -50,6 +51,7 @@ const router = createBrowserRouter([
       { path: "guest/register", element: <RegisterPage /> },
       { path: "guest/aboutus", element: <WhyChooseUs /> },
       { path: "guest/terms", element: <OurTerms /> },
+       { path: "guest/stockcars", element: <StockCarsPage /> },
     ],
   },
 
@@ -68,7 +70,7 @@ const router = createBrowserRouter([
       { path: "carbooking/:vehicleId", element: <BookingPage /> },
       { path: "carbooking", element: <BookingPage /> },
       { path: "invoice", element: <InvoicePage /> },
-            { path: "success", element: <SuccessPage /> },
+      { path: "success", element: <SuccessPage /> },
       { path: "vote", element: <OwnerVoteListPage /> },
     ],
   },

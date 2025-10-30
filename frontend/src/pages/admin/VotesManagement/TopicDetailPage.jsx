@@ -11,9 +11,10 @@ export default function TopicDetailPage() {
   const fetchVotes = async () => {
     try {
       const res = await voteApi.getVotesByTopic(id);
-      setVotes(res.data);
+      const data = Array.isArray(res) ? res : res?.data ?? [];
+      setVotes(data);
     } catch {
-      message.error("Failed to load votes");
+      message.error("Không thể tải danh sách phiếu bầu");
     } finally {
       setLoading(false);
     }
@@ -23,22 +24,22 @@ export default function TopicDetailPage() {
     fetchVotes();
   }, [id]);
 
-  if (loading) return <Spin tip="Loading votes..." />;
+  if (loading) return <Spin tip="Đang tải..." />;
 
   const columns = [
-    { title: "User", dataIndex: "userName" },
+    { title: "Người dùng", dataIndex: "userName" },
     {
-      title: "Choice",
+      title: "Lựa chọn",
       dataIndex: "choice",
-      render: (v) => (v ? "Agree" : "Disagree"),
+      render: (v) => (v ? "Đồng ý" : "Không đồng ý"),
     },
-    { title: "Weight", dataIndex: "weight" },
-    { title: "Voted At", dataIndex: "votedAt" },
+    { title: "Trọng số", dataIndex: "weight" },
+    { title: "Thời gian bình chọn", dataIndex: "votedAt" },
   ];
 
   return (
     <div className="container mt-4">
-      <h2>Vote Detail</h2>
+      <h2>Chi Tiết Bình Chọn</h2>
       <Table rowKey="voteId" columns={columns} dataSource={votes} />
     </div>
   );

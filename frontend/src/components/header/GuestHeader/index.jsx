@@ -32,19 +32,19 @@ const GuestHeader = () => {
 
   const navItems = [
     {
-      key: "home",
+      key: "/",
       label: <NavLink to="/">Trang Chủ</NavLink>
     },
     {
-      key: "cars",
-      label: <NavLink to="/cars">Danh Sách Xe Điện</NavLink>
+      key: "guest/stockcars",
+      label: <NavLink to="guest/stockcars">Danh Sách Xe Điện</NavLink>
     },
     {
-      key: "terms",
+      key: "/guest/terms",
       label: <NavLink to="/guest/terms">Điều Khoản</NavLink>
     },
     {
-      key: "about",
+      key: "/guest/aboutus",
       label: <NavLink to="/guest/aboutus">Về Chúng Tôi</NavLink>
     },
   ];
