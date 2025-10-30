@@ -5,6 +5,8 @@ import bookingApi from "../../../api/bookingApi";
 import StaffCheckingReport from "./StaffCheckingReport";
 import { App } from "antd";
 import html2canvas from "html2canvas";
+import SignatureCanvas from "react-signature-canvas";
+import { useRef } from "react";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 
@@ -30,6 +32,7 @@ const BookingTracking = () => {
   const [confirmApproved, setConfirmApproved] = useState(true);
   const [confirmComment, setConfirmComment] = useState("");
   const { message, notification } = App.useApp();
+  const sigCanvas = useRef();
 
   const statusStepIndex = {
     Pending: 0,
@@ -102,17 +105,22 @@ const BookingTracking = () => {
     if (!checkingId) return;
 
     try {
-      await bookingApi.confirmStaffChecking(checkingId, {
-        id: checkingId,
-        approved: confirmApproved,
-        userComment: confirmComment,
-      });
+      const formData = new FormData();
+      formData.append("approved", confirmApproved);
+      formData.append("userComment", confirmComment);
+
+      // ✍️ Lấy chữ ký từ canvas
+      const dataUrl = sigCanvas.current.toDataURL("image/png");
+      const blob = await (await fetch(dataUrl)).blob();
+      formData.append("staffSignature", blob, "signature.png");
+
+      await bookingApi.confirmStaffChecking(checkingId, formData);
 
       notification.success({
         message: "Xác nhận biên bản thành công",
         description: confirmApproved
-          ? "Bạn đã xác nhận đồng ý biên bản kiểm tra."
-          : "Bạn đã không đồng ý biên bản và gửi phản hồi.",
+          ? "Bạn đã đồng ý biên bản kiểm tra."
+          : "Bạn đã từ chối và gửi phản hồi.",
       });
 
       setIsConfirmModalVisible(false);
@@ -127,6 +135,7 @@ const BookingTracking = () => {
       console.error(err);
     }
   };
+
 
 
   const openModal = async (booking, type) => {
@@ -284,6 +293,7 @@ const BookingTracking = () => {
               Không đồng ý
             </label>
           </div>
+
           <div>
             <label>Ghi chú / bình luận:</label>
             <textarea
@@ -292,8 +302,27 @@ const BookingTracking = () => {
               onChange={(e) => setConfirmComment(e.target.value)}
             />
           </div>
+
+          {/* ✍️ Khu vực ký */}
+          <div style={{ marginTop: 15 }}>
+            <label>Chữ ký xác nhận:</label>
+            <SignatureCanvas
+              ref={sigCanvas}
+              penColor="black"
+              backgroundColor="#f5f5f5"
+              canvasProps={{
+                width: 400,
+                height: 200,
+                className: "border rounded",
+              }}
+            />
+            <Button onClick={() => sigCanvas.current.clear()} style={{ marginTop: 8 }}>
+              Xóa chữ ký
+            </Button>
+          </div>
         </div>
       </Modal>
+
 
       {/* Danh sách booking */}
       {loading ? (

@@ -51,7 +51,7 @@ const router = createBrowserRouter([
       { path: "guest/register", element: <RegisterPage /> },
       { path: "guest/aboutus", element: <WhyChooseUs /> },
       { path: "guest/terms", element: <OurTerms /> },
-       { path: "guest/stockcars", element: <StockCarsPage /> },
+      { path: "guest/stockcars", element: <StockCarsPage /> },
     ],
   },
 

@@ -40,8 +40,10 @@ const bookingApi = {
   },
 
   createStaffChecking(data) {
-    return axiosClient.post("/staff-checkings/createStaffChecking", data);
-  },
+  return axiosClient.post("/staff-checkings/createStaffChecking", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+},
 
   getAllStaffCheckings() {
     return axiosClient.get("/staff-checkings/viewAllStaffChecking");

@@ -7,49 +7,81 @@ const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [done, setDone] = useState(false);
+  const [statusText, setStatusText] = useState("Đang xác nhận...");
 
-  const orderCode = searchParams.get("orderCode");
-  const amount = searchParams.get("amount");
+  // PayOS có thể trả về params khác — ưu tiên orderCode
+  const orderCodeFromUrl = searchParams.get("orderCode");
+  const amountFromUrl = searchParams.get("amount");
 
   useEffect(() => {
-    const sendWebhook = async () => {
+    let orderCode = orderCodeFromUrl || localStorage.getItem("pendingOrderCode");
+    const fallbackInvoiceId = localStorage.getItem("pendingSumaInvoiceId");
+
+    if (!orderCode && !fallbackInvoiceId) {
+      message.error("Không tìm thấy orderCode hoặc invoiceId để xác nhận.");
+      setLoading(false);
+      return;
+    }
+
+    let attempts = 0;
+    const maxAttempts = 10; // thử 10 lần
+    const intervalMs = 2000; // mỗi 2s
+
+    const check = async () => {
       try {
-        if (!orderCode || !amount) {
-          message.error("Thiếu dữ liệu thanh toán");
+        attempts++;
+        setStatusText(`Đang xác nhận (lần ${attempts})...`);
+
+        // Nếu bạn có endpoint check theo orderCode:
+        if (orderCode) {
+          const res = await paymentApi.getStatus(orderCode);
+          const data = res?.data ?? res;
+          const status = data.status || data.paymentStatus || data.state;
+
+          if (status === "SUCCESS" || status === "SETTLED" || status === "PAID") {
+            setDone(true);
+            setStatusText("Thanh toán đã được xác nhận.");
+            // cleanup
+            localStorage.removeItem("pendingOrderCode");
+            localStorage.removeItem("pendingSumaInvoiceId");
+            setLoading(false);
+            return;
+          }
+        } else if (fallbackInvoiceId) {
+          // nếu BE có API check theo sumaInvoiceId, gọi nó ở đây (ví dụ invoiceApi.getById)
+          // const res = await invoiceApi.getById(fallbackInvoiceId);
+          // if (res.data.status === 'SETTLED') { ... }
+        }
+
+        if (attempts >= maxAttempts) {
+          setStatusText("Chưa có xác nhận từ hệ thống. Vui lòng thử lại sau.");
+          setLoading(false);
           return;
         }
 
-        const payload = {
-          data: { orderCode: Number(orderCode), amount: Number(amount) },
-        };
-
-        await paymentApi.sendWebhook(payload);
-        message.success("Xác nhận thanh toán thành công!");
-        setDone(true);
+        // nếu chưa xong, tiếp tục sau interval
+        setTimeout(check, intervalMs);
       } catch (err) {
-        console.error("Webhook error:", err);
-        message.error("Lỗi xác nhận thanh toán!");
-      } finally {
-        setLoading(false);
+        console.error("Error checking payment status:", err);
+        if (attempts >= maxAttempts) {
+          setStatusText("Lỗi khi xác nhận thanh toán");
+          setLoading(false);
+        } else {
+          setTimeout(check, intervalMs);
+        }
       }
     };
 
-    sendWebhook();
-  }, [orderCode, amount]);
+    check();
+  }, [orderCodeFromUrl, amountFromUrl]);
 
   if (loading) return <Spin style={{ marginTop: 50 }} />;
 
   return (
     <Result
-      status={done ? "success" : "error"}
-      title={done ? "Thanh toán thành công!" : "Không thể xác nhận thanh toán"}
-      subTitle={
-        done
-          ? `Đơn hàng ${orderCode} đã được xử lý với số tiền ${Number(amount).toLocaleString(
-              "vi-VN"
-            )}₫`
-          : "Vui lòng kiểm tra lại giao dịch."
-      }
+      status={done ? "success" : "warning"}
+      title={done ? "Thanh toán thành công!" : "Chưa xác nhận thanh toán"}
+      subTitle={statusText}
       extra={[
         <Button type="primary" href="/user/invoices" key="back">
           Quay lại danh sách hóa đơn

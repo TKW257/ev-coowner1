@@ -21,22 +21,22 @@ const UserInvoiceDashboard = () => {
       try {
         setLoading(true);
         const res = await invoiceApi.getMyInvoices();
-        console.log("API RESPONSE:", res);
+        // res có thể là response.data hoặc trực tiếp data, an toàn lấy res.data ?? res
+        const data = res?.data ?? res;
 
-        const data = res.data ?? res;
+        // Nếu API trả về mảng
+        const list = Array.isArray(data) ? data : [data];
 
-        const mapped = [{
-          sumaInvoiceId: data.sumaInvoiceId,
-          month: data.month,
-          totalAmount: data.totalAmount,
-          status: data.status,
-          userName: data.userName,
-          invoices: data.invoices || [],
-        }];
+        const mapped = list.map((item) => ({
+          sumaInvoiceId: item.sumaInvoiceId,
+          month: item.month,
+          totalAmount: item.totalAmount,
+          status: item.status,
+          userName: item.userName,
+          invoices: item.invoices || [],
+        }));
 
         setInvoiceList(mapped);
-        console.log("Mapped:", mapped);
-
       } catch (err) {
         console.error(err);
       } finally {
@@ -47,25 +47,35 @@ const UserInvoiceDashboard = () => {
     fetchInvoices();
   }, []);
 
-  const handlePayment = async (sumaInvoiceId) => {
+  const handlePayment = async (sumaInvoiceId, amount) => {
     try {
-      const res = await paymentApi.createPayment(sumaInvoiceId);
-      // Nếu axiosClient đã return response.data => res chính là JSON
-      const data = res.checkoutUrl ? res : res.data;
+      const res = await paymentApi.createPayment(sumaInvoiceId, amount, "PAYOS");
+      const data = res?.data ?? res;
 
       console.log("✅ PAYMENT DATA:", data);
 
-      if (data.checkoutUrl) {
-        window.open(data.checkoutUrl, "_blank", "noopener,noreferrer");
-      }
-      else {
+      // Lấy checkoutUrl và orderCode đúng chuẩn
+      const checkoutUrl = data?.data?.checkoutUrl || data.checkoutUrl;
+      const orderCode = data?.data?.orderCode || data.orderCode;
+
+      if (!checkoutUrl) {
         console.warn("⚠️ Không nhận được checkoutUrl:", data);
+        return;
       }
+
+      // Lưu orderCode để xác nhận sau redirect
+      if (orderCode) {
+        localStorage.setItem("pendingOrderCode", String(orderCode));
+      } else {
+        localStorage.setItem("pendingSumaInvoiceId", String(sumaInvoiceId));
+      }
+
+      // Redirect sang PayOS
+      window.location.href = checkoutUrl;
     } catch (err) {
       console.error("❌ Lỗi khi tạo payment:", err);
     }
   };
-
 
 
   const handleDownloadPDF = async () => {
