@@ -24,7 +24,7 @@ import BookingPage from "./pages/co-owner/BookingPage";
 import BookingTrackingPage from "./pages/co-owner/BookingTrackingPage"
 import InvoicePage from "./pages/co-owner/InvoicePage";
 import SuccessPage from "./pages/co-owner/SucessPage";
-import OwnerVoteListPage from "./pages/co-owner/VotingPage/OwnerVoteListPage";
+import VotingPage from "./pages/co-owner/VotingPage";
 import ProfilePage from "./pages/co-owner/ProfilePage";
 
 // ===== Admin Pages =====
@@ -71,7 +71,7 @@ const router = createBrowserRouter([
       { path: "carbooking", element: <BookingPage /> },
       { path: "invoice", element: <InvoicePage /> },
       { path: "success", element: <SuccessPage /> },
-      { path: "vote", element: <OwnerVoteListPage /> },
+      { path: "vote", element: <VotingPage /> },
     ],
   },
 
