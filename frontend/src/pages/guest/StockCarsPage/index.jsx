@@ -243,21 +243,6 @@ const StockCarsPage = () => {
                       Reset
                   </Button>
               </Space>
-
-              {/* Dòng riêng cho khoảng giá */}
-              <div style={{ marginTop: 16, marginLeft: 260 }}>
-                  Khoảng giá
-                  <Slider
-                      range
-                      step={50000000}
-                      min={0}
-                      max={2000000000}
-                      value={priceRange}
-                      onChange={setPriceRange}
-                      tooltip={{ formatter: (v) => v.toLocaleString("vi-VN") }}
-                      style={{ width: 300 }}
-                  />
-              </div>
           </Card>
 
       {/* GRID */}
