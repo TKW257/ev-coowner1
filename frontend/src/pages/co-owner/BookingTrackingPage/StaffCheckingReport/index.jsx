@@ -95,14 +95,10 @@ const StaffCheckingReport = ({ checking }) => {
             <strong>Chữ ký nhân viên</strong>
           </p>
           {checking.staffSignature ? (
-            <img
+           <img
               src={checking.staffSignature}
-              alt="Staff Signature"
-              style={{
-                width: 150,
-                border: "1px solid #ccc",
-                borderRadius: 8,
-              }}
+              alt="Chữ ký nhân viên"
+              style={{ width: 200, border: "1px solid #ccc", marginTop: 10 }}
             />
           ) : (
             <p>Không có chữ ký</p>
@@ -116,12 +112,8 @@ const StaffCheckingReport = ({ checking }) => {
           {checking.userSignature ? (
             <img
               src={checking.userSignature}
-              alt="User Signature"
-              style={{
-                width: 150,
-                border: "1px solid #ccc",
-                borderRadius: 8,
-              }}
+              alt="Chữ ký khách hàng"
+              style={{ width: 200, border: "1px solid #ccc", marginTop: 10 }}
             />
           ) : (
             <p>Không có chữ ký</p>

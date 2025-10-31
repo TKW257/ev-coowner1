@@ -11,7 +11,7 @@ const voteApi = {
   castVote: (data) => axiosClient.post("/votes/castVote", data),
 
   // Common
-  getVotesByTopic: (id) => axiosClient.get(`/votes/topics/${id}/find`),
+  getVotesByTopic: (id) => axiosClient.get(`/votes/topic/${id}/find`),
 
 };
 

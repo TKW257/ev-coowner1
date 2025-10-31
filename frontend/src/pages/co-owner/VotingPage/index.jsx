@@ -1,125 +1,156 @@
-import React, { useEffect, useState } from "react";
-import {
-  Card,
-  Row,
-  Col,
-  Select,
-  Button,
-  Tag,
-  Typography,
-  Space,
-  Modal,
-  Table,
-  message,
-  Spin,
-} from "antd";
-import { FileTextOutlined } from "@ant-design/icons";
+import React, { useEffect, useState, useCallback } from "react";
+import { App } from "antd";
+import { PieChart, Pie, Cell, Tooltip as ReTooltip, Legend, ResponsiveContainer } from "recharts";
+import { Card, Row, Col, Select, Button, Tag, Typography, Divider, Space, Modal, Table, Spin } from "antd";
+import { UserOutlined, DollarOutlined, CarOutlined, LikeOutlined, DislikeOutlined, EyeOutlined } from "@ant-design/icons";
 import voteApi from "../../../api/voteApi";
 
-const { Title, Paragraph } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const VoteDashboard = () => {
   const [topics, setTopics] = useState([]);
   const [filteredTopics, setFilteredTopics] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [statusFilter, setStatusFilter] = useState("OPEN");
+  const [statusFilter, setStatusFilter] = useState("PENDING");
   const [loading, setLoading] = useState(false);
 
-  // Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedTopic, setSelectedTopic] = useState(null);
-  const [votes, setVotes] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [voteList, setVoteList] = useState([]);
+  const [voteStats, setVoteStats] = useState([]);
   const [loadingVotes, setLoadingVotes] = useState(false);
 
-  // ===== GỌI API LẤY DANH SÁCH TOPIC =====
-  useEffect(() => {
-    const fetchTopics = async () => {
-      try {
-        setLoading(true);
-        const res = await voteApi.getUserTopics();
-        const data = res?.data ?? res;
-        setTopics(data);
+  const [voteModalOpen, setVoteModalOpen] = useState(false);
+  const [currentTopic, setCurrentTopic] = useState(null);
+  const { notification } = App.useApp();
 
-        // Auto chọn xe đầu tiên khi load xong
-        const firstVehicle = data.length > 0 ? data[0].vehicleName : null;
-        setSelectedVehicle(firstVehicle);
-      } catch (err) {
-        console.error(err);
-        message.error("Không thể tải danh sách biểu quyết");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTopics();
-  }, []);
-
-  // ===== LỌC THEO TRẠNG THÁI & XE =====
-  useEffect(() => {
-    if (selectedVehicle) {
-      const filtered = topics.filter(
-        (t) => t.vehicleName === selectedVehicle && t.status === statusFilter
-      );
-      setFilteredTopics(filtered);
-    }
-  }, [topics, selectedVehicle, statusFilter]);
-
-  const vehicleOptions = [...new Set(topics.map((t) => t.vehicleName))].map((v) => ({
-    label: v,
-    value: v,
-  }));
-
-  const openCount = topics.filter((t) => t.status === "OPEN").length;
-  const closedCount = topics.filter((t) => t.status === "CLOSED").length;
-
-  // ===== MỞ MODAL VÀ LẤY VOTE THEO TOPIC =====
-  const handleViewVotes = async (topic) => {
+  // get All topic user
+  const fetchTopics = useCallback(async () => {
     try {
-      setIsModalOpen(true);
-      setSelectedTopic(topic);
-      setLoadingVotes(true);
-      const res = await voteApi.getVotesByTopic(topic.topicId);
-      const data = res?.data ?? res;
-      setVotes(data);
+      setLoading(true);
+      const res = await voteApi.getUserTopics();
+      const data = Array.isArray(res) ? res : [];
+      setTopics(data);
+
+      setSelectedVehicle((prev) => prev || (data[0]?.vehicleName ?? null));
     } catch (err) {
       console.error(err);
-      message.error("Không thể tải danh sách phiếu");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTopics();
+  }, [fetchTopics]);
+
+
+  // view trạng chi tiết trạng thái vote 
+  const handleViewVotes = async (topicId) => {
+    try {
+      setModalOpen(true);
+      setLoadingVotes(true);
+      const res = await voteApi.getVotesByTopic(topicId);
+      const votes = Array.isArray(res) ? res : [];
+      setVoteList(votes);
+
+      const agree = votes.filter(v => v.choice === true).length;
+      const disagree = votes.filter(v => v.choice === false).length;
+      setVoteStats([
+        { name: "Đồng ý", value: agree },
+        { name: "Không đồng ý", value: disagree },
+      ]);
+    } catch (err) {
+      console.error(err);
     } finally {
       setLoadingVotes(false);
     }
   };
 
-  const columns = [
+  const openVoteModal = async (topic) => {
+    setCurrentTopic(topic);
+    setVoteModalOpen(true);
+  };
+
+  /// send vote
+const handleCastVote = async (agree) => {
+  if (!currentTopic) return;
+  try {
+    const payload = { topicId: currentTopic.topicId, agree };
+    await voteApi.castVote(payload);
+
+    notification.success({
+      message: "Bình chọn thành công",
+      description: `Bạn đã ${agree ? "đồng ý" : "không đồng ý"} bình chọn.`,
+      placement: "topRight", 
+    });
+
+    setVoteModalOpen(false);
+  } catch (err) {
+    console.error(err);
+    notification.error({
+      message: "Bình chọn thất bại",
+      description: "Bạn đã bình chọn cho chủ đề này rồi.",
+      placement: "topRight",
+    });
+  }
+};
+
+  // filter và status
+  const vehicleOptions = [...new Set(topics.map((t) => t.vehicleName))].map(
+    (v) => ({ label: v, value: v })
+  );
+
+  const statusCount = {
+    PENDING: topics.filter((t) => t.status === "PENDING").length,
+    APPROVED: topics.filter((t) => t.status === "APPROVED").length,
+    REJECTED: topics.filter((t) => t.status === "REJECTED").length,
+  };
+
+  useEffect(() => {
+    if (selectedVehicle) {
+      setFilteredTopics(
+        topics.filter(
+          (t) => t.vehicleName === selectedVehicle && t.status === statusFilter
+        )
+      );
+    }
+  }, [selectedVehicle, statusFilter, topics]);
+
+
+
+  const voteColumns = [
     { title: "Người bỏ phiếu", dataIndex: "userName", key: "userName" },
     {
       title: "Lựa chọn",
       dataIndex: "choice",
       key: "choice",
-      render: (val) =>
-        val ? (
-          <Tag color="green">Đồng ý</Tag>
-        ) : (
-          <Tag color="red">Không đồng ý</Tag>
-        ),
+      render: (choice) => (choice ? "Đồng ý" : "Không đồng ý"),
     },
     { title: "Trọng số", dataIndex: "weight", key: "weight" },
-    {
-      title: "Thời gian",
-      dataIndex: "votedAt",
-      key: "votedAt",
-      render: (time) =>
-        time ? new Date(time).toLocaleString("vi-VN") : "-",
-    },
+    { title: "Thời gian", dataIndex: "votedAt", key: "votedAt" },
   ];
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "APPROVED":
+        return "green";
+      case "REJECTED":
+        return "red";
+      default:
+        return "blue";
+    }
+  };
+
+
+
   return (
-    <div style={{ padding: "24px" }}>
-      <Title level={3}>Vote Dashboard</Title>
+    <div style={{ padding: 24 }}>
 
       {/* Bộ lọc */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col>
           <Select
-            style={{ width: 200 }}
+            style={{ width: 220 }}
             placeholder="Chọn xe"
             value={selectedVehicle}
             onChange={setSelectedVehicle}
@@ -129,92 +160,248 @@ const VoteDashboard = () => {
         <Col>
           <Space>
             <Button
-              type={statusFilter === "OPEN" ? "primary" : "default"}
-              onClick={() => setStatusFilter("OPEN")}
+              type={statusFilter === "PENDING" ? "primary" : "default"}
+              onClick={() => setStatusFilter("PENDING")}
             >
-              Đang mở ({openCount})
+              Đang mở ({statusCount.PENDING})
             </Button>
             <Button
-              type={statusFilter === "CLOSED" ? "primary" : "default"}
-              onClick={() => setStatusFilter("CLOSED")}
+              type={statusFilter === "APPROVED" ? "primary" : "default"}
+              onClick={() => setStatusFilter("APPROVED")}
             >
-              Đã đóng ({closedCount})
+              Đã duyệt ({statusCount.APPROVED})
+            </Button>
+            <Button
+              type={statusFilter === "REJECTED" ? "primary" : "default"}
+              onClick={() => setStatusFilter("REJECTED")}
+            >
+              Từ chối ({statusCount.REJECTED})
             </Button>
           </Space>
         </Col>
       </Row>
 
       {/* Danh sách topic */}
-      {loading ? (
-        <Spin tip="Đang tải danh sách..." />
-      ) : (
+      <Spin spinning={loading}>
         <Row gutter={[16, 16]}>
           {filteredTopics.map((topic) => (
             <Col key={topic.topicId} span={24}>
-              <Card>
-                <Row align="middle" gutter={16}>
-                  {/* Thông tin chính */}
-                  <Col flex="auto">
-                    <Title level={5} style={{ margin: 0 }}>
-                      {topic.title}
-                    </Title>
-                    <Paragraph type="secondary" style={{ margin: "4px 0" }}>
-                      {topic.description}
-                    </Paragraph>
-                    <Space size="large">
-                      <Tag color={topic.status === "OPEN" ? "green" : "red"}>
-                        {topic.status === "OPEN" ? "Đang mở" : "Đã đóng"}
+              <Card
+                hoverable
+                style={{
+                  borderRadius: 12,
+                  boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+                  background: "#fff",
+                }}
+              >
+                {/* --- Header --- */}
+                <Row justify="space-between" align="middle">
+                  <Col>
+                    <Space align="center" size="middle" wrap>
+                      <Text
+                        strong
+                        style={{
+                          fontSize: 16,
+                          color: "#555",
+                          minWidth: 80,
+                        }}
+                      >
+                        Tiêu đề:
+                      </Text>
+
+                      {/* Tiêu đề chính */}
+                      <Title
+                        level={4}
+                        style={{
+                          margin: 0,
+                          color: "#222",
+                          fontWeight: 500,
+                          background: "#f0f2f5",
+                          padding: "2px 10px",
+                          borderRadius: 6,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {topic.title}
+                      </Title>
+
+                      {/* Xe trong khung */}
+                      <Tag color={getStatusColor(topic.status)}>
+                        {topic.status}
                       </Tag>
-                      <Tag color="blue">{topic.vehicleName}</Tag>
-                      <Tag color="purple">{topic.decisionType}</Tag>
                     </Space>
                   </Col>
 
-                  {/* Nút thao tác */}
-                  <Col flex="0 0 120px" style={{ textAlign: "right" }}>
-                    <Button
-                      type="primary"
-                      icon={<FileTextOutlined />}
-                      onClick={() => handleViewVotes(topic)}
-                    >
-                      Xem
-                    </Button>
+                  <Col>
+                    <Space>
+
+                      <Text type="secondary">
+                        Tạo vào:
+                      </Text>
+                      <Text type="secondary">
+                        {topic.createdAt
+                          ? new Date(topic.createdAt).toLocaleString()
+                          : "null"}
+                      </Text>
+                    </Space>
+                  </Col>
+                </Row>
+
+                <Divider style={{ margin: "12px 0" }} />
+
+                {/* --- Nội dung chia 2 cột --- */}
+                <Row justify="space-between" align="top">
+                  {/* Cột trái: thông tin chi tiết */}
+                  <Col span={20}>
+                    <Row gutter={[0, 8]}>
+                      <Col span={24}>
+                        <Tag color="purple">
+                          Loại quyết định: {topic.decisionType}
+                        </Tag>
+                        <Tag color="orange">
+                          Tỷ lệ yêu cầu: {topic.requiredRatio}
+                        </Tag>
+                        <Tag
+                          color="#fffbe6"
+                          style={{
+                            border: "1px solid #ffe58f",
+                            borderRadius: 6,
+                            color: "#ad8b00",
+                            fontWeight: 500,
+                          }}
+                        >
+                          <DollarOutlined /> Giá dự kiến:{" "}
+                          {topic.amount
+                            ? `${topic.amount.toLocaleString()} ₫`
+                            : "Chưa có"}
+                        </Tag>
+                      </Col>
+                      <Col span={24}>
+                        <Space>
+                          <CarOutlined />
+                          <Text>Xe: {topic.vehicleName || "N/A"}</Text>
+                        </Space>
+                      </Col>
+                      <Col span={24}>
+                        <Space>
+                          <UserOutlined />
+                          <Text>Người tạo: {topic.createdByName || "N/A"}</Text>
+                        </Space>
+                      </Col>
+                      <Col span={24}>
+                        <Text strong>Mô tả:</Text> {topic.description}
+                      </Col>
+                    </Row>
+                  </Col>
+
+                  {/* Cột phải: nút hành động */}
+                  <Col>
+                    <Space direction="vertical" size="middle">
+                      <Button
+                        type="primary"
+                        icon={<EyeOutlined />}
+                        onClick={() => handleViewVotes(topic.topicId)}
+                      >
+                        Chi tiết
+                      </Button>
+
+                      <Button
+                        type="default"
+                        icon={<LikeOutlined />}
+                        onClick={() => openVoteModal(topic)}
+                        disabled={topic.status !== "PENDING"}
+                      >
+                        Bình chọn
+                      </Button>
+                    </Space>
                   </Col>
                 </Row>
               </Card>
             </Col>
           ))}
 
-          {filteredTopics.length === 0 && !loading && (
-            <Col span={24} style={{ textAlign: "center", padding: "40px" }}>
+          {filteredTopics.length === 0 && (
+            <Col span={24} style={{ textAlign: "center", padding: 40 }}>
               <Paragraph>Không có topic nào phù hợp.</Paragraph>
             </Col>
           )}
         </Row>
-      )}
+      </Spin>
 
-      {/* Modal chi tiết phiếu */}
+      {/* Modal danh sách phiếu bầu */}
       <Modal
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        title="Danh sách phiếu bầu"
+        open={modalOpen}
+        onCancel={() => setModalOpen(false)}
         footer={null}
         width={700}
-        title={
-          selectedTopic
-            ? `Chi tiết phiếu - ${selectedTopic.title}`
-            : "Chi tiết phiếu"
-        }
       >
-        {loadingVotes ? (
-          <Spin tip="Đang tải phiếu..." />
-        ) : (
+        <Spin spinning={loadingVotes}>
+          {/* --- Biểu đồ --- */}
+          {modalOpen && voteStats.length > 0 && (
+            <div style={{ height: 250, marginBottom: 24 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={voteStats}
+                    dataKey="value"
+                    nameKey="name"
+                    outerRadius={90}
+                    label
+                  >
+                    <Cell key="agree" fill="#52c41a" />
+                    <Cell key="disagree" fill="#ff4d4f" />
+                  </Pie>
+                  <ReTooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* --- Bảng chi tiết phiếu bầu --- */}
           <Table
-            columns={columns}
-            dataSource={votes}
+            dataSource={voteList}
+            columns={voteColumns}
             rowKey="voteId"
             pagination={false}
           />
-        )}
+        </Spin>
+      </Modal>
+
+
+      {/* Modal bình chọn */}
+      <Modal
+        title={`🗳️ Bình chọn - ${currentTopic?.title || ""}`}
+        open={voteModalOpen}
+        onCancel={() => setVoteModalOpen(false)}
+        footer={null}
+        centered
+      >
+        <Spin spinning={loadingVotes}>
+          {currentTopic ? (
+            <div style={{ textAlign: "center", padding: "12px 0" }}>
+              <Paragraph>
+                <Text strong>Xe:</Text> {currentTopic.vehicleName}
+              </Paragraph>
+              <Paragraph>
+                <Text strong>Mô tả:</Text>{" "}
+                {currentTopic.description || "Không có mô tả"}
+              </Paragraph>
+              <Divider />
+              <Space>
+                <Button type="primary" onClick={() => handleCastVote(true)}>
+                  <LikeOutlined /> Đồng ý
+                </Button>
+                <Button danger onClick={() => handleCastVote(false)}>
+                  <DislikeOutlined /> Không đồng ý
+                </Button>
+              </Space>
+            </div>
+          ) : (
+            <Paragraph>Không tìm thấy thông tin chủ đề.</Paragraph>
+          )}
+        </Spin>
       </Modal>
     </div>
   );

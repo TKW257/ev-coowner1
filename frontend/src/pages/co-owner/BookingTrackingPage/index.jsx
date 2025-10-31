@@ -109,20 +109,30 @@ const BookingTracking = () => {
       formData.append("approved", confirmApproved);
       formData.append("userComment", confirmComment);
 
-      // ✍️ Lấy chữ ký từ canvas
+      // ✅ Kiểm tra canvas có chữ ký hay không
+      if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
+        notification.warning({
+          message: "Chưa ký xác nhận",
+          description: "Vui lòng ký trước khi gửi xác nhận.",
+        });
+        return;
+      }
+
+      // ✍️ Lấy chữ ký khách hàng
       const dataUrl = sigCanvas.current.toDataURL("image/png");
       const blob = await (await fetch(dataUrl)).blob();
-      formData.append("staffSignature", blob, "signature.png");
+      formData.append("userSignature", blob, "signature.png");
 
       await bookingApi.confirmStaffChecking(checkingId, formData);
 
       notification.success({
         message: "Xác nhận biên bản thành công",
         description: confirmApproved
-          ? "Bạn đã đồng ý biên bản kiểm tra."
+          ? "Bạn đã đồng ý biên bản kiểm tra xe."
           : "Bạn đã từ chối và gửi phản hồi.",
       });
 
+      // Reset modal
       setIsConfirmModalVisible(false);
       setIsModalVisible(false);
       setConfirmComment("");
