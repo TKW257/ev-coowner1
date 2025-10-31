@@ -279,15 +279,17 @@ const ManageBookings = () => {
 
       // Cập nhật status tự động nếu cần
       let newStatus = null;
-      if (checkingType === "checkout" && currentBooking.bookingStatus === "Confirmed") {
-        newStatus = "InProgress";
-      } else if (checkingType === "checkin" && currentBooking.bookingStatus === "InProgress") {
+
+      // Giữ nguyên Confirmed khi check-out, chỉ đổi Completed khi check-in
+      if (checkingType === "checkin" && currentBooking.bookingStatus === "InProgress") {
         newStatus = "Completed";
       }
 
       if (newStatus) {
         await bookingApi.updateStatus(currentBooking.bookingId, newStatus);
-        message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công và cập nhật trạng thái thành ${newStatus}!`);
+        message.success(
+          `${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công và cập nhật trạng thái thành ${newStatus}!`
+        );
       } else {
         message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
       }
