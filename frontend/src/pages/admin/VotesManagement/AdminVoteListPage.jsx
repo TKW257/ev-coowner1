@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Button,
   message,
@@ -13,13 +12,15 @@ import {
   Space,
   Tooltip,
   Checkbox,
+  Spin,
+  Descriptions,
 } from "antd";
-import { PlusOutlined, EyeOutlined, CalculatorOutlined, SearchOutlined } from "@ant-design/icons";
+import { PlusOutlined, EyeOutlined, CalculatorOutlined, SearchOutlined, FileTextOutlined } from "@ant-design/icons";
 import voteApi from "../../../api/voteApi";
 import vehiclesApi from "../../../api/vehiclesApi";
+import feeApi from "../../../api/feeApi";
 
 export default function AdminVoteListPage() {
-  const navigate = useNavigate();
   const [topics, setTopics] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +28,17 @@ export default function AdminVoteListPage() {
   const [confirmCalculateVisible, setConfirmCalculateVisible] = useState(false);
   const [calculatingId, setCalculatingId] = useState(null);
   const [form] = Form.useForm();
+  
+  // Detail modal states
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedTopic, setSelectedTopic] = useState(null);
+  const [votes, setVotes] = useState([]);
+  const [votesLoading, setVotesLoading] = useState(false);
+  
+  // Fee invoice modal states
+  const [feeModalVisible, setFeeModalVisible] = useState(false);
+  const [feeForm] = Form.useForm();
+  const [feeLoading, setFeeLoading] = useState(false);
   
   // Filter states
   const [selectedVehicles, setSelectedVehicles] = useState([]);
@@ -118,11 +130,114 @@ export default function AdminVoteListPage() {
     }
   };
 
-  const getStatusTag = (topic) => {
-    if (topic.resultCalculated || topic.status === "CALCULATED") {
-      return <Tag color="green">Đã tính kết quả</Tag>;
+  const handleViewDetail = async (record) => {
+    setSelectedTopic(record);
+    setDetailModalVisible(true);
+    setVotesLoading(true);
+    
+    try {
+      const id = record.topicId ?? record.id;
+      const res = await voteApi.getVotesByTopic(id);
+      console.log("[AdminVoteListPage] Votes response:", res);
+      const data = Array.isArray(res) ? res : res?.data ?? [];
+      setVotes(data);
+    } catch (err) {
+      console.error("[AdminVoteListPage] Error fetching votes:", err);
+      message.error("Không thể tải danh sách phiếu bầu");
+      setVotes([]);
+    } finally {
+      setVotesLoading(false);
     }
-    return <Tag color="orange">Chưa tính</Tag>;
+  };
+
+  const handleCreateFee = (record) => {
+    feeForm.resetFields();
+    feeForm.setFieldsValue({
+      vehicleId: record.vehicleId,
+    });
+    setFeeModalVisible(true);
+  };
+
+  const handleCreateFeeSubmit = async () => {
+    try {
+      const values = await feeForm.validateFields();
+      setFeeLoading(true);
+      
+      // Đảm bảo vehicleId là số
+      const vehicleId = typeof values.vehicleId === 'string' ? parseInt(values.vehicleId, 10) : values.vehicleId;
+      
+      const payload = {
+        vehicleId: vehicleId,
+        email: values.email.trim(),
+        type: values.type,
+        amount: Number(values.amount),
+        description: values.description.trim(),
+      };
+
+      console.log("[AdminVoteListPage] Creating fee with payload:", payload);
+      await feeApi.createVariableFee(payload);
+      message.success("Tạo hóa đơn phát sinh thành công!");
+      feeForm.resetFields();
+      setFeeModalVisible(false);
+    } catch (err) {
+      console.error("Create fee failed:", err);
+      console.error("Error details:", err?.response?.data);
+      
+      // Xử lý các loại lỗi khác nhau
+      if (err?.response?.status === 403) {
+        message.error("Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại với tài khoản ADMIN.");
+      } else if (err?.response?.status === 401) {
+        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      } else {
+        const serverMsg = err?.response?.data?.message ?? err?.message ?? "Không thể tạo hóa đơn phát sinh";
+        message.error(serverMsg);
+      }
+    } finally {
+      setFeeLoading(false);
+    }
+  };
+
+  const voteColumns = [
+    { 
+      title: "ID", 
+      dataIndex: "voteId", 
+      key: "voteId",
+      width: 80,
+    },
+    { 
+      title: "Người dùng", 
+      dataIndex: "userName",
+      key: "userName",
+    },
+    {
+      title: "Lựa chọn",
+      dataIndex: "choice",
+      key: "choice",
+      render: (v) => v ? "Đồng ý" : "Không đồng ý",
+    },
+    { 
+      title: "Trọng số", 
+      dataIndex: "weight",
+      key: "weight",
+    },
+    { 
+      title: "Thời gian bình chọn", 
+      dataIndex: "votedAt",
+      key: "votedAt",
+    },
+  ];
+
+  const getStatusTag = (topic) => {
+    const status = topic.status;
+    const statusMap = {
+      PENDING: { color: "orange", text: "Đang chờ" },
+      APPROVED: { color: "green", text: "Đã phê duyệt" },
+      REJECTED: { color: "red", text: "Đã từ chối" },
+      EXPIRED: { color: "default", text: "Hết hạn" },
+    };
+    
+    const statusInfo = statusMap[status] || { color: "default", text: status || "N/A" };
+    return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
   };
 
   // Get unique vehicle names for filtering
@@ -135,21 +250,6 @@ export default function AdminVoteListPage() {
     return Array.from(vehicleSet).sort();
   };
 
-  const handleVehicleFilterChange = (checkedValues) => {
-    setSelectedVehicles(checkedValues);
-  };
-
-  const handleStatusFilterChange = (checkedValues) => {
-    setSelectedStatuses(checkedValues);
-  };
-
-  const clearFilter = (filterType) => {
-    if (filterType === 'vehicle') {
-      setSelectedVehicles([]);
-    } else if (filterType === 'status') {
-      setSelectedStatuses([]);
-    }
-  };
 
   const columns = [
     {
@@ -191,7 +291,7 @@ export default function AdminVoteListPage() {
       ellipsis: {
         showTitle: false,
       },
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      filterDropdown: ({ setSelectedKeys, confirm, clearFilters }) => (
         <div style={{ padding: 8 }}>
           <div style={{ marginBottom: 8, maxHeight: 300, overflow: 'auto' }}>
             <Checkbox.Group
@@ -243,15 +343,18 @@ export default function AdminVoteListPage() {
     },
     {
       title: "Trạng thái",
+      dataIndex: "status",
       key: "status",
       width: 150,
-      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
+      filterDropdown: ({ setSelectedKeys, confirm, clearFilters }) => (
         <div style={{ padding: 8 }}>
           <div style={{ marginBottom: 8 }}>
             <Checkbox.Group
               options={[
-                { label: 'Đã tính kết quả', value: 'calculated' },
-                { label: 'Chưa tính', value: 'pending' }
+                { label: 'Đang chờ', value: 'PENDING' },
+                { label: 'Đã phê duyệt', value: 'APPROVED' },
+                { label: 'Đã từ chối', value: 'REJECTED' },
+                { label: 'Hết hạn', value: 'EXPIRED' }
               ]}
               value={selectedStatuses}
               onChange={(values) => {
@@ -285,10 +388,7 @@ export default function AdminVoteListPage() {
         <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
       ),
       onFilter: (value, record) => {
-        const isCalculated = record.resultCalculated || record.status === "CALCULATED";
-        if (value === 'calculated') return isCalculated;
-        if (value === 'pending') return !isCalculated;
-        return true;
+        return record.status === value;
       },
       filteredValue: selectedStatuses.length > 0 ? selectedStatuses : null,
       render: (_, record) => getStatusTag(record),
@@ -299,7 +399,8 @@ export default function AdminVoteListPage() {
       width: 200,
       render: (_, record) => {
         const id = record.topicId ?? record.id;
-        const isCalculated = record.resultCalculated || record.status === "CALCULATED";
+        const canCalculate = record.status === "PENDING";
+        const canCreateFee = record.status === "APPROVED";
         
         return (
           <Space size="middle">
@@ -307,17 +408,26 @@ export default function AdminVoteListPage() {
               <Button
                 type="link"
                 icon={<EyeOutlined />}
-                onClick={() => navigate(`/admin/vote/${id}`)}
+                onClick={() => handleViewDetail(record)}
               />
             </Tooltip>
             <Tooltip title="Tính kết quả">
               <Button
                 type="link"
                 icon={<CalculatorOutlined />}
-                disabled={isCalculated}
+                disabled={!canCalculate}
                 onClick={() => handleCalculate(id)}
               />
             </Tooltip>
+            {canCreateFee && (
+              <Tooltip title="Tạo hóa đơn phát sinh">
+                <Button
+                  type="link"
+                  icon={<FileTextOutlined />}
+                  onClick={() => handleCreateFee(record)}
+                />
+              </Tooltip>
+            )}
           </Space>
         );
       },
@@ -441,6 +551,142 @@ export default function AdminVoteListPage() {
       >
         <p>Bạn có chắc chắn muốn tính kết quả bình chọn cho chủ đề này?</p>
         <p>Thao tác này không thể hoàn tác.</p>
+      </Modal>
+
+      {/* Modal Chi Tiết Bình Chọn */}
+      <Modal
+        open={detailModalVisible}
+        onCancel={() => {
+          setDetailModalVisible(false);
+          setSelectedTopic(null);
+          setVotes([]);
+        }}
+        footer={[
+          <Button key="close" onClick={() => {
+            setDetailModalVisible(false);
+            setSelectedTopic(null);
+            setVotes([]);
+          }}>
+            Đóng
+          </Button>
+        ]}
+        title={`Chi Tiết Bình Chọn - Topic #${selectedTopic?.topicId ?? selectedTopic?.id ?? ''}`}
+        width={1000}
+        destroyOnClose
+      >
+        {selectedTopic && (
+          <>
+            <Descriptions bordered column={2} style={{ marginBottom: 24 }}>
+              <Descriptions.Item label="ID">{selectedTopic.topicId ?? selectedTopic.id}</Descriptions.Item>
+              <Descriptions.Item label="Tiêu đề">{selectedTopic.title}</Descriptions.Item>
+              <Descriptions.Item label="Mô tả" span={2}>{selectedTopic.description}</Descriptions.Item>
+              <Descriptions.Item label="Xe áp dụng">
+                {selectedTopic.vehicleName || selectedTopic.vehicle?.model || selectedTopic.vehicleId || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái">
+                {getStatusTag(selectedTopic)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Loại quyết định">
+                {selectedTopic.decisionType || "N/A"}
+              </Descriptions.Item>
+              <Descriptions.Item label="Tỷ lệ yêu cầu">
+                {selectedTopic.requiredRatio 
+                  ? `${(selectedTopic.requiredRatio * 100).toFixed(2)}%`
+                  : "N/A"}
+              </Descriptions.Item>
+            </Descriptions>
+
+            <div>
+              <h3 style={{ marginBottom: 16 }}>Danh sách phiếu bầu</h3>
+              <Spin spinning={votesLoading}>
+                <Table 
+                  rowKey="voteId" 
+                  columns={voteColumns} 
+                  dataSource={votes}
+                  loading={votesLoading}
+                  pagination={{ pageSize: 5 }}
+                  size="small"
+                />
+              </Spin>
+            </div>
+          </>
+        )}
+      </Modal>
+
+      {/* Modal Tạo Hóa Đơn Phát Sinh */}
+      <Modal
+        open={feeModalVisible}
+        title="Tạo Hóa Đơn Phát Sinh"
+        onOk={handleCreateFeeSubmit}
+        onCancel={() => {
+          setFeeModalVisible(false);
+          feeForm.resetFields();
+        }}
+        okText="Tạo"
+        cancelText="Hủy"
+        confirmLoading={feeLoading}
+        destroyOnClose
+      >
+        <Form form={feeForm} layout="vertical">
+          <Form.Item
+            name="vehicleId"
+            label="ID Xe"
+            rules={[{ required: true, message: "Vui lòng chọn xe!" }]}
+          >
+            <Input disabled />
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: "Vui lòng nhập email!" },
+              { type: 'email', message: "Email không hợp lệ!" }
+            ]}
+          >
+            <Input placeholder="Nhập email người dùng" />
+          </Form.Item>
+
+          <Form.Item
+            name="type"
+            label="Loại phí biến động"
+            rules={[{ required: true, message: "Vui lòng chọn loại phí!" }]}
+          >
+            <Select placeholder="Chọn loại phí biến động">
+              <Select.Option value="MAINTENANCE">Bảo trì</Select.Option>
+              <Select.Option value="REPAIR">Sửa chữa</Select.Option>
+              <Select.Option value="PARKING">Đỗ xe</Select.Option>
+              <Select.Option value="TOLL">Phí cầu đường</Select.Option>
+              <Select.Option value="INSURANCE">Bảo hiểm</Select.Option>
+              <Select.Option value="OTHER">Khác</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="amount"
+            label="Số tiền"
+            rules={[
+              { required: true, message: "Vui lòng nhập số tiền!" },
+              { type: 'number', min: 0, message: "Số tiền phải lớn hơn 0!" }
+            ]}
+          >
+            <InputNumber
+              min={0}
+              placeholder="Nhập số tiền"
+              style={{ width: '100%' }}
+              formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={value => value.replace(/\$\s?|(,*)/g, '')}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label="Mô tả"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
+          >
+            <Input.TextArea rows={3} placeholder="Nhập mô tả hóa đơn phát sinh" />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );
