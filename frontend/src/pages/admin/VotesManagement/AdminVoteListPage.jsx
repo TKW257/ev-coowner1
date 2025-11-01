@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Button,
   message,
@@ -18,10 +19,13 @@ import voteApi from "../../../api/voteApi";
 import vehiclesApi from "../../../api/vehiclesApi";
 
 export default function AdminVoteListPage() {
+  const navigate = useNavigate();
   const [topics, setTopics] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [confirmCalculateVisible, setConfirmCalculateVisible] = useState(false);
+  const [calculatingId, setCalculatingId] = useState(null);
   const [form] = Form.useForm();
   
   // Filter states
@@ -89,14 +93,28 @@ export default function AdminVoteListPage() {
     }
   };
 
-  const handleCalculate = async (id) => {
+  const handleCalculate = (id) => {
+    console.log("[AdminVoteListPage] handleCalculate clicked with id:", id);
+    setCalculatingId(id);
+    setConfirmCalculateVisible(true);
+  };
+
+  const confirmCalculate = async () => {
+    if (!calculatingId) return;
+    
+    console.log("[AdminVoteListPage] confirmCalculate called with id:", calculatingId);
     try {
-      await voteApi.calculateResult(id);
+      const result = await voteApi.calculateResult(calculatingId);
+      console.log("[AdminVoteListPage] calculateResult success:", result);
       message.success("Đã tính kết quả bình chọn");
+      setConfirmCalculateVisible(false);
+      setCalculatingId(null);
       fetchTopics();
     } catch (err) {
-      console.error("calculateResult error:", err);
-      message.error("Không thể tính kết quả");
+      console.error("[AdminVoteListPage] calculateResult error:", err);
+      console.error("[AdminVoteListPage] Error response:", err?.response?.data);
+      const serverMsg = err?.response?.data?.message ?? err?.message ?? "Không thể tính kết quả";
+      message.error(serverMsg);
     }
   };
 
@@ -289,7 +307,7 @@ export default function AdminVoteListPage() {
               <Button
                 type="link"
                 icon={<EyeOutlined />}
-                onClick={() => message.info(`Chi tiết topic #${id}`)}
+                onClick={() => navigate(`/admin/vote/${id}`)}
               />
             </Tooltip>
             <Tooltip title="Tính kết quả">
@@ -407,6 +425,22 @@ export default function AdminVoteListPage() {
             />
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Modal Xác nhận Tính Kết quả */}
+      <Modal
+        open={confirmCalculateVisible}
+        onOk={confirmCalculate}
+        onCancel={() => {
+          setConfirmCalculateVisible(false);
+          setCalculatingId(null);
+        }}
+        okText="Xác nhận"
+        cancelText="Hủy"
+        title="Xác nhận tính kết quả"
+      >
+        <p>Bạn có chắc chắn muốn tính kết quả bình chọn cho chủ đề này?</p>
+        <p>Thao tác này không thể hoàn tác.</p>
       </Modal>
     </div>
   );

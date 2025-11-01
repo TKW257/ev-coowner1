@@ -44,11 +44,30 @@ const VehicleManagement = () => {
     setLoading(true);
     try {
       const response = await vehiclesApi.getAllVehicles();
-      const vehiclesData = Array.isArray(response) ? response : [];
+      
+      // Xử lý response từ API
+      let vehiclesData = [];
+      if (Array.isArray(response)) {
+        vehiclesData = response;
+      } else if (response?.data && Array.isArray(response.data)) {
+        vehiclesData = response.data;
+      } else if (response?.data) {
+        vehiclesData = [response.data];
+      } else if (response?.content && Array.isArray(response.content)) {
+        vehiclesData = response.content;
+      }
+      
       setVehicles(vehiclesData);
+      
+      if (vehiclesData.length === 0) {
+        message.info("Danh sách xe trống");
+      }
     } catch (error) {
-      message.error("Không tải được danh sách xe!");
+      const errorMessage = error.response?.data?.message || error.message || "Không xác định được lỗi";
+      message.error(`Không tải được danh sách xe! ${errorMessage}`);
       console.error("Error fetching vehicles:", error);
+      console.error("Error response:", error.response);
+      setVehicles([]); // Đảm bảo state được set về mảng rỗng khi lỗi
     } finally {
       setLoading(false);
     }
@@ -62,14 +81,38 @@ const VehicleManagement = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      await vehiclesApi.createVehicle(values);
-      message.success("Thêm xe thành công!");
-      setModalVisible(false);
-      form.resetFields();
-      fetchVehicles(); // Refresh danh sách
+      const response = await vehiclesApi.createVehicle(values);
+      
+      // Xử lý response từ API
+      if (response) {
+        message.success("Thêm xe thành công!");
+        setModalVisible(false);
+        form.resetFields();
+        fetchVehicles(); // Refresh danh sách
+      } else {
+        message.warning("Phản hồi từ server không hợp lệ");
+      }
     } catch (error) {
       console.error("Error creating vehicle:", error);
-      message.error("Không thể thêm xe!");
+      
+      // Xử lý lỗi chi tiết
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          "Không xác định được lỗi";
+      
+      // Kiểm tra các lỗi cụ thể
+      if (error.response?.status === 400) {
+        message.error(`Dữ liệu không hợp lệ: ${errorMessage}`);
+      } else if (error.response?.status === 401) {
+        message.error("Bạn không có quyền thực hiện thao tác này!");
+      } else if (error.response?.status === 403) {
+        message.error("Không có quyền truy cập!");
+      } else if (error.response?.status === 409) {
+        message.error(`Xe đã tồn tại: ${errorMessage}`);
+      } else {
+        message.error(`Không thể thêm xe! ${errorMessage}`);
+      }
     }
   };
 
@@ -115,16 +158,44 @@ const VehicleManagement = () => {
   const handleUpdateSubmit = async () => {
     try {
       const values = await updateForm.validateFields();
+      
+      if (!editingVehicle?.vehicleId && !editingVehicle?.id) {
+        message.error("Không tìm thấy ID xe để cập nhật!");
+        return;
+      }
 
-     await vehiclesApi.updateVehicle(editingVehicle.vehicleId ?? editingVehicle.id, values);
+      const vehicleId = editingVehicle.vehicleId ?? editingVehicle.id;
+      const response = await vehiclesApi.updateVehicle(vehicleId, values);
 
-
-      message.success("Cập nhật xe thành công!");
-      handleCloseUpdateModal();
-      fetchVehicles();
+      // Xử lý response từ API
+      if (response || response === undefined) { // Một số API không trả về data khi thành công
+        message.success("Cập nhật xe thành công!");
+        handleCloseUpdateModal();
+        fetchVehicles();
+      } else {
+        message.warning("Phản hồi từ server không hợp lệ");
+      }
     } catch (error) {
       console.error("Error updating vehicle:", error);
-      message.error("Không thể cập nhật xe!");
+      
+      // Xử lý lỗi chi tiết
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          "Không xác định được lỗi";
+      
+      // Kiểm tra các lỗi cụ thể
+      if (error.response?.status === 404) {
+        message.error("Không tìm thấy xe để cập nhật!");
+      } else if (error.response?.status === 400) {
+        message.error(`Dữ liệu không hợp lệ: ${errorMessage}`);
+      } else if (error.response?.status === 401) {
+        message.error("Bạn không có quyền thực hiện thao tác này!");
+      } else if (error.response?.status === 403) {
+        message.error("Không có quyền truy cập!");
+      } else {
+        message.error(`Không thể cập nhật xe! ${errorMessage}`);
+      }
     }
   };
 
@@ -141,20 +212,44 @@ const VehicleManagement = () => {
 
   const handleConfirmDelete = async () => {
     try {
-      if (!deletingVehicle.vehicleId) {
+      const vehicleId = deletingVehicle?.vehicleId ?? deletingVehicle?.id;
+      
+      if (!vehicleId) {
         message.error("Không tìm thấy ID xe để xóa!");
         return;
       }
 
-      await vehiclesApi.deleteVehicle(deletingVehicle.vehicleId);
+      const response = await vehiclesApi.deleteVehicle(vehicleId);
+      
+      // Xử lý response từ API
+      // Một số API không trả về data khi xóa thành công (status 204)
       message.success("Xóa xe thành công!");
       setDeleteModalVisible(false);
       setDeletingVehicle(null);
       fetchVehicles();
     } catch (error) {
       console.error("Error deleting vehicle:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Unknown error";
-      message.error(`Không thể xóa xe! ${errorMessage}`);
+      
+      // Xử lý lỗi chi tiết
+      const errorMessage = error.response?.data?.message || 
+                          error.response?.data?.error || 
+                          error.message || 
+                          "Không xác định được lỗi";
+      
+      // Kiểm tra các lỗi cụ thể
+      if (error.response?.status === 404) {
+        message.error("Không tìm thấy xe để xóa!");
+      } else if (error.response?.status === 400) {
+        message.error(`Dữ liệu không hợp lệ: ${errorMessage}`);
+      } else if (error.response?.status === 401) {
+        message.error("Bạn không có quyền thực hiện thao tác này!");
+      } else if (error.response?.status === 403) {
+        message.error("Không có quyền truy cập!");
+      } else if (error.response?.status === 409) {
+        message.error(`Không thể xóa xe vì đang được sử dụng: ${errorMessage}`);
+      } else {
+        message.error(`Không thể xóa xe! ${errorMessage}`);
+      }
     }
   };
 

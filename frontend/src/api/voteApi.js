@@ -43,7 +43,7 @@ const voteApi = {
   // Common
   getVotesByTopic: (id) => {
     console.log("[VOTE API] REQUEST - getVotesByTopic, topicId:", id);
-    return axiosClient.get(`/votes/topics/${id}`).then(res => {
+    return axiosClient.get(`/votes/topic/${id}/find`).then(res => {
       console.log("[VOTE API] RESPONSE - getVotesByTopic:", res);
       return res;
     });
