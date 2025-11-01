@@ -17,7 +17,9 @@ const DashboardHeader = ({ children }) => {
   const isLoggedIn = Boolean(currentUser && Object.keys(currentUser).length > 0);
 
   const role = currentUser?.role || "USER";
-  const headerTitle = role === "STAFF" ? "Staff Dashboard" : "Owner Dashboard";
+  const headerTitle = role === "STAFF" || role === "ADMIN" 
+    ? (role === "ADMIN" ? "Admin Dashboard" : "Staff Dashboard") 
+    : "Owner Dashboard";
 
   const handleLogout = () => {
     dispatch(logout());

@@ -3,7 +3,7 @@ import axiosClient from "./axiosClient";
 
 const paymentApi = {
   createPayment(invoiceId, amount, method = "PAYOS") {
-    return axiosClient.post(`/payments/create/pay`, {
+    return axiosClient.post(`/payments/create/pay?SumaInvoiceId=${invoiceId}`, {
       invoiceId,       // phải trùng với PaymentRequest của BE
       paidAmount: amount,
       method,

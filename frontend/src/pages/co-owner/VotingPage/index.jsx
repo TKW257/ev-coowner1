@@ -1,45 +1,13 @@
 import { useEffect, useState } from "react";
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-import { Spin, message, Modal, Radio, Select, Card, Tag } from "antd";
+import { Spin, message, Modal, Radio, Select, Table, Tag, Button, Space, Tooltip } from "antd";
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   ClockCircleOutlined,
   LikeOutlined,
   DislikeOutlined,
-  CarOutlined,
+  LikeFilled,
+  DislikeFilled,
 } from "@ant-design/icons";
 import voteApi from "../../../api/voteApi";
 import vehiclesApi from "../../../api/vehiclesApi";
@@ -54,7 +22,7 @@ export default function OwnerVoteListPage() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // 🧩 Giả lập user (thay cho /api/users/me)
+  // Giả lập user (thay cho /api/users/me)
   useEffect(() => {
     const mockUser = JSON.parse(localStorage.getItem("user")) || {
       id: 1,
@@ -63,7 +31,7 @@ export default function OwnerVoteListPage() {
     setCurrentUser(mockUser);
   }, []);
 
-  // 🟦 Fetch dữ liệu khi có user
+  // Fetch dữ liệu khi có user
   useEffect(() => {
     if (currentUser) {
       fetchVehicles();
@@ -71,7 +39,7 @@ export default function OwnerVoteListPage() {
     }
   }, [currentUser]);
 
-  // 🟢 Lấy danh sách xe
+  // Lấy danh sách xe
   const fetchVehicles = async () => {
     try {
       const res = await vehiclesApi.getAllVehicles();
@@ -83,7 +51,7 @@ export default function OwnerVoteListPage() {
     }
   };
 
-  // 🟢 Lấy danh sách chủ đề + kiểm tra user đã vote chưa
+  // Lấy danh sách chủ đề + kiểm tra user đã vote chưa
   const fetchTopics = async () => {
     setLoading(true);
     try {
@@ -91,7 +59,7 @@ export default function OwnerVoteListPage() {
       const data = Array.isArray(res) ? res : res?.data ?? res?.content;
       const list = Array.isArray(data) ? data : [];
 
-      // 🧠 Lấy tất cả phiếu cho từng topic
+      // Lấy tất cả phiếu cho từng topic
       const updated = await Promise.all(
         list.map(async (topic) => {
           try {
@@ -125,7 +93,7 @@ export default function OwnerVoteListPage() {
     }
   };
 
-  // 🟨 Gửi phiếu bình chọn
+  // Gửi phiếu bình chọn
   const handleVote = async () => {
     if (!selected) return;
     try {
@@ -148,7 +116,7 @@ export default function OwnerVoteListPage() {
     }
   };
 
-  // 🧩 Lọc topic theo xe và trạng thái
+  // Lọc topic theo xe và trạng thái
   const filteredTopics = topics.filter((t) => {
     const matchVehicle =
       selectedVehicle === "ALL" ||
@@ -163,7 +131,7 @@ export default function OwnerVoteListPage() {
     return matchVehicle && matchStatus;
   });
 
-  // 🌈 Hiển thị tag kết quả vote
+  // Hiển thị tag kết quả vote
   const renderVoteTag = (t) => {
     if (!t.voted)
       return (
@@ -174,128 +142,171 @@ export default function OwnerVoteListPage() {
     if (t.userChoice === true)
       return (
         <Tag color="green" icon={<CheckCircleOutlined />}>
-          Đã bình chọn (Đồng ý)
+          Đồng ý
         </Tag>
       );
     return (
       <Tag color="red" icon={<CloseCircleOutlined />}>
-        Đã bình chọn (Không đồng ý)
+        Không đồng ý
       </Tag>
     );
   };
 
-  return (
-    <Spin spinning={loading} tip="Đang tải danh sách...">
-      <div className="container mt-4">
-        <h2 className="mb-3 fw-bold" style={{ color: "black" }}>
-          🗳️ Danh Sách Bình Chọn (Chủ Sở Hữu)
-        </h2>
-
-
-
-        {/* Bộ lọc */}
-        <div className="d-flex flex-wrap gap-3 mb-4">
-          <Select
-            style={{ minWidth: 220 }}
-            placeholder="🚗 Chọn xe"
-            value={selectedVehicle}
-            onChange={(v) => setSelectedVehicle(v)}
-          >
-            <Select.Option value="ALL">Tất cả xe</Select.Option>
-            {vehicles.map((v) => (
-              <Select.Option key={v.vehicleId} value={v.vehicleId}>
-                {v.brand} {v.model} ({v.licensePlate || v.plateNumber})
-              </Select.Option>
-            ))}
-          </Select>
-
-          <Select
-            style={{ minWidth: 180 }}
-            value={filterStatus}
-            onChange={(v) => setFilterStatus(v)}
-          >
-            <Select.Option value="ALL">Tất cả</Select.Option>
-            <Select.Option value="NOT_VOTED">Chưa bình chọn</Select.Option>
-            <Select.Option value="VOTED">Đã bình chọn</Select.Option>
-          </Select>
-        </div>
-
-        {/* Danh sách chủ đề */}
-        {filteredTopics.length === 0 ? (
-          <div className="text-muted fst-italic">Không có chủ đề phù hợp.</div>
-        ) : (
-          filteredTopics.map((t) => (
-            <Card
-              key={t.topicId}
-              className="mb-4 shadow-sm rounded-3 border-0"
-              hoverable
-              title={<div className="fw-semibold">{t.title}</div>}
-              extra={renderVoteTag(t)}
+  const columns = [
+    {
+      title: "ID",
+      dataIndex: "topicId",
+      key: "topicId",
+      width: 80,
+    },
+    {
+      title: "Tiêu đề",
+      dataIndex: "title",
+      key: "title",
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (title) => (
+        <Tooltip placement="topLeft" title={title}>
+          {title}
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (desc) => (
+        <Tooltip placement="topLeft" title={desc || "Không có mô tả"}>
+          {desc || "Không có mô tả"}
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Xe áp dụng",
+      dataIndex: "vehicleName",
+      key: "vehicleName",
+      ellipsis: {
+        showTitle: false,
+      },
+      render: (vehicleName) => (
+        <Tooltip placement="topLeft" title={vehicleName}>
+          {vehicleName || "N/A"}
+        </Tooltip>
+      ),
+    },
+    {
+      title: "Trạng thái",
+      key: "status",
+      width: 150,
+      render: (_, record) => renderVoteTag(record),
+    },
+    {
+      title: "Hành động",
+      key: "action",
+      width: 200,
+      render: (_, record) => (
+        <Space size="middle">
+          {!record.voted ? (
+            <Button
+              type="primary"
+              icon={<LikeOutlined />}
+              onClick={() => {
+                setSelected(record);
+                setChoice(true);
+              }}
             >
-              <p className="mb-2 text-secondary">
-                {t.description || "Không có mô tả."}
-              </p>
+              Bình chọn
+            </Button>
+          ) : (
+            <Tag color={record.userChoice ? "success" : "error"}>
+              {record.userChoice ? (
+                <>
+                  <LikeFilled /> Đồng ý
+                </>
+              ) : (
+                <>
+                  <DislikeFilled /> Không đồng ý
+                </>
+              )}
+            </Tag>
+          )}
+        </Space>
+      ),
+    },
+  ];
 
-              <p>
-                <CarOutlined /> <strong>Xe:</strong>{" "}
-                <span className="text-primary">{t.vehicleName || "N/A"}</span>
-              </p>
-
-              <div className="d-flex gap-2 mt-3">
-                {!t.voted ? (
-                  <button
-                    className="btn btn-primary fw-semibold"
-                    onClick={() => {
-                      setSelected(t);
-                      setChoice(true);
-                    }}
-                  >
-                    <LikeOutlined /> Bình chọn ngay
-                  </button>
-                ) : (
-                  <button className="btn btn-outline-success" disabled>
-                    {t.userChoice ? (
-                      <>
-                        <CheckCircleOutlined /> Đồng ý
-                      </>
-                    ) : (
-                      <>
-                        <CloseCircleOutlined /> Không đồng ý
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            </Card>
-          ))
-        )}
-
-        {/* Modal Vote */}
-        <Modal
-          open={!!selected}
-          onCancel={() => setSelected(null)}
-          onOk={handleVote}
-          title={`Bình chọn cho "${selected?.title}"`}
-          okText="Gửi phiếu"
-          cancelText="Hủy"
-        >
-          <div className="text-center mb-3 text-secondary">
-            Bạn chọn đồng ý hay không đồng ý?
-          </div>
-          <Radio.Group
-            onChange={(e) => setChoice(e.target.value === "true")}
-            value={choice ? "true" : "false"}
-            className="d-flex justify-content-around"
-          >
-            <Radio value="true">
-              <LikeOutlined style={{ color: "#52c41a" }} /> Đồng ý
-            </Radio>
-            <Radio value="false">
-              <DislikeOutlined style={{ color: "#ff4d4f" }} /> Không đồng ý
-            </Radio>
-          </Radio.Group>
-        </Modal>
+  return (
+    <div style={{ padding: '24px' }}>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: "black" }}>
+        <h2>🗳️ Danh Sách Bình Chọn</h2>
       </div>
-    </Spin>
+
+      {/* Bộ lọc */}
+      <div style={{ marginBottom: 16, display: 'flex', gap: 12 }}>
+        <Select
+          style={{ minWidth: 220 }}
+          placeholder="Chọn xe"
+          value={selectedVehicle}
+          onChange={(v) => setSelectedVehicle(v)}
+        >
+          <Select.Option value="ALL">Tất cả xe</Select.Option>
+          {vehicles.map((v) => (
+            <Select.Option key={v.vehicleId} value={v.vehicleId}>
+              {v.brand} {v.model} ({v.licensePlate || v.plateNumber})
+            </Select.Option>
+          ))}
+        </Select>
+
+        <Select
+          style={{ minWidth: 180 }}
+          value={filterStatus}
+          onChange={(v) => setFilterStatus(v)}
+        >
+          <Select.Option value="ALL">Tất cả</Select.Option>
+          <Select.Option value="NOT_VOTED">Chưa bình chọn</Select.Option>
+          <Select.Option value="VOTED">Đã bình chọn</Select.Option>
+        </Select>
+      </div>
+
+      <Table
+        rowKey="topicId"
+        columns={columns}
+        dataSource={filteredTopics}
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+      />
+
+      {/* Modal Vote */}
+      <Modal
+        open={!!selected}
+        onCancel={() => setSelected(null)}
+        onOk={handleVote}
+        title={`Bình chọn cho "${selected?.title}"`}
+        okText="Gửi phiếu"
+        cancelText="Hủy"
+      >
+        <div style={{ textAlign: 'center', marginBottom: 16, color: '#666' }}>
+          Bạn chọn đồng ý hay không đồng ý?
+        </div>
+        <Radio.Group
+          onChange={(e) => setChoice(e.target.value === "true")}
+          value={choice ? "true" : "false"}
+          style={{ display: 'flex', justifyContent: 'space-around', width: '100%' }}
+        >
+          <Radio value="true">
+            <LikeOutlined style={{ color: "#52c41a", marginRight: 8 }} />
+            Đồng ý
+          </Radio>
+          <Radio value="false">
+            <DislikeOutlined style={{ color: "#ff4d4f", marginRight: 8 }} />
+            Không đồng ý
+          </Radio>
+        </Radio.Group>
+      </Modal>
+    </div>
   );
 }
