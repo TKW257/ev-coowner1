@@ -1,7 +1,21 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { Table, Tag, Space, Button, message, Select, Modal, Form, Input, InputNumber, Switch, Typography } from "antd";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import {
+  Table,
+  Tag,
+  Space,
+  Button,
+  message,
+  Select,
+  Modal,
+  Form,
+  Input,
+  InputNumber,
+  Switch,
+  Typography,
+} from "antd";
 import bookingApi from "../../../api/bookingApi";
 import StorageKeys from "../../../constants/storage-key";
+import SignatureCanvas from "react-signature-canvas";
 
 const { Title } = Typography;
 
@@ -13,36 +27,55 @@ const ManageBookings = () => {
   const [sortOrder, setSortOrder] = useState("newest"); // "newest" hoặc "oldest"
   const [users, setUsers] = useState([]);
   const [staffCheckings, setStaffCheckings] = useState([]);
-  
+
   // Check-in/Check-out modal states
   const [checkingModalVisible, setCheckingModalVisible] = useState(false);
   const [currentBooking, setCurrentBooking] = useState(null);
-  const [checkingType, setCheckingType] = useState(""); 
+  const [checkingType, setCheckingType] = useState("");
   const [hasUserEmail, setHasUserEmail] = useState(false);
   const [form] = Form.useForm();
-  
+
+  // useRef cho signature canvas (không dùng state để tránh re-render)
+  const sigPadRef = useRef(null);
+
   // Confirmation modal states
   const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [pendingAction, setPendingAction] = useState(null); 
+  const [pendingAction, setPendingAction] = useState(null);
 
   const extractUsersFromBookings = useCallback((bookingsData) => {
     const usersMap = new Map();
-    
-    bookingsData.forEach(booking => {
-      // Lấy thông tin user từ booking
-      const userId = booking.userId || booking.user_id || booking.userName;
-      const userName = booking.userName || booking.user_name || booking.full_name;
-      
-      // Chỉ thêm user nếu có tên và chưa có trong map
-      if (userName && !usersMap.has(userId)) {
-        usersMap.set(userId, {
-          id: userId,
+
+    bookingsData.forEach((booking) => {
+      // cố gắng lấy nhiều trường khả dĩ
+      const userId =
+        booking.userId ??
+        booking.user_id ??
+        booking.user?.id ??
+        booking.userName ??
+        booking.user_name ??
+        booking.email ??
+        booking.userEmail ??
+        null;
+
+      const userName =
+        booking.userName ??
+        booking.user_name ??
+        booking.full_name ??
+        booking.user?.full_name ??
+        booking.user?.name ??
+        booking.userEmail ??
+        null;
+
+      // Nếu trùng key null thì bỏ
+      if (userId && userName && !usersMap.has(String(userId))) {
+        usersMap.set(String(userId), {
+          id: String(userId),
           name: userName,
-          full_name: userName 
+          full_name: userName,
         });
       }
     });
-    
+
     return Array.from(usersMap.values());
   }, []);
 
@@ -50,19 +83,24 @@ const ManageBookings = () => {
     if (userId === "all") {
       return bookingsData;
     }
-    
-    return bookingsData.filter(booking => {
-      const bookingUserId = booking.userId || booking.user_id || booking.userName;
-      return bookingUserId === userId;
+
+    return bookingsData.filter((booking) => {
+      const bookingUserId =
+        booking.userId ??
+        booking.user_id ??
+        booking.user?.id ??
+        booking.userName ??
+        booking.user_name ??
+        null;
+      return String(bookingUserId) === String(userId);
     });
   }, []);
 
-  // Hàm sắp xếp bookings theo ID
+  // Hàm sắp xếp bookings theo ID (chuyển về số nếu có thể)
   const sortBookingsById = useCallback((bookingsData, order) => {
     return [...bookingsData].sort((a, b) => {
-      const aId = parseInt(a.bookingId) || 0;
-      const bId = parseInt(b.bookingId) || 0;
-      
+      const aId = Number(a.bookingId ?? a.id ?? 0) || 0;
+      const bId = Number(b.bookingId ?? b.id ?? 0) || 0;
       return order === "newest" ? bId - aId : aId - bId;
     });
   }, []);
@@ -71,28 +109,17 @@ const ManageBookings = () => {
     setLoading(true);
     try {
       const response = await bookingApi.getAllBookings();
-      
-      console.log("📊 BookingManagement - API Response:", response);
-      console.log("📋 Response Type:", typeof response);
-      console.log("📋 Is Array:", Array.isArray(response));
-      
+      // bookingApi phải trả về mảng
       const bookingsData = Array.isArray(response) ? response : [];
-      console.log("📋 Bookings Data:", bookingsData);
-      console.log("📋 Total bookings:", bookingsData.length);
-      
-      if (bookingsData.length > 0) {
-        console.log("📋 First booking sample:", bookingsData[0]);
-      }
-      
       setBookings(bookingsData);
-      setAllBookings(bookingsData); 
-      
+      setAllBookings(bookingsData);
+
       const usersFromBookings = extractUsersFromBookings(bookingsData);
-setUsers(usersFromBookings);
+      setUsers(usersFromBookings);
       console.log("📋 Users from bookings:", usersFromBookings);
     } catch (error) {
-      message.error("Không tải được danh sách booking!");
       console.error("Error fetching bookings:", error);
+      message.error("Không tải được danh sách booking!");
     } finally {
       setLoading(false);
     }
@@ -101,7 +128,6 @@ setUsers(usersFromBookings);
   const fetchStaffCheckings = useCallback(async () => {
     try {
       const response = await bookingApi.getAllStaffCheckings();
-      
       const checkingsData = Array.isArray(response) ? response : [];
       setStaffCheckings(checkingsData);
       console.log("📋 Staff Checkings:", checkingsData);
@@ -110,24 +136,25 @@ setUsers(usersFromBookings);
     }
   }, []);
 
+  // Mount: lấy dữ liệu 1 lần
   useEffect(() => {
     fetchBookings();
     fetchStaffCheckings();
   }, [fetchBookings, fetchStaffCheckings]);
 
+  // Khi filter/sort/allBookings thay đổi => cập nhật bookings hiển thị
   useEffect(() => {
-    fetchStaffCheckings(); 
     const filteredByUser = filterBookingsByUser(allBookings, userFilter);
     const sortedAndFiltered = sortBookingsById(filteredByUser, sortOrder);
     setBookings(sortedAndFiltered);
     console.log("📋 Filtered and sorted bookings:", sortedAndFiltered);
-  }, [userFilter, sortOrder, allBookings, filterBookingsByUser, sortBookingsById, fetchStaffCheckings]);
+  }, [userFilter, sortOrder, allBookings, filterBookingsByUser, sortBookingsById]);
 
-  // Handle setting form values when modal opens and currentBooking has userEmail
+  // Set form khi modal mở và có email
   useEffect(() => {
     if (checkingModalVisible && currentBooking && currentBooking.userEmail) {
       form.setFieldsValue({
-        userEmail: currentBooking.userEmail
+        userEmail: currentBooking.userEmail,
       });
     }
   }, [checkingModalVisible, currentBooking, form]);
@@ -136,44 +163,44 @@ setUsers(usersFromBookings);
     setPendingAction({
       bookingId,
       newStatus,
-      actionType
+      actionType,
     });
     setConfirmModalVisible(true);
   };
 
   const handleConfirmAction = async () => {
     if (!pendingAction) return;
-    
+
     const { bookingId, newStatus } = pendingAction;
     setConfirmModalVisible(false);
-    
+
     try {
       const token = localStorage.getItem(StorageKeys.TOKEN);
-      
+
       if (!token) {
         message.error("Không có token xác thực! Vui lòng đăng nhập lại.");
         return;
       }
-      
+
       if (!bookingId) {
         message.error("ID booking không hợp lệ!");
         return;
       }
-      
+
       const validStatuses = ["Pending", "Confirmed", "InProgress", "Completed", "Cancelled"];
       if (!validStatuses.includes(newStatus)) {
         message.error(`Trạng thái không hợp lệ: ${newStatus}`);
         return;
       }
-      
+
       await bookingApi.updateStatus(bookingId, newStatus);
       message.success(`Cập nhật trạng thái thành ${newStatus} thành công!`);
-      
+
       await fetchBookings();
-      
     } catch (error) {
+      console.error("Error update status:", error);
       let errorMessage = "Không thể cập nhật trạng thái!";
-      
+
       if (error.response?.status === 401) {
         errorMessage = "Không có quyền truy cập! Vui lòng đăng nhập lại.";
       } else if (error.response?.status === 403) {
@@ -184,12 +211,12 @@ setUsers(usersFromBookings);
         errorMessage = error.response?.data?.message || "Dữ liệu đầu vào không hợp lệ!";
       } else if (error.response?.status >= 500) {
         errorMessage = "Lỗi máy chủ! Vui lòng thử lại sau.";
-} else if (error.response?.data?.message) {
+      } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = `Lỗi: ${error.message}`;
       }
-      
+
       message.error(errorMessage);
     } finally {
       setPendingAction(null);
@@ -201,23 +228,21 @@ setUsers(usersFromBookings);
     setPendingAction(null);
   };
 
-
   const handleCheckInOut = (booking, type) => {
     setCurrentBooking(booking);
     setCheckingType(type);
-    
-    // Check if userEmail is available from booking data
-    const hasUserEmailFromBooking = !!(booking.userEmail);
+
+    const hasUserEmailFromBooking = !!(booking.userEmail && booking.userEmail.trim());
     setHasUserEmail(hasUserEmailFromBooking);
     setCheckingModalVisible(true);
-    
-    // Set form values immediately if userEmail is available
+
+    // set form immediately nếu có email
     if (hasUserEmailFromBooking) {
-      setTimeout(() => {
-        form.setFieldsValue({
-          userEmail: booking.userEmail
-        });
-      }, 100);
+      form.setFieldsValue({
+        userEmail: booking.userEmail,
+      });
+    } else {
+      form.resetFields(["userEmail"]);
     }
   };
 
@@ -225,67 +250,89 @@ setUsers(usersFromBookings);
     try {
       const values = await form.validateFields();
 
-      const checkingData = {
-        vehicleId: currentBooking.vehicleId,
-        userEmail: values.userEmail || currentBooking.userEmail || "admin@example.com",
-        bookingId: currentBooking.bookingId,
-        staffCheckingType: checkingType === "checkin" ? "CheckIn" : "CheckOut",
-        odometer: values.odometer || 0,
-        batteryPercent: values.batteryPercent || 100,
-        damageReported: values.damageReported || false,
-        notes: values.notes || ""
-      };
-      
-      await bookingApi.createStaffChecking(checkingData);
-      
-      // Tự động cập nhật status dựa trên loại checking
+      if (!currentBooking) {
+        message.error("Không có booking hiện tại để check-in/check-out.");
+        return;
+      }
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("vehicleId", currentBooking.vehicleId ?? "");
+      formData.append("bookingId", currentBooking.bookingId ?? "");
+      formData.append("userEmail", values.userEmail || currentBooking.userEmail || "admin@example.com");
+      formData.append("staffCheckingType", checkingType === "checkin" ? "CheckIn" : "CheckOut");
+      formData.append("odometer", (values.odometer ?? 0).toString());
+      formData.append("batteryPercent", (values.batteryPercent ?? 100).toString());
+      formData.append("damageReported", (values.damageReported ?? false).toString());
+      formData.append("notes", values.notes ?? "");
+
+      // Lấy file chữ ký từ Signature Canvas (nếu có)
+      const sigPad = sigPadRef.current;
+      if (sigPad && !sigPad.isEmpty()) {
+        const blob = await new Promise((resolve) => sigPad.getCanvas().toBlob(resolve));
+        if (blob) {
+          formData.append("staffSignature", blob, "signature.png");
+        }
+      }
+
+      await bookingApi.createStaffChecking(formData);
+
+      // Cập nhật status tự động nếu cần
       let newStatus = null;
-      if (checkingType === "checkout" && currentBooking.bookingStatus === "Confirmed") {
-        newStatus = "InProgress";
-      } else if (checkingType === "checkin" && currentBooking.bookingStatus === "InProgress") {
+
+      // Giữ nguyên Confirmed khi check-out, chỉ đổi Completed khi check-in
+      if (checkingType === "checkin" && currentBooking.bookingStatus === "InProgress") {
         newStatus = "Completed";
       }
-      
+
       if (newStatus) {
         await bookingApi.updateStatus(currentBooking.bookingId, newStatus);
-        message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công và cập nhật trạng thái thành ${newStatus}!`);
+        message.success(
+          `${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công và cập nhật trạng thái thành ${newStatus}!`
+        );
       } else {
         message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
       }
-      
+
+      // Đóng modal và refresh dữ liệu
       setCheckingModalVisible(false);
       setHasUserEmail(false);
       setCurrentBooking(null);
       form.resetFields();
-      
-      fetchStaffCheckings();
-      fetchBookings();
-    } catch {
+      if (sigPadRef.current) sigPadRef.current.clear();
+
+      await fetchStaffCheckings();
+      await fetchBookings();
+    } catch (error) {
+      console.error("Error during checking submit:", error);
       message.error(`Không thể thực hiện ${checkingType === "checkin" ? "check-in" : "check-out"}!`);
     }
   };
 
-  // Function để kiểm tra trạng thái check-in/check-out của booking
   const getBookingCheckingStatus = (bookingId) => {
-    const bookingCheckings = staffCheckings.filter(
-      checking => checking.bookingId === bookingId || checking.booking_id === bookingId
-    );
-    
+    const idStr = String(bookingId);
+    const bookingCheckings = staffCheckings.filter((checking) => {
+      const cId = String(checking.bookingId ?? checking.booking_id ?? checking.bookingId);
+      return cId === idStr;
+    });
+
     const hasCheckIn = bookingCheckings.some(
-      checking => checking.checkingType === "CheckIn" || checking.staffCheckingType === "CheckIn"
+      (checking) => checking.checkingType === "CheckIn" || checking.staffCheckingType === "CheckIn"
     );
-    
+
     const hasCheckOut = bookingCheckings.some(
-      checking => checking.checkingType === "CheckOut" || checking.staffCheckingType === "CheckOut"
+      (checking) => checking.checkingType === "CheckOut" || checking.staffCheckingType === "CheckOut"
     );
-    
+
     return { hasCheckIn, hasCheckOut };
   };
 
   const columns = [
-    { title: "ID",
+    {
+      title: "ID",
       dataIndex: "bookingId",
-      key: "bookingId" },
+      key: "bookingId",
+    },
     {
       title: "Tên xe",
       dataIndex: "vehicleName",
@@ -296,25 +343,25 @@ setUsers(usersFromBookings);
       dataIndex: "userName",
       key: "userName",
     },
-    { 
-      title: "Ngày bắt đầu", 
-      dataIndex: "startTime", 
+    {
+      title: "Ngày bắt đầu",
+      dataIndex: "startTime",
       key: "startTime",
       render: (timeArray) => {
-        if (!timeArray || !Array.isArray(timeArray)) return '-';
+        if (!timeArray || !Array.isArray(timeArray)) return "-";
         const [year, month, day, hour, minute] = timeArray;
-return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
-      }
+        return `${day}/${month}/${year} ${hour}:${String(minute ?? 0).padStart(2, "0")}`;
+      },
     },
-    { 
-      title: "Ngày kết thúc", 
-      dataIndex: "endTime", 
+    {
+      title: "Ngày kết thúc",
+      dataIndex: "endTime",
       key: "endTime",
       render: (timeArray) => {
-        if (!timeArray || !Array.isArray(timeArray)) return '-';
+        if (!timeArray || !Array.isArray(timeArray)) return "-";
         const [year, month, day, hour, minute] = timeArray;
-        return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
-      }
+        return `${day}/${month}/${year} ${hour}:${String(minute ?? 0).padStart(2, "0")}`;
+      },
     },
     {
       title: "Trạng thái",
@@ -324,92 +371,59 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
         const colorMap = {
           Confirmed: "blue",
           InProgress: "purple",
-          Completed: "green", 
+          Completed: "green",
           Pending: "orange",
-          Cancelled: "red"
+          Cancelled: "red",
         };
-        return (
-          <Tag color={colorMap[status] || "default"}>
-            {status.toUpperCase()}
-          </Tag>
-        );
+        return <Tag color={colorMap[status] || "default"}>{String(status).toUpperCase()}</Tag>;
       },
     },
     {
       title: "Hành động",
       key: "action",
       render: (_, record) => {
-        // Nếu trạng thái là Cancelled thì không hiển thị nút nào
         if (record.bookingStatus === "Cancelled") {
           return <span>-</span>;
         }
 
-        // Lấy trạng thái checking của booking
         const { hasCheckIn, hasCheckOut } = getBookingCheckingStatus(record.bookingId);
 
         return (
           <Space>
-            {/* Trạng thái Pending: hiển thị 2 nút Xác nhận và Hủy */}
             {record.bookingStatus === "Pending" && (
               <>
-                <Button 
-                  type="primary" 
-                  size="small"
-                  onClick={() => handleStatusUpdateClick(record.bookingId, "Confirmed", "Xác nhận")}
-                >
+                <Button type="primary" size="small" onClick={() => handleStatusUpdateClick(record.bookingId, "Confirmed", "Xác nhận")}>
                   Xác nhận
                 </Button>
-                <Button 
-                  danger 
-                  size="small"
-                  onClick={() => handleStatusUpdateClick(record.bookingId, "Cancelled", "Hủy")}
-                >
+                <Button danger size="small" onClick={() => handleStatusUpdateClick(record.bookingId, "Cancelled", "Hủy")}>
                   Hủy
                 </Button>
               </>
             )}
-            
-            {/* Trạng thái Confirmed: Hiển thị nút Check-out */}
+
             {record.bookingStatus === "Confirmed" && (
               <>
                 {!hasCheckIn && !hasCheckOut && (
-                  <Button 
-                    type="primary" 
-                    size="small"
-                    style={{ backgroundColor: '#1890ff', borderColor: '#1890ff' }}
-                    onClick={() => handleCheckInOut(record, "checkout")}
-                  >
+                  <Button type="primary" size="small" onClick={() => handleCheckInOut(record, "checkout")}>
                     Check-out
                   </Button>
                 )}
               </>
             )}
 
-            {/* Trạng thái InProgress: Hiển thị nút Check-in */}
             {record.bookingStatus === "InProgress" && (
               <>
                 {hasCheckOut && !hasCheckIn && (
-                  <Button 
-                    type="primary" 
-                    size="small"
-                    style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-                    onClick={() => handleCheckInOut(record, "checkin")}
-                  >
+                  <Button type="primary" size="small" onClick={() => handleCheckInOut(record, "checkin")}>
                     Check-in
                   </Button>
                 )}
               </>
             )}
 
-            {/* Trạng thái Completed: Logic hiển thị nút check-in/check-out để tiện theo dõi */}
             {record.bookingStatus === "Completed" && (
               <>
-                {/* Hiển thị thông tin check status */}
-                {(hasCheckIn || hasCheckOut) && (
-                  <span style={{ fontSize: '12px', color: '#52c41a' }}>
-                    {hasCheckIn && hasCheckOut ? 'Đã hoàn thành' : hasCheckIn ? 'Đã check-in' : 'Đã check-out'}
-                  </span>
-                )}
+                {(hasCheckIn || hasCheckOut) && <span style={{ fontSize: "12px", color: "#52c41a" }}>{hasCheckIn && hasCheckOut ? "Đã hoàn thành" : hasCheckIn ? "Đã check-in" : "Đã check-out"}</span>}
               </>
             )}
           </Space>
@@ -418,7 +432,7 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
     },
   ];
 
-  // Log bookings state để debug
+  // Debug logs (giữ hoặc xóa tuỳ bạn)
   console.log("🔍 BookingManagement - Current bookings state:", bookings);
   console.log("🔍 BookingManagement - Bookings count:", bookings.length);
   console.log("🔍 BookingManagement - Loading state:", loading);
@@ -428,43 +442,28 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
       <Title level={2} style={{ marginBottom: 24, textAlign: "left" }}>
         Đặt xe
       </Title>
-      
-      <div style={{ marginBottom: 16, display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-        <Select
-          style={{ width: 200 }}
-          placeholder="Chọn user để lọc"
-          value={userFilter}
-          onChange={setUserFilter}
-        >
+
+      <div style={{ marginBottom: 16, display: "flex", gap: "10px", alignItems: "center", flexWrap: "wrap" }}>
+        <Select style={{ width: 200 }} placeholder="Chọn user để lọc" value={userFilter} onChange={setUserFilter}>
           <Select.Option value="all">Tất cả users</Select.Option>
-          {users.map(user => (
+          {users.map((user) => (
             <Select.Option key={user.id} value={user.id}>
               {user.full_name || user.name}
             </Select.Option>
           ))}
         </Select>
-        
-        <Select
-          style={{ width: 200 }}
-          placeholder="Sắp xếp theo ID"
-          value={sortOrder}
-          onChange={setSortOrder}
-        >
+
+        <Select style={{ width: 200 }} placeholder="Sắp xếp theo ID" value={sortOrder} onChange={setSortOrder}>
           <Select.Option value="newest">Mới nhất</Select.Option>
           <Select.Option value="oldest">Cũ nhất</Select.Option>
         </Select>
       </div>
-      <Table
-        rowKey="bookingId"
-        columns={columns}
-        dataSource={bookings}
-        loading={loading}
-        pagination={{ pageSize: 10 }}
-      />
+
+      <Table rowKey={(record) => String(record.bookingId)} columns={columns} dataSource={bookings} loading={loading} pagination={{ pageSize: 10 }} />
 
       {/* Check-in/Check-out Modal */}
       <Modal
-        title={`${checkingType === "checkin" ? "Check-in" : "Check-out"} - ${currentBooking?.vehicleName}`}
+        title={`${checkingType === "checkin" ? "Check-in" : "Check-out"} - ${currentBooking?.vehicleName ?? ""}`}
         open={checkingModalVisible}
         onOk={handleCheckingSubmit}
         onCancel={() => {
@@ -472,6 +471,7 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
           setHasUserEmail(false);
           setCurrentBooking(null);
           form.resetFields();
+          if (sigPadRef.current) sigPadRef.current.clear();
         }}
         okText={checkingType === "checkin" ? "Check-in" : "Check-out"}
         cancelText="Hủy"
@@ -479,71 +479,55 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
       >
         <Form form={form} layout="vertical">
           <Form.Item label="Booking ID">
-            <Input value={currentBooking?.bookingId} disabled />
+            <Input value={currentBooking?.bookingId ?? ""} disabled />
           </Form.Item>
           <Form.Item label="Tên xe">
-            <Input value={currentBooking?.vehicleName} disabled />
+            <Input value={currentBooking?.vehicleName ?? ""} disabled />
           </Form.Item>
           <Form.Item label="Người đặt">
-            <Input value={currentBooking?.userName} disabled />
-          </Form.Item>
-          
-          <Form.Item 
-            name="userEmail" 
-            label="Email người dùng"
-            rules={[{ required: !hasUserEmail, message: 'Vui lòng nhập email!' }]}
-          >
-            <Input 
-              placeholder={hasUserEmail ? "Email từ dữ liệu booking" : "Nhập email người dùng"} 
-              disabled={hasUserEmail}
-            />
+            <Input value={currentBooking?.userName ?? ""} disabled />
           </Form.Item>
 
-
-          <Form.Item 
-            name="odometer" 
-            label="Số km đồng hồ"
-            rules={[{ required: true, message: 'Vui lòng nhập số km!' }]}
-          >
-            <InputNumber 
-              placeholder="Nhập số km"
-              style={{ width: '100%' }}
-              min={0}
-              step={0.1}
-            />
+          <Form.Item name="userEmail" label="Email người dùng" rules={[{ required: !hasUserEmail, message: "Vui lòng nhập email!" }]}>
+            <Input placeholder={hasUserEmail ? "Email từ dữ liệu booking" : "Nhập email người dùng"} disabled={hasUserEmail} />
           </Form.Item>
 
-          <Form.Item 
-            name="batteryPercent" 
-            label="Phần trăm pin (%)"
-            rules={[{ required: true, message: 'Vui lòng nhập phần trăm pin!' }]}
->
-            <InputNumber 
-              placeholder="Nhập phần trăm pin"
-              style={{ width: '100%' }}
-              min={0}
-              max={100}
-              step={0.1}
-            />
+          <Form.Item name="odometer" label="Số km đồng hồ" rules={[{ required: true, message: "Vui lòng nhập số km!" }]}>
+            <InputNumber placeholder="Nhập số km" style={{ width: "100%" }} min={0} step={0.1} />
           </Form.Item>
 
-          <Form.Item 
-            name="damageReported" 
-            label="Có hư hỏng"
-            valuePropName="checked"
-          >
+          <Form.Item name="batteryPercent" label="Phần trăm pin (%)" rules={[{ required: true, message: "Vui lòng nhập phần trăm pin!" }]}>
+            <InputNumber placeholder="Nhập phần trăm pin" style={{ width: "100%" }} min={0} max={100} step={0.1} />
+          </Form.Item>
+
+          <Form.Item name="damageReported" label="Có hư hỏng" valuePropName="checked">
             <Switch />
           </Form.Item>
 
-
-          <Form.Item 
-            name="notes" 
-            label="Ghi chú"
-          >
-            <Input.TextArea 
-              rows={3} 
-              placeholder="Nhập ghi chú (tùy chọn)"
+          <Form.Item label="Chữ ký nhân viên">
+            <SignatureCanvas
+              ref={sigPadRef}
+              penColor="black"
+              canvasProps={{
+                width: 500,
+                height: 150,
+                className: "signatureCanvas",
+                style: { border: "1px solid #ccc", borderRadius: "6px" },
+              }}
             />
+            <Button
+              type="link"
+              onClick={() => {
+                if (sigPadRef.current) sigPadRef.current.clear();
+              }}
+              style={{ padding: 0, marginTop: 5 }}
+            >
+              Xóa chữ ký
+            </Button>
+          </Form.Item>
+
+          <Form.Item name="notes" label="Ghi chú">
+            <Input.TextArea rows={3} placeholder="Nhập ghi chú (tùy chọn)" />
           </Form.Item>
         </Form>
       </Modal>
@@ -557,20 +541,14 @@ return `${day}/${month}/${year} ${hour}:${minute.toString().padStart(2, '0')}`;
         okText="Xác nhận"
         cancelText="Hủy"
         okButtonProps={{
-          style: pendingAction?.newStatus === "Cancelled" 
-            ? { backgroundColor: '#ff4d4f', borderColor: '#ff4d4f' }
-            : {}
+          style: pendingAction?.newStatus === "Cancelled" ? { backgroundColor: "#ff4d4f", borderColor: "#ff4d4f" } : {},
         }}
       >
         <p>
-          {pendingAction?.newStatus === "Confirmed" && 
-            `Bạn có chắc chắn muốn xác nhận booking này?`}
-          {pendingAction?.newStatus === "InProgress" && 
-            `Bạn có chắc chắn muốn chuyển booking này sang trạng thái đang thực hiện?`}
-          {pendingAction?.newStatus === "Completed" && 
-            `Bạn có chắc chắn muốn hoàn thành booking này?`}
-          {pendingAction?.newStatus === "Cancelled" && 
-            `Bạn có chắc chắn muốn hủy booking này?`}
+          {pendingAction?.newStatus === "Confirmed" && `Bạn có chắc chắn muốn xác nhận booking này?`}
+          {pendingAction?.newStatus === "InProgress" && `Bạn có chắc chắn muốn chuyển booking này sang trạng thái đang thực hiện?`}
+          {pendingAction?.newStatus === "Completed" && `Bạn có chắc chắn muốn hoàn thành booking này?`}
+          {pendingAction?.newStatus === "Cancelled" && `Bạn có chắc chắn muốn hủy booking này?`}
         </p>
         {pendingAction && (
           <p>

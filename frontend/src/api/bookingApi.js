@@ -6,6 +6,14 @@ const bookingApi = {
     return axiosClient.post(`/bookings/createBooking`, data);
   },
 
+  getAllBookings() {
+    return axiosClient.get("/bookings/viewAllBooking");
+  },
+
+  getMyBooking() {
+    return axiosClient.get('/bookings/my');
+  },
+
   getBookingsByVehicle(vehicleId) {
     return axiosClient.get(`/bookings/byVehicle/${vehicleId}`);
   },
@@ -21,30 +29,33 @@ const bookingApi = {
   updateStatus(id, status) {
     const requestData = {
       id: id,
-      status: status
+      status: status,
     };
     return axiosClient.put("/bookings/updateStatus", requestData);
   },
 
   // STAFF CHECKING API
-  getAllBookings() {
-    return axiosClient.get("/bookings/viewAllBooking");
+  confirmStaffChecking(id, data) {
+    return axiosClient.post(`/staff-checkings/${id}/confirm`, data);
   },
 
   createStaffChecking(data) {
-    return axiosClient.post("/staff-checkings/createStaffChecking", data);
+  return axiosClient.post("/staff-checkings/createStaffChecking", data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+},
+
+  getAllStaffCheckings() {
+    return axiosClient.get("/staff-checkings/viewAllStaffChecking");
+  },
+
+  getStaffCheckingsByBookingId(id) {
+    return axiosClient.get(`/staff-checkings/booking/${id}`)
   },
 
   viewAllStaffCheckings() {
     return axiosClient.get("/staff-checkings/viewAllStaffChecking");
   },
-
-  getAllStaffCheckings() {
-    // Alias for viewAllStaffCheckings for backward compatibility
-    return this.viewAllStaffCheckings();
-  },
-
-
 };
 
 export default bookingApi;

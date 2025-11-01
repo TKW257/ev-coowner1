@@ -21,12 +21,12 @@ const StaffCheckingManagement = () => {
     setLoading(true);
     try {
       const response = await bookingApi.viewAllStaffCheckings();
-      
+
       console.log("📊 StaffCheckingManagement - API Response:", response);
       console.log("📋 Response Type:", typeof response);
       console.log("📋 Is Array:", Array.isArray(response));
       console.log("📋 Response.data:", response?.data);
-      
+
       // Handle different response structures
       let checkingsData = [];
       if (Array.isArray(response)) {
@@ -38,15 +38,15 @@ const StaffCheckingManagement = () => {
           checkingsData = [response.data];
         }
       }
-      
+
       console.log("📋 Processed checkingsData:", checkingsData);
       console.log("📋 Total checkings:", checkingsData.length);
-      
+
       if (checkingsData.length > 0) {
         console.log("📋 First checking sample:", checkingsData[0]);
         console.log("📋 All checking fields:", Object.keys(checkingsData[0]));
       }
-      
+
       setCheckings(checkingsData);
       calculateStats(checkingsData);
     } catch (error) {
@@ -60,7 +60,7 @@ const StaffCheckingManagement = () => {
 
   const calculateStats = (data) => {
     const today = new Date().toDateString();
-    
+
     const checkIns = data.filter(item => item.checkingType === "CheckIn");
     const checkOuts = data.filter(item => item.checkingType === "CheckOut");
     const todayCheckings = data.filter(item => {
@@ -71,14 +71,14 @@ const StaffCheckingManagement = () => {
       }
       return false;
     });
-    
+
     const stats = {
       totalCheckings: data.length,
       checkIns: checkIns.length,
       checkOuts: checkOuts.length,
       todayCheckings: todayCheckings.length
     };
-    
+
     setStats(stats);
   };
 
@@ -116,10 +116,10 @@ const StaffCheckingManagement = () => {
     }
 
     message.success("Đang tạo file PDF...");
-    
+
     // Tạo nội dung HTML cho form PDF
     const pdfContent = generatePDFContent(selectedChecking);
-    
+
     // Tạo window mới để in PDF
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
@@ -178,7 +178,7 @@ const StaffCheckingManagement = () => {
               background-color: #1890ff;
             }
             .status-damage-yes {
-              background-color: #ff4d4f;
+background-color: #ff4d4f;
             }
             .status-damage-no {
               background-color: #52c41a;
@@ -276,7 +276,7 @@ const StaffCheckingManagement = () => {
           <tr>
             <th>Có hư hỏng</th>
             <td>
-              <span class="status-badge ${checking.damageReported ? 'status-damage-yes' : 'status-damage-no'}">
+<span class="status-badge ${checking.damageReported ? 'status-damage-yes' : 'status-damage-no'}">
                 ${checking.damageReported ? "Có" : "Không"}
               </span>
             </td>
@@ -349,9 +349,9 @@ const StaffCheckingManagement = () => {
   ];
 
   const columns = [
-    { 
-      title: "Checking ID", 
-      dataIndex: "checkingId", 
+    {
+      title: "Checking ID",
+      dataIndex: "checkingId",
       key: "checkingId",
       width: 120,
       render: (text, record) => record.checkingId || record.id
@@ -385,8 +385,8 @@ const StaffCheckingManagement = () => {
       width: 100,
       render: (_, record) => (
         <Space>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             size="small"
             icon={<EyeOutlined />}
             onClick={() => handleViewDetails(record)}
@@ -402,7 +402,7 @@ const StaffCheckingManagement = () => {
   return (
     <div style={{ padding: '24px', color: "black" }}>
       <h2>Quản lý Staff Checking</h2>
-      
+
       {/* Statistics Cards */}
       <Row gutter={16} style={{ marginBottom: '24px' }}>
         <Col span={6}>
@@ -481,8 +481,8 @@ const StaffCheckingManagement = () => {
             Đóng
           </Button>,
           <Dropdown key="confirm" menu={{ items: getConfirmMenuItems() }} placement="topRight">
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<CheckOutlined />}
             >
               Xác nhận checking <DownOutlined />

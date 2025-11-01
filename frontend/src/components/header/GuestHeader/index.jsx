@@ -32,20 +32,20 @@ const GuestHeader = () => {
 
   const navItems = [
     {
-      key: "home",
-      label: <NavLink to="/">Home</NavLink>
+      key: "/",
+      label: <NavLink to="/">Trang Chủ</NavLink>
     },
     {
-      key: "cars",
-      label: <NavLink to="/cars">Stock Cars</NavLink>
+      key: "guest/stockcars",
+      label: <NavLink to="guest/stockcars">Danh Sách Xe Điện</NavLink>
     },
     {
-      key: "terms",
-      label: <NavLink to="/guest/terms">Our Terms</NavLink>
+      key: "/guest/terms",
+      label: <NavLink to="/guest/terms">Điều Khoản</NavLink>
     },
     {
-      key: "about",
-      label: <NavLink to="/guest/aboutus">About Us</NavLink>
+      key: "/guest/aboutus",
+      label: <NavLink to="/guest/aboutus">Về Chúng Tôi</NavLink>
     },
   ];
 
@@ -53,7 +53,7 @@ const GuestHeader = () => {
     items: [
       {
         key: "profile",
-        label: <NavLink to="/profile">Trang cá nhân</NavLink>,
+        label: <NavLink to="/owner/profile">Trang cá nhân</NavLink>,
         icon: <UserOutlined />,
       },
       {
@@ -104,7 +104,7 @@ const GuestHeader = () => {
             </Dropdown>
           ) : (
             <NavLink to="/guest/login" className="login-link">
-              Sign In
+              Đăng nhập 
             </NavLink>
           )
         ) : (
@@ -137,12 +137,12 @@ const GuestHeader = () => {
                   <span>{currentUser?.fullName || "Người dùng"}</span>
                 </Space>
                 <a className="logout-link" onClick={handleLogout}>
-                  Logout
+                  Đăng xuất
                 </a>
               </>
             ) : (
               <NavLink to="/guest/login" className="login-link">
-                Sign In
+                Đăng nhập
               </NavLink>
             )}
           </div>

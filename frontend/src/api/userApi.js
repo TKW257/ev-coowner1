@@ -11,7 +11,7 @@ const userApi = {
   },
 
   getProfile() {
-    const url = '/api/users/me';
+    const url = '/users/me';
     return axiosClient.get(url);
   },
 

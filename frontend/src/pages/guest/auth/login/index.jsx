@@ -1,6 +1,6 @@
 import React from "react";
-import { Form, Input, Button, Typography, Divider } from "antd";
-import { useDispatch } from 'react-redux';
+import { Form, Input, Button, Typography, Divider, App } from "antd"; 
+import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useNavigate } from "react-router-dom";
 import { login } from "../../../../features/userSlice";
@@ -11,11 +11,14 @@ const { Text } = Typography;
 function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { message } = App.useApp(); 
 
   const handleSubmit = async (values) => {
     try {
       const actionResult = await dispatch(login(values));
       const user = unwrapResult(actionResult);
+
+      message.success("Đăng nhập thành công 🎉");
 
       if (user.role === "STAFF") {
         navigate("/admin/bookingmanage");
@@ -25,9 +28,14 @@ function LoginPage() {
         navigate("/");
       }
 
-      console.log("Logged in user:", user);
+      console.log("Đăng nhập thành công:", user);
     } catch (error) {
-      console.log("Failed to login", error);
+      console.error("Đăng nhập thất bại:", error);
+      if (error?.message) {
+        message.error(error.message);
+      } else {
+        message.error("Email hoặc mật khẩu không đúng ❌");
+      }
     }
   };
 
@@ -36,24 +44,24 @@ function LoginPage() {
       <div className="login-right">
         <div className="login-form-box">
           <div className="login-header">
-            <Text className="login-subtitle">Welcome back</Text>
+            <Text className="login-subtitle">Chào mừng bạn quay lại</Text>
           </div>
 
           <Form layout="vertical" onFinish={handleSubmit}>
             <Form.Item
               label={<span className="login-label">Email</span>}
               name="email"
-              rules={[{ required: true, message: "Please enter your email!" }]}
+              rules={[{ required: true, message: "Vui lòng nhập email!" }]}
             >
-              <Input placeholder="Enter email" />
+              <Input placeholder="Nhập email" />
             </Form.Item>
 
             <Form.Item
-              label={<span className="login-label">Password</span>}
+              label={<span className="login-label">Mật khẩu</span>}
               name="password"
-              rules={[{ required: true, message: "Please enter your password!" }]}
+              rules={[{ required: true, message: "Vui lòng nhập mật khẩu!" }]}
             >
-              <Input.Password placeholder="Enter password" />
+              <Input.Password placeholder="Nhập mật khẩu" />
             </Form.Item>
 
             <Form.Item>
@@ -63,7 +71,7 @@ function LoginPage() {
                 block
                 className="login-btn"
               >
-                Sign In
+                Đăng Nhập
               </Button>
             </Form.Item>
           </Form>
@@ -72,9 +80,9 @@ function LoginPage() {
 
           <div className="login-footer">
             <Text>
-              Don’t have an account?{" "}
+              Chưa có tài khoản?{" "}
               <a href="/guest/register" className="login-link">
-                Sign up
+                Đăng ký ngay
               </a>
             </Text>
           </div>
