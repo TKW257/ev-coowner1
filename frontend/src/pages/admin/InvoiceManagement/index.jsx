@@ -125,7 +125,7 @@ const AdminInvoiceDashboard = () => {
     fetchInvoices();
   }, []);
 
-  const handleView = (record) => setSelectedInvoice(record);
+  // const handleView = (record) => setSelectedInvoice(record);
 
   const handleDownloadPDF = async () => {
     const element = pdfRef.current;
