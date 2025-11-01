@@ -1,16 +1,6 @@
 import React from "react";
 import { Menu } from "antd";
-import {
-  HomeOutlined,
-  CalendarOutlined,
-  BookOutlined,
-  DashboardOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  LikeOutlined,
-  CarOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, FileTextOutlined, CheckCircleOutlined, LikeOutlined, CarOutlined, UserOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -45,7 +35,7 @@ const Sidebar = () => {
       {
         key: "/admin/vote",
         icon: <LikeOutlined />,
-        label: <Link to="/admin/vote">Bình Chọn</Link>,
+        label: <Link to="/admin/vote">Quản Lý Bình Chọn</Link>,
       },
       {
         key: "/admin/bookingmanage",
@@ -75,16 +65,16 @@ const Sidebar = () => {
         icon: <CalendarOutlined />,
         label: <Link to="/owner/bookingtracking">Lịch Đặt Xe</Link>,
       },
-      {
-        key: "/owner/invoice",
-        icon: <FileTextOutlined />,
-        label: <Link to="/owner/invoice">Thanh Toán</Link>,
-      },
-      {
+       {
         key: "/owner/vote",
         icon: <LikeOutlined />,
         label: <Link to="/owner/vote">Bình Chọn</Link>,
       },
+      {
+        key: "/owner/invoice",
+        icon: <FileTextOutlined />,
+        label: <Link to="/owner/invoice">Thanh Toán</Link>,
+      },  
       {
         key: "/owner/profile",
         icon: <UserOutlined />,

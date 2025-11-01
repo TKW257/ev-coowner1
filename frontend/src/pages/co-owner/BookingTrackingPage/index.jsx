@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Steps, Card, Row, Col, Tag, Typography, Button, Space, Spin, Empty, Popconfirm, Modal } from "antd";
 import { CalendarOutlined, StopOutlined, CarOutlined, SwapOutlined } from "@ant-design/icons";
 import bookingApi from "../../../api/bookingApi";
-import StaffCheckingReport from "./StaffCheckingReport";
+import StaffCheckingReport from "../../../components/StaffCheckingReport";
 import { App } from "antd";
-import html2canvas from "html2canvas";
 import SignatureCanvas from "react-signature-canvas";
 import { useRef } from "react";
+import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 
@@ -104,12 +104,26 @@ const BookingTracking = () => {
     const checkingId = checking.checkingId || checking.id || checking.staffCheckingId;
     if (!checkingId) return;
 
+    // Hàm chuyển base64 sang Blob
+    const dataURLtoBlob = (dataurl) => {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)[1];
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new Blob([u8arr], { type: mime });
+    };
+
     try {
       const formData = new FormData();
       formData.append("approved", confirmApproved);
       formData.append("userComment", confirmComment);
 
-      // ✅ Kiểm tra canvas có chữ ký hay không
+
+      // Kiểm tra canvas có chữ ký hay không
       if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
         notification.warning({
           message: "Chưa ký xác nhận",
@@ -118,11 +132,12 @@ const BookingTracking = () => {
         return;
       }
 
-      // ✍️ Lấy chữ ký khách hàng
+      // Lấy chữ ký từ canvas và append vào FormData
       const dataUrl = sigCanvas.current.toDataURL("image/png");
-      const blob = await (await fetch(dataUrl)).blob();
+      const blob = dataURLtoBlob(dataUrl);
       formData.append("userSignature", blob, "signature.png");
 
+      // Gửi lên backend
       await bookingApi.confirmStaffChecking(checkingId, formData);
 
       notification.success({
@@ -137,6 +152,7 @@ const BookingTracking = () => {
       setIsModalVisible(false);
       setConfirmComment("");
       fetchBookings();
+
     } catch (err) {
       notification.error({
         message: "Lỗi xác nhận",
@@ -145,6 +161,7 @@ const BookingTracking = () => {
       console.error(err);
     }
   };
+
 
 
 

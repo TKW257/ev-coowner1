@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Table,
-  Tag,
-  Space,
-  Button,
+import { Table, Tag, Space, Button,
   message,
   Select,
   Modal,
@@ -277,13 +273,17 @@ const ManageBookings = () => {
 
       await bookingApi.createStaffChecking(formData);
 
-      // Cập nhật status tự động nếu cần
+      // Cập nhật trạng thái dựa trên loại checking
       let newStatus = null;
 
-      // Giữ nguyên Confirmed khi check-out, chỉ đổi Completed khi check-in
-      if (checkingType === "checkin" && currentBooking.bookingStatus === "InProgress") {
-        newStatus = "Completed";
+      if (checkingType === "checkin") {
+        // Khi check-in -> chuyển trạng thái thành InProgress
+        newStatus = "InProgress";
+      } else if (checkingType === "checkout") {
+        // Khi check-out -> chuyển trạng thái thành Confirmed
+        newStatus = "Confirmed";
       }
+
 
       if (newStatus) {
         await bookingApi.updateStatus(currentBooking.bookingId, newStatus);
@@ -293,6 +293,7 @@ const ManageBookings = () => {
       } else {
         message.success(`${checkingType === "checkin" ? "Check-in" : "Check-out"} thành công!`);
       }
+
 
       // Đóng modal và refresh dữ liệu
       setCheckingModalVisible(false);

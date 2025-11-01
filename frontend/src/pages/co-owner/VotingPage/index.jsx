@@ -4,6 +4,7 @@ import { PieChart, Pie, Cell, Tooltip as ReTooltip, Legend, ResponsiveContainer 
 import { Card, Row, Col, Select, Button, Tag, Typography, Divider, Space, Modal, Table, Spin } from "antd";
 import { UserOutlined, DollarOutlined, CarOutlined, LikeOutlined, DislikeOutlined, EyeOutlined } from "@ant-design/icons";
 import voteApi from "../../../api/voteApi";
+import dayjs from "dayjs";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -71,17 +72,20 @@ const VoteDashboard = () => {
     setVoteModalOpen(true);
   };
 
-  /// send vote
 const handleCastVote = async (agree) => {
   if (!currentTopic) return;
   try {
-    const payload = { topicId: currentTopic.topicId, agree };
+    const payload = {
+      topicId: currentTopic.topicId,
+      agree,
+      votedAt: dayjs().format("YYYY-MM-DD HH:mm:ss"), 
+    };
     await voteApi.castVote(payload);
 
     notification.success({
       message: "Bình chọn thành công",
       description: `Bạn đã ${agree ? "đồng ý" : "không đồng ý"} bình chọn.`,
-      placement: "topRight", 
+      placement: "topRight",
     });
 
     setVoteModalOpen(false);
@@ -94,6 +98,7 @@ const handleCastVote = async (agree) => {
     });
   }
 };
+
 
   // filter và status
   const vehicleOptions = [...new Set(topics.map((t) => t.vehicleName))].map(

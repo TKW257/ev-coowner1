@@ -7,6 +7,10 @@ const ownershipApi = {
   getMyVehicles() {
     return axiosClient.get("/ownerships/viewVehicleAndOwnship");
   },
+
+  getMyGroupOwnership(vehicle_Id) {
+    return axiosClient.get(`/ownerships/viewMygroupOwnership/${vehicle_Id}`);
+  },
 };
 
 export default ownershipApi;

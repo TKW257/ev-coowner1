@@ -20,10 +20,10 @@ const HomePage = () => {
               Tham gia mô hình đồng sở hữu xe điện – tiết kiệm hơn, thân thiện hơn, vì một hành tinh xanh hơn.
             </Text>
             <Title level={1} className="banner-title">
-              Cùng Sở Hữu, Cùng Hướng Đến Tương Lai Xanh
+              Cùng Sở Hữu, Hướng Đến Tương Lai Xanh
             </Title>
             <Text className="banner-desc">
-              Hoặc khám phá các mẫu xe điện nổi bật
+              Khám phá các mẫu xe điện nổi bật
             </Text>
           </div>
         </div>
