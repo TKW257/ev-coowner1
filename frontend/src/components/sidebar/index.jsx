@@ -24,7 +24,7 @@ const Sidebar = () => {
 
   let menuItems = [];
 
-  if (role === "STAFF") {
+  if (role === "STAFF" || role === "ADMIN") {
     menuItems = [
       {
         key: "/admin",

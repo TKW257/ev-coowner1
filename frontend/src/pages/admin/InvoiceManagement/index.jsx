@@ -58,6 +58,21 @@ const AdminInvoiceDashboard = () => {
     }
   };
 
+  // Dịch trạng thái sang tiếng Việt
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case "SETTLED":
+      case "PAID":
+        return "Đã thanh toán";
+      case "OPEN":
+        return "Đang mở";
+      case "OVERDUE":
+        return "Quá hạn";
+      default:
+        return status;
+    }
+  };
+
   // === Fetch users ===
   const fetchUsers = async () => {
     setLoadingUsers(true);
@@ -222,9 +237,19 @@ const AdminInvoiceDashboard = () => {
       render: (status, record) => {
         const isOverdue = status === "OPEN" && dayjs(record.dueDate).isBefore(dayjs());
         let color = "orange";
-        if (status === "SETTLED" || status === "PAID") color = "green";
-        else if (isOverdue) color = "red";
-        return <Tag color={color}>{isOverdue ? "OVERDUE" : status}</Tag>;
+        let displayStatus = status;
+        
+        if (status === "SETTLED" || status === "PAID") {
+          color = "green";
+          displayStatus = "SETTLED";
+        } else if (isOverdue) {
+          color = "red";
+          displayStatus = "OVERDUE";
+        } else if (status === "OPEN") {
+          displayStatus = "OPEN";
+        }
+        
+        return <Tag color={color}>{getStatusLabel(displayStatus)}</Tag>;
       },
     },
     {
@@ -249,13 +274,13 @@ const AdminInvoiceDashboard = () => {
     <div style={{ padding: 24 }}>
       <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12} md={6}>
-          <Card><Statistic title="Tổng HĐ" value={totalInvoices} prefix={<FileTextOutlined />} /></Card>
+          <Card><Statistic title="Tổng hóa đơn" value={totalInvoices} prefix={<FileTextOutlined />} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card><Statistic title="Đang mở" value={openInvoices} valueStyle={{ color: "#faad14" }} prefix={<ClockCircleOutlined />} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
-          <Card><Statistic title="Đã TT" value={paidInvoices} valueStyle={{ color: "#3f8600" }} prefix={<CheckCircleOutlined />} /></Card>
+          <Card><Statistic title="Đã thanh toán" value={paidInvoices} valueStyle={{ color: "#3f8600" }} prefix={<CheckCircleOutlined />} /></Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card><Statistic title="Tổng tiền" value={totalAmount.toLocaleString("vi-VN")} valueStyle={{ color: "#1677ff" }} prefix={<DollarOutlined />} /></Card>
@@ -311,7 +336,23 @@ const AdminInvoiceDashboard = () => {
 
             <Descriptions bordered column={1} size="small" title="Chi tiết hóa đơn" style={{ marginTop: 16 }}>
               <Descriptions.Item label="Tháng">{selectedInvoice.invoiceMonth}</Descriptions.Item>
-              <Descriptions.Item label="Trạng thái"><Tag>{selectedInvoice.status}</Tag></Descriptions.Item>
+              <Descriptions.Item label="Trạng thái">
+                <Tag color={
+                  selectedInvoice.status === "SETTLED" || selectedInvoice.status === "PAID" 
+                    ? "green" 
+                    : (selectedInvoice.status === "OPEN" && dayjs(selectedInvoice.dueDate).isBefore(dayjs()))
+                    ? "red"
+                    : "orange"
+                }>
+                  {getStatusLabel(
+                    (selectedInvoice.status === "OPEN" && dayjs(selectedInvoice.dueDate).isBefore(dayjs()))
+                      ? "OVERDUE"
+                      : selectedInvoice.status === "PAID"
+                      ? "SETTLED"
+                      : selectedInvoice.status
+                  )}
+                </Tag>
+              </Descriptions.Item>
             </Descriptions>
           </div>
         )}
