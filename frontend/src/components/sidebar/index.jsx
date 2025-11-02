@@ -71,6 +71,11 @@ const Sidebar = () => {
         icon: <FileDoneOutlined />,
         label: <Link to="/admin/contracts">Quản Lý Hợp Đồng</Link>,
       },
+      {
+        key: "/admin/owner-contracts",
+        icon: <FileTextOutlined />,
+        label: <Link to="/admin/owner-contracts">Quản Lý Owner Contract</Link>,
+      },
     ];
   } else if (role === "USER") {
     menuItems = [

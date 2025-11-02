@@ -8,9 +8,11 @@ const ownerContractsApi = {
 
   // Tạo owner contract mới (dành cho ADMIN)
   create(data) {
-    return axiosClient.post("/owner-contracts/createOwnerContract", data);
+    return axiosClient.post("/owner-contracts/createOwnerContract", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
-
+  
   // Lấy owner contracts của user hiện tại (dành cho ADMIN)
   getMyContracts() {
     return axiosClient.get("/owner-contracts/viewMyOwnerContract");

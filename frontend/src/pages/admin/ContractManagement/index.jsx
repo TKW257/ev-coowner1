@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   Button,
@@ -15,7 +15,6 @@ import {
   Typography,
   Spin,
   Empty,
-  Upload,
 } from "antd";
 import {
   PlusOutlined,
@@ -23,12 +22,12 @@ import {
   EditOutlined,
   DeleteOutlined,
   FileTextOutlined,
-  UploadOutlined,
 } from "@ant-design/icons";
 import contractApi from "../../../api/contractApi";
 import ownerContractsApi from "../../../api/owner-contractsApi";
 import vehiclesApi from "../../../api/vehiclesApi";
 import userApi from "../../../api/userApi";
+import SignatureCanvas from "react-signature-canvas";
 
 const { Title } = Typography;
 
@@ -47,13 +46,15 @@ const ContractManagement = () => {
   const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
+  const adminSigPadRef = useRef(null);
+  const userSigPadRef = useRef(null);
 
   // Contract status options
   const contractStatusOptions = [
-    { value: "Draft", label: "Draft" },
-    { value: "Pending", label: "Pending" },
-    { value: "Approved", label: "Approved" },
-    { value: "Closed", label: "Closed" },
+    { value: "PENDING", label: "Đang chờ duyệt" },
+    { value: "APPROVED", label: "Đã được duyệt" },
+    { value: "COMPLETED", label: "Đã bán đủ cổ phần" },
+    { value: "EXPIRED", label: "Hết hạn hợp đồng" },
   ];
 
   useEffect(() => {
@@ -67,6 +68,12 @@ const ContractManagement = () => {
     try {
       const response = await contractApi.getAll();
       
+      // Log response từ API
+      console.log("📋 Response từ getAll contract API:", response);
+      console.log("📋 Response type:", typeof response);
+      console.log("📋 Is Array?", Array.isArray(response));
+      console.log("📋 Response keys:", response ? Object.keys(response) : "null/undefined");
+      
       // Xử lý response từ API
       let contractsData = [];
       if (Array.isArray(response)) {
@@ -78,6 +85,9 @@ const ContractManagement = () => {
       } else if (response?.content && Array.isArray(response.content)) {
         contractsData = response.content;
       }
+      
+      console.log("📋 ContractsData sau khi xử lý:", contractsData);
+      console.log("📋 Số lượng contracts:", contractsData.length);
       
       setContracts(contractsData);
       
@@ -153,11 +163,17 @@ const ContractManagement = () => {
   const handleCreateContract = () => {
     setCreateModalVisible(true);
     createForm.resetFields();
+    // Xóa chữ ký
+    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+    if (userSigPadRef.current) userSigPadRef.current.clear();
   };
 
   const handleCloseCreateModal = () => {
     setCreateModalVisible(false);
     createForm.resetFields();
+    // Xóa chữ ký
+    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+    if (userSigPadRef.current) userSigPadRef.current.clear();
   };
 
   const handleCreateSubmit = async () => {
@@ -177,20 +193,28 @@ const ContractManagement = () => {
         formData.append("status", values.status);
       }
       
-      // Thêm file chữ ký admin
-      if (values.adminSignature && Array.isArray(values.adminSignature) && values.adminSignature.length > 0) {
-        const adminFile = values.adminSignature[0].originFileObj || values.adminSignature[0];
-        if (adminFile) {
-          formData.append("adminSignature", adminFile);
+      // Lấy chữ ký admin từ Signature Canvas
+      const adminSigPad = adminSigPadRef.current;
+      if (adminSigPad && !adminSigPad.isEmpty()) {
+        const blob = await new Promise((resolve) => adminSigPad.getCanvas().toBlob(resolve));
+        if (blob) {
+          formData.append("adminSignature", blob, "admin_signature.png");
         }
+      } else {
+        message.error("Vui lòng vẽ chữ ký Admin!");
+        return;
       }
       
-      // Thêm file chữ ký user
-      if (values.userSignature && Array.isArray(values.userSignature) && values.userSignature.length > 0) {
-        const userFile = values.userSignature[0].originFileObj || values.userSignature[0];
-        if (userFile) {
-          formData.append("userSignature", userFile);
+      // Lấy chữ ký user từ Signature Canvas
+      const userSigPad = userSigPadRef.current;
+      if (userSigPad && !userSigPad.isEmpty()) {
+        const blob = await new Promise((resolve) => userSigPad.getCanvas().toBlob(resolve));
+        if (blob) {
+          formData.append("userSignature", blob, "user_signature.png");
         }
+      } else {
+        message.error("Vui lòng vẽ chữ ký User!");
+        return;
       }
 
       const response = await contractApi.create(formData);
@@ -388,7 +412,16 @@ const ContractManagement = () => {
     }
   };
 
-  // Helper function để lấy thông tin xe
+  // Helper function để lấy thông tin xe (tóm tắt)
+  const getVehicleSummary = (vehicleId) => {
+    const vehicle = vehicles.find(v => (v.vehicleId || v.id) === vehicleId);
+    if (vehicle) {
+      return `${vehicle.brand} ${vehicle.model} (${vehicle.plateNumber})`;
+    }
+    return vehicleId || "N/A";
+  };
+
+  // Helper function để lấy thông tin xe đầy đủ
   const getVehicleInfo = (vehicleId) => {
     const vehicle = vehicles.find(v => (v.vehicleId || v.id) === vehicleId);
     if (vehicle) {
@@ -397,50 +430,66 @@ const ContractManagement = () => {
     return vehicleId || "N/A";
   };
 
+  // Helper function để lấy thông tin user
+  const getUserInfo = (userId) => {
+    const user = users.find(u => (u.id || u.userId) === userId);
+    if (user) {
+      return user.fullName || user.full_name || user.email || "N/A";
+    }
+    return userId || "N/A";
+  };
+
   const columns = [
     {
-      title: "Mã hợp đồng",
-      dataIndex: "contractNumber",
-      key: "contractNumber",
+      title: "Mã HĐ",
+      dataIndex: "contractId",
+      key: "contractId",
+      width: 120,
+      render: (id, record) => id || record?.id || "-"
+    },
+    {
+      title: "User",
+      key: "user",
+      width: 120,
+      render: (_, record) => record.user?.fullName || record.user?.email || "N/A"
+    },
+    {
+      title: "Xe",
+      key: "vehicle",
+      width: 200,
+      render: (_, record) =>
+        record.vehicle
+          ? `${record.vehicle.brand} ${record.vehicle.model} (${record.vehicle.plateNumber})`
+          : "N/A"
+    },
+    {
+      title: "% Sở hữu",
+      dataIndex: "salePercentage",
+      key: "salePercentage",
+      width: 120,
+      render: (percentage) => percentage ? `${percentage}%` : "-"
+    },
+    {
+      title: "Ngày hiệu lực",
+      dataIndex: "createdAt",
+      key: "createdAt",
       width: 150,
-    },
-    {
-      title: "Thông tin xe",
-      key: "vehicleInfo",
-      width: 250,
-      render: (_, record) => getVehicleInfo(record.vehicleId),
-    },
-    {
-      title: "Tổng phần sở hữu",
-      dataIndex: "totalShares",
-      key: "totalShares",
-      width: 120,
-      render: (v) => v || "-"
-    },
-    {
-      title: "Giá/Phần",
-      dataIndex: "pricePerShare",
-      key: "pricePerShare",
-      width: 120,
-      render: (v) => v ? `${v?.toLocaleString()} VND` : "-"
-    },
-    {
-      title: "Ngày có hiệu lực",
-      dataIndex: "effectiveDate",
-      key: "effectiveDate",
-      width: 120,
       render: (date) => date ? new Date(date).toLocaleDateString('vi-VN') : "-"
     },
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
-      width: 120,
+      width: 150,
       render: (status) => {
-        const color = status === "Approved" ? "green" :
-          status === "Pending" ? "orange" :
-          status === "Draft" ? "blue" : "red";
-        return <Tag color={color}>{status}</Tag>;
+        const statusMap = {
+          PENDING: { label: "Đang chờ duyệt", color: "orange" },
+          APPROVED: { label: "Đã được duyệt", color: "green" },
+          COMPLETED: { label: "Đã bán đủ cổ phần", color: "blue" },
+          EXPIRED: { label: "Hết hạn hợp đồng", color: "red" },
+        };
+        const { label, color } = statusMap[status] || { label: status, color: "default" };
+        return <Tag color={color}>{label}</Tag>;
       },
     },
     {
@@ -456,7 +505,7 @@ const ContractManagement = () => {
               onClick={() => handleViewDetails(record)}
             />
           </Tooltip>
-          {record.status === "Draft" && (
+          {record.status === "PENDING" && (
             <Tooltip title="Chỉnh sửa">
               <Button
                 type="link"
@@ -465,7 +514,7 @@ const ContractManagement = () => {
               />
             </Tooltip>
           )}
-          {record.status === "Approved" && (
+          {record.status === "APPROVED" && (
             <Tooltip title="Tạo Owner Contract">
               <Button
                 type="link"
@@ -526,48 +575,139 @@ const ContractManagement = () => {
             Đóng
           </Button>
         ]}
-        width={800}
+        width={900}
       >
-        {selectedContract && (
-          <Descriptions bordered column={2}>
-            <Descriptions.Item label="Mã hợp đồng" span={1}>
-              {selectedContract.contractNumber}
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái" span={1}>
-              <Tag color={
-                selectedContract.status === "Approved" ? "green" :
-                  selectedContract.status === "Pending" ? "orange" :
-                    selectedContract.status === "Draft" ? "blue" : "red"
-              }>
-                {selectedContract.status}
-              </Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="Thông tin xe" span={2}>
-              {getVehicleInfo(selectedContract.vehicleId)}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tổng phần sở hữu" span={1}>
-              {selectedContract.totalShares || '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Giá mỗi phần" span={1}>
-              {selectedContract.pricePerShare ? `${selectedContract.pricePerShare.toLocaleString()} VND` : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ngày có hiệu lực" span={1}>
-              {selectedContract.effectiveDate ? new Date(selectedContract.effectiveDate).toLocaleDateString('vi-VN') : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ngày hết hạn" span={1}>
-              {selectedContract.expiryDate ? new Date(selectedContract.expiryDate).toLocaleDateString('vi-VN') : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Mô tả" span={2}>
-              {selectedContract.description || 'Không có mô tả'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Ngày tạo" span={1}>
-              {selectedContract.createdAt ? new Date(selectedContract.createdAt).toLocaleString('vi-VN') : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Cập nhật lần cuối" span={1}>
-              {selectedContract.updatedAt ? new Date(selectedContract.updatedAt).toLocaleString('vi-VN') : '-'}
-            </Descriptions.Item>
-          </Descriptions>
-        )}
+        {selectedContract && (() => {
+          const vehicle = selectedContract.vehicle;
+          const user = selectedContract.user;
+          const BASE_URL = "https://vallate-enzootically-sterling.ngrok-free.dev";
+          
+          const buildUrl = (path) => {
+            if (!path) return null;
+            return path.startsWith("http") ? path : `${BASE_URL}${path.startsWith("/") ? path : `/${path}`}`;
+          };
+
+          const adminSignatureUrl = buildUrl(selectedContract.adminSignature);
+          const userSignatureUrl = buildUrl(selectedContract.userSignature);
+
+          return (
+            <Descriptions bordered column={2}>
+              {/* Thông tin hợp đồng cơ bản */}
+              <Descriptions.Item label="Mã hợp đồng" span={1}>
+                {selectedContract.contractId || selectedContract.id || '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngày tạo" span={1}>
+                {selectedContract.createdAt ? new Date(selectedContract.createdAt).toLocaleString('vi-VN') : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Người ký (Chủ xe)" span={1}>
+                {user ? (user.fullName || user.full_name || user.email) : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Trạng thái hợp đồng" span={1}>
+                <Tag color={
+                  selectedContract.status === "APPROVED" ? "green" :
+                    selectedContract.status === "PENDING" ? "orange" :
+                      selectedContract.status === "COMPLETED" ? "blue" : "red"
+                }>
+                  {selectedContract.status}
+                </Tag>
+              </Descriptions.Item>
+
+              {/* Thông tin xe đầy đủ */}
+              <Descriptions.Item label="Thông tin xe" span={2}>
+                <div style={{ fontWeight: 'bold', marginBottom: 8 }}>
+                  {vehicle ? `${vehicle.brand} ${vehicle.model}` : '-'}
+                </div>
+              </Descriptions.Item>
+              {vehicle && (
+                <>
+                  <Descriptions.Item label="Biển số" span={1}>
+                    {vehicle.plateNumber || '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Màu sắc" span={1}>
+                    {vehicle.color || '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Năm sản xuất" span={1}>
+                    {vehicle.year || '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Số chỗ ngồi" span={1}>
+                    {vehicle.seat || '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Số khung (VIN)" span={1}>
+                    {vehicle.vin || vehicle.chassisNumber || '-'}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Dung lượng pin" span={1}>
+                    {vehicle.batteryCapacityKwh ? `${vehicle.batteryCapacityKwh} kWh` : '-'}
+                  </Descriptions.Item>
+                  {vehicle.imageUrl && (
+                    <Descriptions.Item label="Hình ảnh xe" span={2}>
+                      <img
+                        src={vehicle.imageUrl.startsWith("http") ? vehicle.imageUrl : `${BASE_URL}${vehicle.imageUrl.startsWith("/") ? vehicle.imageUrl : `/${vehicle.imageUrl}`}`}
+                        alt={`${vehicle.brand} ${vehicle.model}`}
+                        style={{
+                          width: "100%",
+                          maxHeight: 300,
+                          objectFit: "cover",
+                          borderRadius: 6
+                        }}
+                      />
+                    </Descriptions.Item>
+                  )}
+                </>
+              )}
+
+              {/* Thông tin hợp đồng */}
+              <Descriptions.Item label="Giá/phần" span={1}>
+                {selectedContract.pricePerShare ? `${selectedContract.pricePerShare.toLocaleString()} VND` : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Tổng % sở hữu" span={1}>
+                {selectedContract.salePercentage ? `${selectedContract.salePercentage}%` : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngày bắt đầu" span={1}>
+                {selectedContract.startDate ? new Date(selectedContract.startDate).toLocaleDateString('vi-VN') : '-'}
+              </Descriptions.Item>
+              <Descriptions.Item label="Ngày kết thúc" span={1}>
+                {selectedContract.endDate ? new Date(selectedContract.endDate).toLocaleDateString('vi-VN') : '-'}
+              </Descriptions.Item>
+
+              {/* Chữ ký */}
+              <Descriptions.Item label="Chữ ký Admin" span={1}>
+                {adminSignatureUrl ? (
+                  <img
+                    src={adminSignatureUrl}
+                    alt="Chữ ký Admin"
+                    style={{ maxWidth: 200, maxHeight: 100, border: "1px solid #ccc", borderRadius: 4 }}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "block";
+                    }}
+                  />
+                ) : (
+                  <span style={{ color: "#999" }}>Không có</span>
+                )}
+              </Descriptions.Item>
+              <Descriptions.Item label="Chữ ký User" span={1}>
+                {userSignatureUrl ? (
+                  <img
+                    src={userSignatureUrl}
+                    alt="Chữ ký User"
+                    style={{ maxWidth: 200, maxHeight: 100, border: "1px solid #ccc", borderRadius: 4 }}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "block";
+                    }}
+                  />
+                ) : (
+                  <span style={{ color: "#999" }}>Không có</span>
+                )}
+              </Descriptions.Item>
+
+              {/* Ghi chú */}
+              <Descriptions.Item label="Ghi chú" span={2}>
+                {selectedContract.description || selectedContract.note || 'Không có ghi chú'}
+              </Descriptions.Item>
+            </Descriptions>
+          );
+        })()}
       </Modal>
 
       {/* Edit Contract Status Modal */}
@@ -731,7 +871,7 @@ const ContractManagement = () => {
           <Form.Item
             name="status"
             label="Trạng Thái"
-            initialValue="Draft"
+            initialValue="PENDING"
           >
             <Select>
               {contractStatusOptions.map(option => (
@@ -743,43 +883,51 @@ const ContractManagement = () => {
           </Form.Item>
 
           <Form.Item
-            name="adminSignature"
             label="Chữ ký Admin"
-            rules={[{ required: true, message: 'Vui lòng upload chữ ký admin!' }]}
-            getValueFromEvent={(e) => {
-              if (Array.isArray(e)) {
-                return e;
-              }
-              return e?.fileList;
-            }}
           >
-            <Upload
-              beforeUpload={() => false}
-              accept="image/*,.pdf"
-              maxCount={1}
+            <SignatureCanvas
+              ref={adminSigPadRef}
+              penColor="black"
+              canvasProps={{
+                width: 500,
+                height: 150,
+                className: "signatureCanvas",
+                style: { border: "1px solid #ccc", borderRadius: "6px" },
+              }}
+            />
+            <Button
+              type="link"
+              onClick={() => {
+                if (adminSigPadRef.current) adminSigPadRef.current.clear();
+              }}
+              style={{ padding: 0, marginTop: 5 }}
             >
-              <Button icon={<UploadOutlined />}>Chọn file chữ ký Admin</Button>
-            </Upload>
+              Xóa chữ ký Admin
+            </Button>
           </Form.Item>
 
           <Form.Item
-            name="userSignature"
             label="Chữ ký User (Chủ xe)"
-            rules={[{ required: true, message: 'Vui lòng upload chữ ký user!' }]}
-            getValueFromEvent={(e) => {
-              if (Array.isArray(e)) {
-                return e;
-              }
-              return e?.fileList;
-            }}
           >
-            <Upload
-              beforeUpload={() => false}
-              accept="image/*,.pdf"
-              maxCount={1}
+            <SignatureCanvas
+              ref={userSigPadRef}
+              penColor="black"
+              canvasProps={{
+                width: 500,
+                height: 150,
+                className: "signatureCanvas",
+                style: { border: "1px solid #ccc", borderRadius: "6px" },
+              }}
+            />
+            <Button
+              type="link"
+              onClick={() => {
+                if (userSigPadRef.current) userSigPadRef.current.clear();
+              }}
+              style={{ padding: 0, marginTop: 5 }}
             >
-              <Button icon={<UploadOutlined />}>Chọn file chữ ký User</Button>
-            </Upload>
+              Xóa chữ ký User
+            </Button>
           </Form.Item>
         </Form>
       </Modal>

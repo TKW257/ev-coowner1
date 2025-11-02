@@ -3,7 +3,9 @@ import axiosClient from "./axiosClient";
 const contractApi = {
   // Tạo contract mới (dành cho ADMIN)
   create(data) {
-    return axiosClient.post("/contracts/createContract", data);
+    return axiosClient.post("/contracts/createContract", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
 
   // Lấy tất cả contracts (dành cho ADMIN)
@@ -12,9 +14,9 @@ const contractApi = {
   },
 
   // Lấy contract theo ID
-  getById(id) {
-    return axiosClient.get(`/contracts/${id}`);
-  },
+  // getById(id) {
+  //   return axiosClient.get(`/contracts/${id}`);
+  // },
 
   // Lấy contracts của user hiện tại (dành cho USER)
   getMyContracts() {
