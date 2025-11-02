@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Modal, Form, Input, Select, message, Card, Space, Tag, Tooltip, Row, Col, Divider } from "antd";
+import { Table, Button, Modal, Form, Input, Select, Card, Space, Tag, Tooltip, Row, Col, Divider } from "antd";
 import { CrownOutlined, TeamOutlined, EditOutlined, DeleteOutlined, UserOutlined, AuditOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import userApi from "../../../api/userApi";
+import { App } from "antd";
+
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -23,6 +25,8 @@ const UserManagement = () => {
 
   const [selectedRole, setSelectedRole] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
+
+  const { message } = App.useApp();
 
 
   const base = "https://vallate-enzootically-sterling.ngrok-free.dev/";
@@ -146,7 +150,7 @@ const UserManagement = () => {
   };
 
   const handleCardClick = (role) => {
-    setSelectedRole(role === selectedRole ? null : role); 
+    setSelectedRole(role === selectedRole ? null : role);
   };
 
   const getRoleColor = (role) => {
