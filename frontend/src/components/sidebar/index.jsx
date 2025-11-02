@@ -6,6 +6,8 @@ import {
   BookOutlined,
   DashboardOutlined,
   FileTextOutlined,
+  PieChartOutlined,
+  LogoutOutlined,
   CheckCircleOutlined,
   LikeOutlined,
   CarOutlined,
