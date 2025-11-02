@@ -1,6 +1,6 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CalendarOutlined, BookOutlined, DashboardOutlined, FileTextOutlined, CheckCircleOutlined, LikeOutlined, CarOutlined, UserOutlined } from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined, FileDoneOutlined, DashboardOutlined, FileTextOutlined, AuditOutlined, PieChartOutlined, CarOutlined, UserOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import logoFull from "../../assets/logo_main.png";
@@ -14,7 +14,7 @@ const Sidebar = () => {
 
   let menuItems = [];
 
-  if (role === "STAFF") {
+  if (role === "ADMIN") {
     menuItems = [
       {
         key: "/admin",
@@ -29,23 +29,22 @@ const Sidebar = () => {
       {
         key: "/admin/vehicles",
         icon: <CarOutlined />,
-        label: <Link to="/admin/vehicles">Quản Lý Xe</Link>,
-      },
-
-      {
-        key: "/admin/vote",
-        icon: <LikeOutlined />,
-        label: <Link to="/admin/vote">Quản Lý Bình Chọn</Link>,
+        label: <Link to="/admin/vehicles">Quản Lý Phương Tiện</Link>,
       },
       {
         key: "/admin/bookingmanage",
-        icon: <BookOutlined />,
+        icon: <CalendarOutlined />,
         label: <Link to="/admin/bookingmanage">Quản Lý Đặt Xe</Link>,
       },
       {
         key: "/admin/staffchecking",
-        icon: <CheckCircleOutlined />,
+        icon: <FileDoneOutlined />,
         label: <Link to="/admin/staffchecking">Biên bản giao nhận xe</Link>,
+      },
+       {
+        key: "/admin/vote",
+        icon: <PieChartOutlined />,
+        label: <Link to="/admin/vote">Quản Lý Bình Chọn</Link>,
       },
       {
         key: "/admin/invoice",
@@ -67,7 +66,7 @@ const Sidebar = () => {
       },
        {
         key: "/owner/vote",
-        icon: <LikeOutlined />,
+        icon: <PieChartOutlined />,
         label: <Link to="/owner/vote">Bình Chọn</Link>,
       },
       {

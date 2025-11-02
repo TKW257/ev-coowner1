@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, Row, Col, Tag, Typography, Button, Statistic, Modal, Table, Spin } from "antd";
-import { ThunderboltOutlined,  DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined, TeamOutlined } from "@ant-design/icons";
+import { ThunderboltOutlined, DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined, TeamOutlined } from "@ant-design/icons";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import "./style.scss";
 
@@ -18,7 +18,7 @@ const MyCars = () => {
   const navigate = useNavigate();
   const chosenCar = currentCarId ? carsObj[String(currentCarId)] : null;
 
-   const totalMembers = groupData.length;
+  const totalMembers = groupData.length;
   const totalPercentage = groupData.reduce(
     (sum, item) => sum + (item.totalSharePercentage || 0),
     0
@@ -183,7 +183,7 @@ const MyCars = () => {
                 <Text className="plate">
                   Biển số xe: {chosenCar.plateNumber}
                 </Text>
-                 <Text className="plate">
+                <Text className="plate">
                   Năm sản xuất: {chosenCar.year}
                 </Text>
                 <div>
@@ -206,16 +206,6 @@ const MyCars = () => {
               <div className="right">
                 <div className="buttons-row" style={{ marginBottom: "20px" }}>
                   <Button
-                    className="btn-group"
-                    icon={<TeamOutlined />}
-                    onClick={() => handleOpenGroupModal(chosenCar)}
-                  >
-                    Nhóm của tôi
-                  </Button>
-                </div>
-
-                <div className="buttons-row">
-                  <Button
                     className="btn-book"
                     type="primary"
                     icon={<CalendarOutlined />}
@@ -225,11 +215,21 @@ const MyCars = () => {
                     Đặt Lịch
                   </Button>
                 </div>
+
+                <div className="buttons-row">
+                  <Button
+                    className="btn-group"
+                    icon={<TeamOutlined />}
+                    onClick={() => handleOpenGroupModal(chosenCar)}
+                  >
+                    Nhóm Của Tôi
+                  </Button>
+                </div>
               </div>
             </div>
-          </div> 
+          </div>
 
-           {/* Modal nhóm sở hữu */}
+          {/* Modal nhóm sở hữu */}
           <Modal
             title={
               chosenCar
@@ -359,7 +359,7 @@ const MyCars = () => {
                     <span className="pct-number">
                       {chosenCar.totalSharePercentage}
                     </span>
-                   / 100  <PercentageOutlined /> 
+                    / 100  <PercentageOutlined />
                   </div>
                 </div>
               </Col>

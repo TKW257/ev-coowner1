@@ -72,32 +72,32 @@ const VoteDashboard = () => {
     setVoteModalOpen(true);
   };
 
-const handleCastVote = async (agree) => {
-  if (!currentTopic) return;
-  try {
-    const payload = {
-      topicId: currentTopic.topicId,
-      agree,
-      votedAt: dayjs().format("YYYY-MM-DD HH:mm:ss"), 
-    };
-    await voteApi.castVote(payload);
+  const handleCastVote = async (agree) => {
+    if (!currentTopic) return;
+    try {
+      const payload = {
+        topicId: currentTopic.topicId,
+        agree,
+        votedAt: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      };
+      await voteApi.castVote(payload);
 
-    notification.success({
-      message: "Bình chọn thành công",
-      description: `Bạn đã ${agree ? "đồng ý" : "không đồng ý"} bình chọn.`,
-      placement: "topRight",
-    });
+      notification.success({
+        message: "Bình chọn thành công",
+        description: `Bạn đã ${agree ? "đồng ý" : "không đồng ý"} bình chọn.`,
+        placement: "topRight",
+      });
 
-    setVoteModalOpen(false);
-  } catch (err) {
-    console.error(err);
-    notification.error({
-      message: "Bình chọn thất bại",
-      description: "Bạn đã bình chọn cho chủ đề này rồi.",
-      placement: "topRight",
-    });
-  }
-};
+      setVoteModalOpen(false);
+    } catch (err) {
+      console.error(err);
+      notification.error({
+        message: "Bình chọn thất bại",
+        description: "Bạn đã bình chọn cho chủ đề này rồi.",
+        placement: "topRight",
+      });
+    }
+  };
 
 
   // filter và status
@@ -151,40 +151,44 @@ const handleCastVote = async (agree) => {
   return (
     <div style={{ padding: 24 }}>
 
-      {/* Bộ lọc */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col>
-          <Select
-            style={{ width: 220 }}
-            placeholder="Chọn xe"
-            value={selectedVehicle}
-            onChange={setSelectedVehicle}
-            options={vehicleOptions}
-          />
-        </Col>
-        <Col>
-          <Space>
-            <Button
-              type={statusFilter === "PENDING" ? "primary" : "default"}
-              onClick={() => setStatusFilter("PENDING")}
-            >
-              Đang mở ({statusCount.PENDING})
-            </Button>
-            <Button
-              type={statusFilter === "APPROVED" ? "primary" : "default"}
-              onClick={() => setStatusFilter("APPROVED")}
-            >
-              Đã duyệt ({statusCount.APPROVED})
-            </Button>
-            <Button
-              type={statusFilter === "REJECTED" ? "primary" : "default"}
-              onClick={() => setStatusFilter("REJECTED")}
-            >
-              Từ chối ({statusCount.REJECTED})
-            </Button>
-          </Space>
-        </Col>
-      </Row>
+      {/* Bộ lọc trong Card */}
+      <Card style={{ marginBottom: 24 }}>
+
+        <Row gutter={16} align="middle">
+          <Col>
+            <Select
+              style={{ width: 220 }}
+              placeholder="Chọn xe"
+              value={selectedVehicle}
+              onChange={setSelectedVehicle}
+              options={vehicleOptions}
+            />
+          </Col>
+          <Col flex="auto">
+            <Space wrap>
+              <Button
+                type={statusFilter === "PENDING" ? "primary" : "default"}
+                onClick={() => setStatusFilter("PENDING")}
+              >
+                Đang mở ({statusCount.PENDING})
+              </Button>
+              <Button
+                type={statusFilter === "APPROVED" ? "primary" : "default"}
+                onClick={() => setStatusFilter("APPROVED")}
+              >
+                Đã duyệt ({statusCount.APPROVED})
+              </Button>
+              <Button
+                type={statusFilter === "REJECTED" ? "primary" : "default"}
+                onClick={() => setStatusFilter("REJECTED")}
+              >
+                Từ chối ({statusCount.REJECTED})
+              </Button>
+            </Space>
+          </Col>
+        </Row>
+      </Card>
+
 
       {/* Danh sách topic */}
       <Spin spinning={loading}>
@@ -230,7 +234,6 @@ const handleCastVote = async (agree) => {
                         {topic.title}
                       </Title>
 
-                      {/* Xe trong khung */}
                       <Tag color={getStatusColor(topic.status)}>
                         {topic.status}
                       </Tag>

@@ -1,8 +1,4 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { App as AntdApp } from "antd";
 
 // ===== Layouts =====
@@ -34,6 +30,7 @@ import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
+
 
 import AdminVoteListPage from "./pages/admin/VotesManagement/AdminVoteListPage";
 import AdminCreateTopicPage from "./pages/admin/VotesManagement/AdminCreateTopicPage";
@@ -102,7 +99,6 @@ const router = createBrowserRouter([
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
-// ===== App =====
 function App() {
   return (
     <AntdApp>
