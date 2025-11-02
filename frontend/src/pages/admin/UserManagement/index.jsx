@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Modal, Form, Input, Select, Card, Space, Tag, Tooltip, Row, Col, Divider } from "antd";
-import { CrownOutlined, TeamOutlined, EditOutlined, DeleteOutlined, UserOutlined, AuditOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import { Table, Button, Modal, Form, Input, Select, Card, Space, Tag, Tooltip, Row, message, Col, Divider } from "antd";
+import { CrownOutlined, TeamOutlined, UpCircleOutlined, EditOutlined, DeleteOutlined, UserOutlined, AuditOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import userApi from "../../../api/userApi";
 import { App } from "antd";
 
@@ -26,7 +26,7 @@ const UserManagement = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
 
-  const { message } = App.useApp();
+  const { notification } = App.useApp();
 
 
   const base = "https://vallate-enzootically-sterling.ngrok-free.dev/";
@@ -72,17 +72,26 @@ const UserManagement = () => {
     });
   };
 
-  const handleUpdateSubmit = async () => {
+  const handleLevelUpSubmit = async () => {
     try {
-      const values = await updateForm.validateFields();
-      await userApi.update(editingUser.id, values);
-      message.success("Cập nhật người dùng thành công!");
+      const email = editingUser.email;
+      await userApi.levelUpToStaff(email);
+
+      notification.success({
+        message: "Thành công",
+        description: `Đã thăng cấp ${email} lên STAFF thành công!`,
+        placement: "topRight",
+      });
+
       setUpdateModalVisible(false);
-      updateForm.resetFields();
       fetchUsers();
     } catch (error) {
-      message.error("Cập nhật người dùng thất bại!");
-      console.error("Error updating user:", error);
+      notification.error({
+        message: "Thất bại",
+        description: "Không thể thăng cấp người dùng này!",
+        placement: "topRight",
+      });
+      console.error("Error upgrading user:", error);
     }
   };
 
@@ -94,11 +103,21 @@ const UserManagement = () => {
   const confirmDelete = async () => {
     try {
       await userApi.delete(deletingUser.id);
-      message.success("Xóa người dùng thành công!");
+
+      notification.success({
+        message: "Xóa thành công",
+        description: `Người dùng ${deletingUser.email} đã được xóa khỏi hệ thống.`,
+        placement: "topRight",
+      });
+
       setDeleteModalVisible(false);
       fetchUsers();
     } catch (error) {
-      message.error("Xóa người dùng thất bại!");
+      notification.error({
+        message: "Xóa thất bại",
+        description: "Không thể xóa người dùng. Vui lòng thử lại sau!",
+        placement: "topRight",
+      });
       console.error("Error deleting user:", error);
     }
   };
@@ -119,18 +138,30 @@ const UserManagement = () => {
     } else setGplxPreview(null);
   };
 
+  // Xác thực USER
   const handleVerify = async (approved) => {
     if (!viewingUser) return;
+
     try {
       await userApi.verifyUser(viewingUser.id, approved, verifyNote);
-      message.success(
-        approved ? "Đã duyệt người dùng thành công!" : "Đã từ chối xác minh!"
-      );
+
+      notification.success({
+        message: approved ? "Duyệt thành công" : "Từ chối thành công",
+        description: approved
+          ? `Người dùng ${viewingUser.email} đã được xác minh thành công!`
+          : `Đã từ chối xác minh người dùng ${viewingUser.email}.`,
+        placement: "topRight",
+      });
+
       setViewModalVisible(false);
       setVerifyNote("");
       fetchUsers();
     } catch (error) {
-      message.error("Xác minh người dùng thất bại!");
+      notification.error({
+        message: "Lỗi xác minh",
+        description: "Không thể xác minh người dùng, vui lòng thử lại!",
+        placement: "topRight",
+      });
       console.error("Error verifying user:", error);
     }
   };
@@ -223,10 +254,10 @@ const UserManagement = () => {
       width: 140,
       render: (_, record) => (
         <Space>
-          <Tooltip title="Chỉnh sửa">
+          <Tooltip title="Thăng Cấp Staff">
             <Button
               type="link"
-              icon={<EditOutlined />}
+              icon={<UpCircleOutlined />}
               onClick={() => handleEditUser(record)}
             />
           </Tooltip>
@@ -413,51 +444,21 @@ const UserManagement = () => {
         )}
       </Modal>
 
-      {/* Update Modal */}
+      {/* Xác nhận thăng cấp Staff */}
       <Modal
-        title="Chỉnh sửa người dùng"
+        title="Xác nhận thăng cấp nhân viên"
         open={updateModalVisible}
-        onOk={handleUpdateSubmit}
+        onOk={handleLevelUpSubmit}
         onCancel={() => setUpdateModalVisible(false)}
-        okText="Cập nhật"
+        okText="Xác nhận"
         cancelText="Hủy"
       >
-        <Form form={updateForm} layout="vertical">
-          <Form.Item
-            name="fullName"
-            label="Tên đầy đủ"
-            rules={[{ required: true, message: "Vui lòng nhập tên đầy đủ!" }]}
-          >
-            <Input placeholder="Nhập tên đầy đủ" />
-          </Form.Item>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[
-              { required: true, message: "Vui lòng nhập email!" },
-              { type: "email", message: "Email không hợp lệ!" },
-            ]}
-          >
-            <Input placeholder="Nhập email" />
-          </Form.Item>
-          <Form.Item name="phone" label="Số điện thoại">
-            <Input placeholder="Nhập số điện thoại" />
-          </Form.Item>
-          <Form.Item
-            name="role"
-            label="Vai trò"
-            rules={[{ required: true, message: "Vui lòng chọn vai trò!" }]}
-          >
-            <Select placeholder="Chọn vai trò">
-              {roleOptions.map((option) => (
-                <Select.Option key={option.value} value={option.value}>
-                  {option.label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
-        </Form>
+        <p>
+          Bạn có chắc chắn muốn thăng cấp người dùng{" "}
+          <strong>{editingUser?.email}</strong> lên <b>STAFF</b> không?
+        </p>
       </Modal>
+
 
       {/* Delete Modal */}
       <Modal

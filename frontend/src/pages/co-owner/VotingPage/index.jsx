@@ -5,6 +5,7 @@ import { Card, Row, Col, Select, Button, Tag, Typography, Divider, Space, Modal,
 import { UserOutlined, DollarOutlined, CarOutlined, LikeOutlined, DislikeOutlined, EyeOutlined } from "@ant-design/icons";
 import voteApi from "../../../api/voteApi";
 import dayjs from "dayjs";
+import "./style.scss";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -99,7 +100,6 @@ const VoteDashboard = () => {
     }
   };
 
-
   // filter và status
   const vehicleOptions = [...new Set(topics.map((t) => t.vehicleName))].map(
     (v) => ({ label: v, value: v })
@@ -152,7 +152,7 @@ const VoteDashboard = () => {
     <div style={{ padding: 24 }}>
 
       {/* Bộ lọc trong Card */}
-      <Card style={{ marginBottom: 24 }}>
+     <Card className="vote-filter-card" style={{ marginBottom: 24 }}>
 
         <Row gutter={16} align="middle">
           <Col>
