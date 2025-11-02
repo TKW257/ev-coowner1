@@ -3,11 +3,7 @@ import axiosClient from "./axiosClient";
 const contractApi = {
   // Tạo contract mới (dành cho ADMIN)
   create(data) {
-    // Kiểm tra nếu data là FormData thì set header multipart/form-data
-    const config = data instanceof FormData
-      ? { headers: { "Content-Type": "multipart/form-data" } }
-      : {};
-    return axiosClient.post("/contracts/createContract", data, config);
+    return axiosClient.post("/contracts/createContract", data);
   },
 
   // Lấy tất cả contracts (dành cho ADMIN)
