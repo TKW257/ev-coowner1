@@ -1,30 +1,22 @@
 import React from "react";
 import { Menu } from "antd";
-import {
-  HomeOutlined,
-  CalendarOutlined,
-  BookOutlined,
-  DashboardOutlined,
-  FileTextOutlined,
-  CheckCircleOutlined,
-  LikeOutlined,
-  CarOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
+import { HomeOutlined, CalendarOutlined, FileDoneOutlined, DashboardOutlined, FileTextOutlined, PieChartOutlined, CarOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../../features/userSlice";
 import logoFull from "../../assets/logo_main.png";
 import "./style.scss";
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const currentUser = useSelector((state) => state.user.current);
   const role = currentUser?.role || "USER";
 
   let menuItems = [];
 
-  if (role === "STAFF" || role === "ADMIN") {
+  if (role === "ADMIN") {
     menuItems = [
       {
         key: "/admin",
@@ -39,23 +31,22 @@ const Sidebar = () => {
       {
         key: "/admin/vehicles",
         icon: <CarOutlined />,
-        label: <Link to="/admin/vehicles">Quản Lý Xe</Link>,
-      },
-
-      {
-        key: "/admin/vote",
-        icon: <LikeOutlined />,
-        label: <Link to="/admin/vote">Bình Chọn</Link>,
+        label: <Link to="/admin/vehicles">Quản Lý Phương Tiện</Link>,
       },
       {
         key: "/admin/bookingmanage",
-        icon: <BookOutlined />,
+        icon: <CalendarOutlined />,
         label: <Link to="/admin/bookingmanage">Quản Lý Đặt Xe</Link>,
       },
       {
         key: "/admin/staffchecking",
-        icon: <CheckCircleOutlined />,
+        icon: <FileDoneOutlined />,
         label: <Link to="/admin/staffchecking">Biên bản giao nhận xe</Link>,
+      },
+      {
+        key: "/admin/vote",
+        icon: <PieChartOutlined />,
+        label: <Link to="/admin/vote">Quản Lý Bình Chọn</Link>,
       },
       {
         key: "/admin/invoice",
@@ -76,23 +67,37 @@ const Sidebar = () => {
         label: <Link to="/owner/bookingtracking">Lịch Đặt Xe</Link>,
       },
       {
+        key: "/owner/vote",
+        icon: <PieChartOutlined />,
+        label: <Link to="/owner/vote">Bình Chọn</Link>,
+      },
+      {
         key: "/owner/invoice",
         icon: <FileTextOutlined />,
         label: <Link to="/owner/invoice">Thanh Toán</Link>,
       },
-      {
-        key: "/owner/vote",
-        icon: <LikeOutlined />,
-        label: <Link to="/owner/vote">Bình Chọn</Link>,
-      },
-      {
-        key: "/owner/profile",
-        icon: <UserOutlined />,
-        label: <Link to="/owner/profile">Người dùng</Link>,
-      },
-
     ];
   }
+
+  const footerItems = [
+    {
+      type: "divider",
+    },
+    {
+      key: "/owner/profile",
+      icon: <UserOutlined />,
+      label: <Link to="/owner/profile">Hồ Sơ Người Dùng</Link>,
+    },
+    {
+      key: "logout",
+      icon: <LogoutOutlined />,
+      label: "Đăng Xuất",
+      onClick: () => {
+        dispatch(logout());
+        navigate("/login");
+      },
+    },
+  ];
 
   return (
     <div className="owner-sidebar">
@@ -109,7 +114,24 @@ const Sidebar = () => {
           items={menuItems}
         />
       </div>
+
+      <div className="menu-footer">
+        <Menu
+          mode="inline"
+          theme="dark"
+          selectedKeys={[]}
+          className="menu footer-menu"
+          items={footerItems}
+          onClick={({ key }) => {
+            if (key === "logout") {
+              dispatch(logout());
+              navigate("guest/login");
+            }
+          }}
+        />
+      </div>
     </div>
+
   );
 };
 

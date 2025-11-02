@@ -28,8 +28,9 @@ const DashboardHeader = ({ children }) => {
 
   const handleGoToDashboard = () => {
     if (role === "STAFF") navigate("/admin");
+    else if (role == "ADMIN") navigate("/admin")
     else if (role === "USER") navigate("/owner/mycar");
-    else navigate("/user/dashboard");
+    else navigate("/");
   };
 
   const userMenu = {

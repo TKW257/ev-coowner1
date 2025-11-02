@@ -36,8 +36,11 @@ const bookingApi = {
 
   // STAFF CHECKING API
   confirmStaffChecking(id, data) {
-    return axiosClient.post(`/staff-checkings/${id}/confirm`, data);
-  },
+  return axiosClient.post(`/staff-checkings/${id}/confirm`, data, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+},
+
 
   createStaffChecking(data) {
   return axiosClient.post("/staff-checkings/createStaffChecking", data, {

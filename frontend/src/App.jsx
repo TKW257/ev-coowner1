@@ -1,8 +1,4 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { App as AntdApp } from "antd";
 
 // ===== Layouts =====
@@ -24,7 +20,7 @@ import BookingPage from "./pages/co-owner/BookingPage";
 import BookingTrackingPage from "./pages/co-owner/BookingTrackingPage"
 import InvoicePage from "./pages/co-owner/InvoicePage";
 import SuccessPage from "./pages/co-owner/SucessPage";
-import VotingtPage from "./pages/co-owner/VotingPage";
+import VotingPage from "./pages/co-owner/VotingPage";
 import ProfilePage from "./pages/co-owner/ProfilePage";
 
 // ===== Admin Pages =====
@@ -34,6 +30,7 @@ import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
+
 
 import AdminVoteListPage from "./pages/admin/VotesManagement/AdminVoteListPage";
 import AdminCreateTopicPage from "./pages/admin/VotesManagement/AdminCreateTopicPage";
@@ -71,7 +68,7 @@ const router = createBrowserRouter([
       { path: "carbooking", element: <BookingPage /> },
       { path: "invoice", element: <InvoicePage /> },
       { path: "success", element: <SuccessPage /> },
-      { path: "vote", element: <VotingtPage /> },
+      { path: "vote", element: <VotingPage /> },
     ],
   },
 
@@ -102,7 +99,6 @@ const router = createBrowserRouter([
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
-// ===== App =====
 function App() {
   return (
     <AntdApp>

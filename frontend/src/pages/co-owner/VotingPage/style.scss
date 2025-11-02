@@ -1,0 +1,55 @@
+.vote-filter-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f6ffed, #ffffff);
+
+  .ant-row {
+    align-items: center;
+  }
+
+  .ant-select {
+    .ant-select-selector {
+      border-radius: 8px;
+      border-color: #52c41a;
+      transition: all 0.3s ease;
+
+      &:hover,
+      &:focus {
+        border-color: #389e0d;
+        box-shadow: 0 0 4px rgba(82, 196, 26, 0.3);
+      }
+    }
+  }
+
+  .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &.ant-btn-primary {
+      background: #52c41a;
+      border-color: #52c41a;
+
+      &:hover {
+        background: #389e0d;
+        border-color: #389e0d;
+      }
+    }
+
+    &.ant-btn-default {
+      color: #52c41a;
+      border-color: #52c41a;
+
+      &:hover {
+        color: #fff;
+        background: #52c41a;
+        border-color: #52c41a;
+      }
+    }
+  }
+
+  .ant-space {
+    gap: 8px !important;
+  }
+}

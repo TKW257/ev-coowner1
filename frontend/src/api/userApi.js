@@ -11,22 +11,35 @@ const userApi = {
   },
 
   getProfile() {
-    const url = '/users/me';
-    return axiosClient.get(url);
+    return axiosClient.get("/users/me");
   },
 
-  update(id, data) {
-    return axiosClient.put(`/users/${id}`, data);
+  update(data) {
+    return axiosClient.put("/users/update", data);
   },
-
 
   getAll() {
     return axiosClient.get("/users/viewAllUser");
   },
 
   delete(id) {
-    return axiosClient.delete(`/users/${id}`);
+    return axiosClient.delete(`/users/delete/${id}`);
   },
+
+  uploadDocuments(id, formData) {
+    return axiosClient.post(`/users/${id}/upload-documents`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+  },
+
+  verifyUser(userId, approved, note) {
+    const params = new URLSearchParams({ approved, note });
+    return axiosClient.post(`/users/${userId}/verify?${params.toString()}`);
+  },
+
+  levelUpToStaff(email) {
+    return axiosClient.post(`/users/${email}/upLevelToStaff`);
+  }
 };
 
 export default userApi;
