@@ -1,20 +1,8 @@
 import React, { useState, useEffect } from "react";
-import {
-  Table,
-  Button,
-  Modal,
-  Form,
-  Input,
-  InputNumber,
-  Select,
-  message,
-  Space,
-  Tag,
-  Descriptions,
-  Tooltip
-} from "antd";
-import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Table, Button, Modal, Form, Input, InputNumber, Select, message, Space, Tag, Descriptions, Tooltip, Upload } from "antd";
+import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import vehiclesApi from "../../../api/vehiclesApi";
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const VehicleManagement = () => {
   const [vehicles, setVehicles] = useState([]);
@@ -29,7 +17,6 @@ const VehicleManagement = () => {
   const [form] = Form.useForm();
   const [updateForm] = Form.useForm();
 
-  // Vehicle status options
   const vehicleStatusOptions = [
     { value: "Available", label: "Available" },
     { value: "Unavailable", label: "Unavailable" },
@@ -73,6 +60,7 @@ const VehicleManagement = () => {
     }
   };
 
+  // -------------------- CREATE --------------------
   const handleAddVehicle = () => {
     setModalVisible(true);
     form.resetFields();
@@ -81,17 +69,20 @@ const VehicleManagement = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
-      const response = await vehiclesApi.createVehicle(values);
-      
-      // Xử lý response từ API
-      if (response) {
-        message.success("Thêm xe thành công!");
-        setModalVisible(false);
-        form.resetFields();
-        fetchVehicles(); // Refresh danh sách
-      } else {
-        message.warning("Phản hồi từ server không hợp lệ");
+      const formData = new FormData();
+
+      Object.entries(values).forEach(([key, value]) => {
+        if (key !== "imageFile") formData.append(key, value);
+      });
+
+      if (values.imageFile?.[0]?.originFileObj) {
+        formData.append("imageFile", values.imageFile[0].originFileObj);
       }
+
+      await vehiclesApi.createVehicle(formData);
+      message.success("Thêm xe thành công!");
+      setModalVisible(false);
+      fetchVehicles();
     } catch (error) {
       console.error("Error creating vehicle:", error);
       
@@ -116,6 +107,7 @@ const VehicleManagement = () => {
     }
   };
 
+  // -------------------- DETAILS --------------------
   const handleViewDetails = (vehicle) => {
     setSelectedVehicle(vehicle);
     setDetailModalVisible(true);
@@ -126,6 +118,7 @@ const VehicleManagement = () => {
     setSelectedVehicle(null);
   };
 
+  // -------------------- UPDATE --------------------
   const handleEditVehicle = (vehicle) => {
     setEditingVehicle(vehicle);
     setUpdateModalVisible(true);
@@ -148,7 +141,6 @@ const VehicleManagement = () => {
     });
   };
 
-
   const handleCloseUpdateModal = () => {
     setUpdateModalVisible(false);
     setEditingVehicle(null);
@@ -158,48 +150,31 @@ const VehicleManagement = () => {
   const handleUpdateSubmit = async () => {
     try {
       const values = await updateForm.validateFields();
-      
-      if (!editingVehicle?.vehicleId && !editingVehicle?.id) {
-        message.error("Không tìm thấy ID xe để cập nhật!");
-        return;
+
+      const formData = new FormData();
+      Object.entries(values).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value);
+        }
+      });
+
+      // Nếu người dùng chọn ảnh mới (sẽ là fileList)
+      if (values.imageFile?.[0]?.originFileObj) {
+        formData.append("imageFile", values.imageFile[0].originFileObj);
       }
 
-      const vehicleId = editingVehicle.vehicleId ?? editingVehicle.id;
-      const response = await vehiclesApi.updateVehicle(vehicleId, values);
+      await vehiclesApi.updateVehicle(editingVehicle.vehicleId, formData);
 
-      // Xử lý response từ API
-      if (response || response === undefined) { // Một số API không trả về data khi thành công
-        message.success("Cập nhật xe thành công!");
-        handleCloseUpdateModal();
-        fetchVehicles();
-      } else {
-        message.warning("Phản hồi từ server không hợp lệ");
-      }
+      message.success("Cập nhật xe thành công!");
+      handleCloseUpdateModal();
+      fetchVehicles();
     } catch (error) {
       console.error("Error updating vehicle:", error);
-      
-      // Xử lý lỗi chi tiết
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          "Không xác định được lỗi";
-      
-      // Kiểm tra các lỗi cụ thể
-      if (error.response?.status === 404) {
-        message.error("Không tìm thấy xe để cập nhật!");
-      } else if (error.response?.status === 400) {
-        message.error(`Dữ liệu không hợp lệ: ${errorMessage}`);
-      } else if (error.response?.status === 401) {
-        message.error("Bạn không có quyền thực hiện thao tác này!");
-      } else if (error.response?.status === 403) {
-        message.error("Không có quyền truy cập!");
-      } else {
-        message.error(`Không thể cập nhật xe! ${errorMessage}`);
-      }
+      message.error("Không thể cập nhật xe!");
     }
   };
 
-
+  // -------------------- DELETE --------------------
   const handleDeleteVehicle = (vehicle) => {
     setDeletingVehicle(vehicle);
     setDeleteModalVisible(true);
@@ -218,39 +193,23 @@ const VehicleManagement = () => {
         message.error("Không tìm thấy ID xe để xóa!");
         return;
       }
-
-      const response = await vehiclesApi.deleteVehicle(vehicleId);
-      
-      // Xử lý response từ API
-      // Một số API không trả về data khi xóa thành công (status 204)
+      await vehiclesApi.deleteVehicle(deletingVehicle.vehicleId);
       message.success("Xóa xe thành công!");
       setDeleteModalVisible(false);
-      setDeletingVehicle(null);
       fetchVehicles();
     } catch (error) {
       console.error("Error deleting vehicle:", error);
-      
-      // Xử lý lỗi chi tiết
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          "Không xác định được lỗi";
-      
-      // Kiểm tra các lỗi cụ thể
-      if (error.response?.status === 404) {
-        message.error("Không tìm thấy xe để xóa!");
-      } else if (error.response?.status === 400) {
-        message.error(`Dữ liệu không hợp lệ: ${errorMessage}`);
-      } else if (error.response?.status === 401) {
-        message.error("Bạn không có quyền thực hiện thao tác này!");
-      } else if (error.response?.status === 403) {
-        message.error("Không có quyền truy cập!");
-      } else if (error.response?.status === 409) {
-        message.error(`Không thể xóa xe vì đang được sử dụng: ${errorMessage}`);
-      } else {
-        message.error(`Không thể xóa xe! ${errorMessage}`);
-      }
+      message.error("Không thể xóa xe!");
     }
+  };
+
+  // -------------------- TABLE --------------------
+
+  const vehicleStatusColors = {
+    AVAILABLE: "green",
+    UNAVAILABLE: "red",
+    MAINTENANCE: "orange",
+
   };
 
   const columns = [
@@ -258,58 +217,48 @@ const VehicleManagement = () => {
       title: "ID",
       dataIndex: "vehicleId",
       key: "vehicleId",
-      width: 80,
+      width: 70,
     },
     {
-      title: "Thương hiệu",
-      dataIndex: "brand",
-      key: "brand",
+      title: "Hình ảnh",
+      dataIndex: "imageUrl",
+      key: "imageUrl",
+      render: (imageUrl) => (
+        imageUrl ? (
+          <img
+            src={
+              imageUrl.startsWith("http")
+                ? imageUrl
+                : `${baseURL}/${imageUrl}`
+            }
+            alt="vehicle"
+            style={{ width: 200, height: 120, objectFit: "cover", borderRadius: 6 }}
+          />
+        ) : (
+          <span style={{ color: "#999" }}>Không có</span>
+        )
+      ),
     },
-    {
-      title: "Mẫu xe",
-      dataIndex: "model",
-      key: "model",
-    },
-    {
-      title: "Biển số",
-      dataIndex: "plateNumber",
-      key: "plateNumber",
-    },
-    {
-      title: "Màu sắc",
-      dataIndex: "color",
-      key: "color",
-    },
-    {
-      title: "Năm sản xuất",
-      dataIndex: "year",
-      key: "year",
-    },
-    {
-      title: "Dung lượng pin (kWh)",
-      dataIndex: "batteryCapacityKwh",
-      key: "batteryCapacityKwh",
-      render: (value) => value ? `${value} kWh` : '-',
-    },
-    {
-      title: "Số chỗ",
-      dataIndex: "seat",
-      key: "seat",
-    },
+    { title: "Thương hiệu", dataIndex: "brand", key: "brand" },
+    { title: "Mẫu xe", dataIndex: "model", key: "model" },
+    { title: "Biển số", dataIndex: "plateNumber", key: "plateNumber" },
     {
       title: "Giá thuê",
       dataIndex: "price",
       key: "price",
-      render: (v) => v?.toLocaleString() + " VND"
+      render: (v) => (v ? v.toLocaleString() + " VND" : "-"),
     },
-
     {
       title: "Trạng thái",
       dataIndex: "status",
       key: "status",
       render: (status) => {
-        const color = status === "Available" ? "green" :
-          status === "Unavailable" ? "red" : "orange";
+        const color =
+          status === "Available"
+            ? "green"
+            : status === "Unavailable"
+              ? "red"
+              : "orange";
         return <Tag color={color}>{status}</Tag>;
       },
     },
@@ -381,9 +330,9 @@ const VehicleManagement = () => {
           <Form.Item
             name="brand"
             label="Thương hiệu"
-            rules={[{ required: true, message: 'Vui lòng nhập thương hiệu!' }]}
+            rules={[{ required: true, message: "Vui lòng chọn thương hiệu!" }]}
           >
-            <Input placeholder="Nhập thương hiệu xe" />
+            <Input />
           </Form.Item>
 
           <Form.Item
@@ -477,8 +426,6 @@ const VehicleManagement = () => {
             />
           </Form.Item>
 
-
-
           <Form.Item
             name="status"
             label="Trạng thái"
@@ -505,11 +452,20 @@ const VehicleManagement = () => {
           </Form.Item>
 
           <Form.Item
-            name="imageUrl"
-            label="URL hình ảnh"
+            name="imageFile"
+            label="Hình ảnh xe"
+            valuePropName="fileList"
+            getValueFromEvent={(e) => e?.fileList}
+            rules={[{ required: true, message: "Vui lòng chọn hình ảnh!" }]}
           >
-            <Input placeholder="Nhập URL hình ảnh (tùy chọn)" />
+            <Upload
+              listType="picture"
+              beforeUpload={() => false} // không upload tự động
+            >
+              <Button icon={<UploadOutlined />}>Chọn ảnh</Button>
+            </Upload>
           </Form.Item>
+
         </Form>
       </Modal>
 
@@ -530,14 +486,13 @@ const VehicleManagement = () => {
             <Descriptions.Item label="ID" span={1}>
               {selectedVehicle.vehicleId}
             </Descriptions.Item>
+
             <Descriptions.Item label="Trạng thái" span={1}>
-              <Tag color={
-                selectedVehicle.status === "Available" ? "green" :
-                  selectedVehicle.status === "Unavailable" ? "red" : "orange"
-              }>
+              <Tag color={vehicleStatusColors[selectedVehicle.status] || "blue"}>
                 {selectedVehicle.status}
               </Tag>
             </Descriptions.Item>
+
             <Descriptions.Item label="Thương hiệu" span={1}>
               {selectedVehicle.brand || '-'}
             </Descriptions.Item>
@@ -553,26 +508,47 @@ const VehicleManagement = () => {
             <Descriptions.Item label="Năm sản xuất" span={1}>
               {selectedVehicle.year || '-'}
             </Descriptions.Item>
+            <Descriptions.Item label="Số chỗ" span={1}>
+              {selectedVehicle.seat || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Giá thuê" span={1}>
+              {selectedVehicle.price !== null ? `${selectedVehicle.price} VND` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Phí sạc / 1% pin" span={1}>
+              {selectedVehicle.feeChargingPer1PercentUsed !== null ? `${selectedVehicle.feeChargingPer1PercentUsed} VND` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Phí vượt km" span={1}>
+              {selectedVehicle.feeOverKm !== null ? `${selectedVehicle.feeOverKm} VND` : '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label="Vận hành / tháng / chia sẻ" span={1}>
+              {selectedVehicle.operationPerMonthPerShare !== null ? `${selectedVehicle.operationPerMonthPerShare} VND` : '-'}
+            </Descriptions.Item>
             <Descriptions.Item label="Dung lượng pin (kWh)" span={1}>
-              {selectedVehicle.batteryCapacityKwh ? `${selectedVehicle.batteryCapacityKwh} kWh` : '-'}
+              {selectedVehicle.batteryCapacityKwh !== null ? `${selectedVehicle.batteryCapacityKwh} kWh` : '-'}
             </Descriptions.Item>
             <Descriptions.Item label="Mô tả" span={2}>
               {selectedVehicle.description || 'Không có mô tả'}
             </Descriptions.Item>
-            {selectedVehicle.imageUrl && (
-              <Descriptions.Item label="Hình ảnh" span={2}>
+
+            <Descriptions.Item label="Hình ảnh" span={2}>
+              {selectedVehicle.imageUrl ? (
                 <img
-                  src={selectedVehicle.imageUrl}
+                  src={
+                    selectedVehicle.imageUrl.startsWith("http")
+                      ? selectedVehicle.imageUrl
+                      : `${baseURL}/${selectedVehicle.imageUrl}`
+                  }
                   alt={`${selectedVehicle.brand} ${selectedVehicle.model}`}
-                  style={{ maxWidth: '100%', height: 'auto', maxHeight: '200px' }}
+                  style={{
+                    width: "100%",
+                    height: 200,
+                    objectFit: "cover",
+                    borderRadius: 6
+                  }}
                 />
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label="Ngày tạo" span={1}>
-              {selectedVehicle.createdAt ? new Date(selectedVehicle.createdAt).toLocaleString('vi-VN') : '-'}
-            </Descriptions.Item>
-            <Descriptions.Item label="Cập nhật lần cuối" span={1}>
-              {selectedVehicle.updatedAt ? new Date(selectedVehicle.updatedAt).toLocaleString('vi-VN') : '-'}
+              ) : (
+                <span style={{ color: "#999" }}>Không có</span>
+              )}
             </Descriptions.Item>
           </Descriptions>
         )}
@@ -589,7 +565,11 @@ const VehicleManagement = () => {
         width={600}
       >
         <Form form={updateForm} layout="vertical">
-          <Form.Item name="brand" label="Thương hiệu" rules={[{ required: true }]}>
+          <Form.Item
+            name="brand"
+            label="Thương hiệu"
+            rules={[{ required: true, message: "Vui lòng chọn thương hiệu!" }]}
+          >
             <Input />
           </Form.Item>
 
@@ -606,7 +586,7 @@ const VehicleManagement = () => {
           </Form.Item>
 
           <Form.Item name="seat" label="Số chỗ" rules={[{ required: true }]}>
-            <InputNumber style={{ width: '100%' }} min={1} />
+            <InputNumber style={{ width: '100%' }} min={0} />
           </Form.Item>
 
           <Form.Item name="price" label="Giá thuê" rules={[{ required: true }]}>
@@ -645,11 +625,20 @@ const VehicleManagement = () => {
             <Input.TextArea rows={3} />
           </Form.Item>
 
-          <Form.Item name="imageUrl" label="Hình ảnh (URL)">
-            <Input />
+          <Form.Item
+            name="imageFile"
+            label="Cập nhật hình ảnh (tùy chọn)"
+            valuePropName="fileList"
+            getValueFromEvent={(e) => e?.fileList}
+          >
+            <Upload
+              listType="picture"
+              beforeUpload={() => false}
+            >
+              <Button icon={<UploadOutlined />}>Chọn ảnh mới</Button>
+            </Upload>
           </Form.Item>
         </Form>
-
       </Modal>
 
       {/* Delete Confirmation Modal */}

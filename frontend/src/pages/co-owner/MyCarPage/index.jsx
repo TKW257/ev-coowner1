@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Row, Col, Tag, Typography, Button, Statistic } from "antd";
-import { ThunderboltOutlined,  DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined } from "@ant-design/icons";
+import { Card, Row, Col, Tag, Typography, Button, Statistic, Modal, Table, Spin } from "antd";
+import { ThunderboltOutlined, DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined, TeamOutlined } from "@ant-design/icons";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import "./style.scss";
 
@@ -12,8 +12,17 @@ const MyCars = () => {
   const [currentCarId, setCurrentCarId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fade, setFade] = useState(false);
+  const [groupModalVisible, setGroupModalVisible] = useState(false);
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [groupData, setGroupData] = useState([]);
   const navigate = useNavigate();
   const chosenCar = currentCarId ? carsObj[String(currentCarId)] : null;
+
+  const totalMembers = groupData.length;
+  const totalPercentage = groupData.reduce(
+    (sum, item) => sum + (item.totalSharePercentage || 0),
+    0
+  );
 
   useEffect(() => {
     const fetchMyVehicles = async () => {
@@ -48,6 +57,21 @@ const MyCars = () => {
     navigate(`/owner/carbooking/${car.vehicleId}`);
   };
 
+  // get group của tôi 
+  const handleOpenGroupModal = async (car) => {
+    setGroupModalVisible(true);
+    setGroupLoading(true);
+    try {
+      const res = await ownerShipsApi.getMyGroupOwnership(car.vehicleId);
+      const data = Array.isArray(res) ? res : res.data || [];
+      setGroupData(data);
+    } catch (err) {
+      console.error("❌ Lỗi khi tải nhóm sở hữu:", err);
+    } finally {
+      setGroupLoading(false);
+    }
+  };
+
   const handleChangeCar = (id) => {
     if (id === currentCarId) return;
     setFade(true);
@@ -56,6 +80,60 @@ const MyCars = () => {
       setFade(false);
     }, 300);
   };
+
+  const columns = [
+    {
+      title: "Thành viên",
+      dataIndex: "userName",
+      key: "userName",
+    },
+    {
+      title: "Tỷ lệ sở hữu (%)",
+      dataIndex: "totalSharePercentage",
+      key: "totalSharePercentage",
+      render: (v) => `${v}%`,
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "status",
+      key: "status",
+      render: (v) => (
+        <Tag
+          color={
+            v?.toLowerCase() === "active"
+              ? "green"
+              : v?.toLowerCase() === "inactive"
+                ? "default"
+                : "blue"
+          }
+        >
+          {v}
+        </Tag>
+      ),
+    },
+    {
+      title: "Ngày tham gia",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (v) => {
+        if (Array.isArray(v)) {
+          const [year, month, day, hour = 0, minute = 0, second = 0] = v;
+          const date = new Date(year, month - 1, day, hour, minute, second);
+          return date.toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          });
+        }
+        if (typeof v === "string" || v instanceof Date) {
+          return new Date(v).toLocaleDateString("vi-VN");
+        }
+        return "-";
+      },
+    }
+  ];
+
+
 
   if (!loading && Object.keys(carsObj).length === 0) {
     return (
@@ -105,7 +183,7 @@ const MyCars = () => {
                 <Text className="plate">
                   Biển số xe: {chosenCar.plateNumber}
                 </Text>
-                 <Text className="plate">
+                <Text className="plate">
                   Năm sản xuất: {chosenCar.year}
                 </Text>
                 <div>
@@ -126,21 +204,82 @@ const MyCars = () => {
               </div>
 
               <div className="right">
-                <div className="buttons-row">
+                <div className="buttons-row" style={{ marginBottom: "20px" }}>
                   <Button
+                    className="btn-book"
                     type="primary"
                     icon={<CalendarOutlined />}
                     onClick={() => handleBook(chosenCar)}
-                    disabled={
-                      chosenCar.vehicleStatus.toLowerCase() !== "available"
-                    }
+                    disabled={chosenCar.vehicleStatus.toLowerCase() !== "available"}
                   >
                     Đặt Lịch
+                  </Button>
+                </div>
+
+                <div className="buttons-row">
+                  <Button
+                    className="btn-group"
+                    icon={<TeamOutlined />}
+                    onClick={() => handleOpenGroupModal(chosenCar)}
+                  >
+                    Nhóm Của Tôi
                   </Button>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Modal nhóm sở hữu */}
+          <Modal
+            title={
+              chosenCar
+                ? `Nhóm sở hữu - ${chosenCar.brand} ${chosenCar.model}`
+                : "Nhóm sở hữu"
+            }
+            open={groupModalVisible}
+            onCancel={() => setGroupModalVisible(false)}
+            footer={null}
+            width={700}
+          >
+            {groupLoading ? (
+              <div style={{ textAlign: "center", padding: "40px" }}>
+                <Spin size="large" />
+              </div>
+            ) : (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: "16px",
+                    padding: "12px 16px",
+                    background: "#f5f5f5",
+                    borderRadius: "8px",
+                  }}
+                >
+                  <Text strong>
+                    <TeamOutlined style={{ marginRight: 8 }} />
+                    Tổng số thành viên:{" "}
+                    <span style={{ color: "#1890ff" }}>{totalMembers}</span>
+                  </Text>
+                  <Text strong>
+                    Tổng tỷ lệ sở hữu:{" "}
+                    <span style={{ color: totalPercentage === 100 ? "#52c41a" : "#faad14" }}>
+                      {totalPercentage}%
+                    </span>
+                  </Text>
+                </div>
+                <Table
+                  dataSource={groupData}
+                  columns={columns}
+                  rowKey="ownershipId"
+                  pagination={false}
+                />
+              </>
+            )}
+          </Modal>
+
 
           {/* Specs */}
           <div className="specs-row">
@@ -220,7 +359,7 @@ const MyCars = () => {
                     <span className="pct-number">
                       {chosenCar.totalSharePercentage}
                     </span>
-                   / 100  <PercentageOutlined /> 
+                    / 100  <PercentageOutlined />
                   </div>
                 </div>
               </Col>

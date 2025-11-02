@@ -85,7 +85,6 @@ const AdminDashboard = () => {
 
   return (
     <div style={{ padding: '24px' }}>
-      <Title level={2}>Admin Dashboard</Title>
       
       {loading ? (
         <div style={{ textAlign: 'center', padding: '50px' }}>

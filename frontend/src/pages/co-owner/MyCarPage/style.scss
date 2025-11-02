@@ -30,11 +30,9 @@
         justify-content: space-between;
         align-items: flex-end;
         padding: 22px;
-        background: linear-gradient(
-          180deg,
-          rgba(0, 0, 0, 0) 30%,
-          rgba(0, 0, 0, 0.55) 100%
-        );
+        background: linear-gradient(180deg,
+            rgba(0, 0, 0, 0) 30%,
+            rgba(0, 0, 0, 0.55) 100%);
 
         .left {
           color: #fff;
@@ -56,9 +54,9 @@
         .right {
           .buttons-row {
             display: flex;
-            gap: 10px;
+            gap: 20px;
 
-            button {
+            .btn-book {
               background-color: #52c41a !important;
               border-color: #52c41a !important;
               font-size: 1.1rem;
@@ -83,8 +81,36 @@
                 transform: none;
               }
             }
+
+            .btn-group {
+              background-color: #fa8c16 !important;
+              border-color: #fa8c16 !important;
+              font-size: 1.1rem;
+              color: white;
+              font-weight: 600;
+              padding: 12px 28px;
+              border-radius: 10px;
+              box-shadow: 0 6px 16px rgba(250, 140, 22, 0.3);
+              transition: all 0.25s ease;
+
+              &:hover {
+                background-color: #ffa940 !important;
+                border-color: #ffa940 !important;
+                transform: translateY(-2px) scale(1.05);
+                box-shadow: 0 10px 20px rgba(250, 140, 22, 0.4);
+              }
+
+              &:disabled {
+                background-color: #ffd591 !important;
+                border-color: #ffd591 !important;
+                color: #fff;
+                box-shadow: none;
+                transform: none;
+              }
+            }
           }
         }
+
       }
     }
 
@@ -172,11 +198,9 @@
           bottom: 0;
           left: 0;
           width: 100%;
-          background: linear-gradient(
-            to top,
-            rgba(0, 0, 0, 0.6),
-            transparent
-          );
+          background: linear-gradient(to top,
+              rgba(0, 0, 0, 0.6),
+              transparent);
           color: #fff;
           padding: 10px 12px;
           backdrop-filter: blur(2px);

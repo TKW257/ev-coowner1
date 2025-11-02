@@ -14,17 +14,22 @@ const vehiclesApi = {
     return axiosClient.get(`/vehicles/vehicle/${id}`);
   },
 
-  createVehicle(data) {
-    return axiosClient.post("/vehicles/createVehicle", data);
+  createVehicle(formData) {
+    return axiosClient.post("/vehicles/createVehicle", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
 
-  updateVehicle(id, data) {
-    return axiosClient.put(`/vehicles/${id}`, data);
+  updateVehicle(id, formData) {
+    return axiosClient.put(`/vehicles/update/${id}`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
   },
 
   deleteVehicle(id) {
-    return axiosClient.delete(`/vehicles/${id}`);
-  },
+    return axiosClient.delete(`/vehicles/delete/${id}`);
+  }
+
 };
 
 export default vehiclesApi;

@@ -1,8 +1,4 @@
-import {
-  createBrowserRouter,
-  RouterProvider,
-  Navigate,
-} from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom";
 import { App as AntdApp } from "antd";
 
 // ===== Layouts =====
@@ -104,7 +100,6 @@ const router = createBrowserRouter([
   { path: "*", element: <Navigate to="/" replace /> },
 ]);
 
-// ===== App =====
 function App() {
   return (
     <AntdApp>
