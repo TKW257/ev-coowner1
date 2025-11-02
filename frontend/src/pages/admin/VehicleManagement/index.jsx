@@ -150,11 +150,6 @@ const VehicleManagement = () => {
   const handleUpdateSubmit = async () => {
     try {
       const values = await updateForm.validateFields();
-      
-      if (!editingVehicle?.vehicleId && !editingVehicle?.id) {
-        message.error("Không tìm thấy ID xe để cập nhật!");
-        return;
-      }
 
       const formData = new FormData();
       Object.entries(values).forEach(([key, value]) => {
@@ -175,25 +170,7 @@ const VehicleManagement = () => {
       fetchVehicles();
     } catch (error) {
       console.error("Error updating vehicle:", error);
-      
-      // Xử lý lỗi chi tiết
-      const errorMessage = error.response?.data?.message || 
-                          error.response?.data?.error || 
-                          error.message || 
-                          "Không xác định được lỗi";
-      
-      // Kiểm tra các lỗi cụ thể
-      if (error.response?.status === 404) {
-        message.error("Không tìm thấy xe để cập nhật!");
-      } else if (error.response?.status === 400) {
-        message.error(`Dữ liệu không hợp lệ: ${errorMessage}`);
-      } else if (error.response?.status === 401) {
-        message.error("Bạn không có quyền thực hiện thao tác này!");
-      } else if (error.response?.status === 403) {
-        message.error("Không có quyền truy cập!");
-      } else {
-        message.error(`Không thể cập nhật xe! ${errorMessage}`);
-      }
+      message.error("Không thể cập nhật xe!");
     }
   };
 

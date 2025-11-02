@@ -30,6 +30,8 @@ import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
 import VehicleManagement from "./pages/admin/VehicleManagement";
 import UserManagement from "./pages/admin/UserManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
+import ContractManagement from "./pages/admin/ContractManagement";
+import OwnerContractManagement from "./pages/admin/OwnerContractManagement";
 
 
 import AdminVoteListPage from "./pages/admin/VotesManagement/AdminVoteListPage";
@@ -87,6 +89,8 @@ const router = createBrowserRouter([
       { path: "vehicles", element: <VehicleManagement /> },
       { path: "users", element: <UserManagement /> },
       { path: "invoice", element: <InvoiceManagement /> },
+      { path: "contracts", element: <ContractManagement /> },
+      { path: "owner-contracts", element: <OwnerContractManagement /> },
 
       // Votes Management
       { path: "vote", element: <AdminVoteListPage /> },

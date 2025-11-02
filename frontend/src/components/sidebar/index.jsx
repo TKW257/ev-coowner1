@@ -1,6 +1,19 @@
 import React from "react";
 import { Menu } from "antd";
-import { HomeOutlined, CalendarOutlined, FileDoneOutlined, DashboardOutlined, FileTextOutlined, PieChartOutlined, CarOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
+import {
+  HomeOutlined,
+  CalendarOutlined,
+  BookOutlined,
+  DashboardOutlined,
+  FileTextOutlined,
+  PieChartOutlined,
+  LogoutOutlined,
+  CheckCircleOutlined,
+  LikeOutlined,
+  CarOutlined,
+  UserOutlined,
+  FileDoneOutlined,
+} from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../features/userSlice";
@@ -52,6 +65,16 @@ const Sidebar = () => {
         key: "/admin/invoice",
         icon: <FileTextOutlined />,
         label: <Link to="/admin/invoice">Quản Lý Hóa Đơn</Link>,
+      },
+      {
+        key: "/admin/contracts",
+        icon: <FileDoneOutlined />,
+        label: <Link to="/admin/contracts">Quản Lý Hợp Đồng</Link>,
+      },
+      {
+        key: "/admin/owner-contracts",
+        icon: <FileTextOutlined />,
+        label: <Link to="/admin/owner-contracts">Quản Lý Owner Contract</Link>,
       },
     ];
   } else if (role === "USER") {
