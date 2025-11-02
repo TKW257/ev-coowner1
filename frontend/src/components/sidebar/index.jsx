@@ -10,6 +10,7 @@ import {
   LikeOutlined,
   CarOutlined,
   UserOutlined,
+  FileDoneOutlined,
 } from "@ant-design/icons";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -61,6 +62,11 @@ const Sidebar = () => {
         key: "/admin/invoice",
         icon: <FileTextOutlined />,
         label: <Link to="/admin/invoice">Quản Lý Hóa Đơn</Link>,
+      },
+      {
+        key: "/admin/contracts",
+        icon: <FileDoneOutlined />,
+        label: <Link to="/admin/contracts">Quản Lý Hợp Đồng</Link>,
       },
     ];
   } else if (role === "USER") {
