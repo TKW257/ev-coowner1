@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Table,
   Button,
   Modal,
   Form,
   Select,
+  InputNumber,
   message,
   Space,
   Tag,
@@ -14,9 +15,10 @@ import {
   Spin,
   Empty,
 } from "antd";
-import { PlusOutlined, EyeOutlined } from "@ant-design/icons";
+import { EyeOutlined, UserAddOutlined } from "@ant-design/icons";
 import ownerContractsApi from "../../../api/owner-contractsApi";
-import contractApi from "../../../api/contractApi";
+import userApi from "../../../api/userApi";
+import SignatureCanvas from "react-signature-canvas";
 
 const { Title } = Typography;
 
@@ -24,17 +26,18 @@ const BASE_URL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const OwnerContractManagement = () => {
   const [ownerContracts, setOwnerContracts] = useState([]);
-  const [contracts, setContracts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
-  const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [addUserModalVisible, setAddUserModalVisible] = useState(false);
   const [selectedOwnerContract, setSelectedOwnerContract] = useState(null);
-  const [selectedContractForCreate, setSelectedContractForCreate] = useState(null);
-  const [createForm] = Form.useForm();
+  const [addUserForm] = Form.useForm();
+  const adminSigPadRef = useRef(null);
+  const userSigPadRef = useRef(null);
 
   useEffect(() => {
     fetchOwnerContracts();
-    fetchApprovedContracts();
+    fetchApprovedUsers();
   }, []);
 
   /** Chuyển array ngày [YYYY,MM,DD] thành Date */
@@ -60,13 +63,14 @@ const OwnerContractManagement = () => {
     setLoading(true);
     try {
       const response = await ownerContractsApi.getAll();
+      console.log("📦 [API viewAllOwnerContract] Raw response:", response);
       let data = [];
       if (Array.isArray(response)) data = response;
       else if (response?.data && Array.isArray(response.data)) data = response.data;
       else if (response?.content && Array.isArray(response.content)) data = response.content;
+      
       setOwnerContracts(data);
-    } catch (error) {
-      console.error("Error fetching owner contracts:", error);
+    } catch {
       message.error("Không tải được danh sách Owner Contract!");
       setOwnerContracts([]);
     } finally {
@@ -74,20 +78,24 @@ const OwnerContractManagement = () => {
     }
   };
 
-  const fetchApprovedContracts = async () => {
+  const fetchApprovedUsers = async () => {
     try {
-      const response = await contractApi.getAll();
-      let data = [];
-      if (Array.isArray(response)) data = response;
-      else if (response?.data && Array.isArray(response.data)) data = response.data;
-      else if (response?.content && Array.isArray(response.content)) data = response.content;
-      const approved = data.filter((c) => c.status === "APPROVED");
-      setContracts(approved);
-    } catch (error) {
-      console.error("Error fetching contracts:", error);
-      setContracts([]);
+      const response = await userApi.getAll();
+      let usersData = [];
+      if (Array.isArray(response)) usersData = response;
+      else if (response?.data && Array.isArray(response.data)) usersData = response.data;
+      else if (response?.content && Array.isArray(response.content)) usersData = response.content;
+      
+      // Lọc chỉ lấy users đã APPROVED
+      const approvedUsers = usersData.filter(
+        (user) => user.verifyStatus === "APPROVED" && user.role === "USER"
+      );
+      setUsers(approvedUsers);
+    } catch {
+      setUsers([]);
     }
   };
+
 
   const handleViewDetails = (record) => {
     setSelectedOwnerContract(record);
@@ -99,35 +107,87 @@ const OwnerContractManagement = () => {
     setDetailModalVisible(false);
   };
 
-  const handleCreateOwnerContract = () => {
-    setCreateModalVisible(true);
-    createForm.resetFields();
-    setSelectedContractForCreate(null);
+  const handleAddUser = (record) => {
+    setSelectedOwnerContract(record);
+    setAddUserModalVisible(true);
+    addUserForm.resetFields();
+    // Xóa chữ ký
+    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+    if (userSigPadRef.current) userSigPadRef.current.clear();
   };
 
-  const handleCloseCreateModal = () => {
-    setCreateModalVisible(false);
-    createForm.resetFields();
-    setSelectedContractForCreate(null);
+  const handleCloseAddUserModal = () => {
+    setAddUserModalVisible(false);
+    setSelectedOwnerContract(null);
+    addUserForm.resetFields();
+    // Xóa chữ ký
+    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+    if (userSigPadRef.current) userSigPadRef.current.clear();
   };
 
-  const handleContractSelect = (contractId) => {
-    const selected = contracts.find(c => (c.contractId || c.id) === contractId);
-    setSelectedContractForCreate(selected || null);
-  };
-
-  const handleCreateSubmit = async () => {
+  const handleAddUserSubmit = async () => {
     try {
-      const values = await createForm.validateFields();
-      const data = { contractId: values.contractId };
-      await ownerContractsApi.create(data);
-      message.success("Tạo Owner Contract thành công!");
-      handleCloseCreateModal();
+      const values = await addUserForm.validateFields();
+      
+      // Lấy contractId từ ownerContract
+      const contractId = selectedOwnerContract?.contract_Id || 
+                        selectedOwnerContract?.contractId || 
+                        selectedOwnerContract?.contract?.contractId || 
+                        selectedOwnerContract?.contract?.id;
+      
+      if (!contractId) {
+        message.error("Không tìm thấy Contract ID!");
+        return;
+      }
+
+      if (!values.userId) {
+        message.error("Vui lòng chọn User!");
+        return;
+      }
+
+      if (!values.sharePercentage) {
+        message.error("Vui lòng nhập Share Percentage!");
+        return;
+      }
+
+      // Tạo FormData
+      const formData = new FormData();
+      formData.append("contractId", contractId.toString());
+      formData.append("userId", values.userId.toString());
+      formData.append("sharePercentage", values.sharePercentage.toString());
+      
+      // Lấy chữ ký admin từ Signature Canvas
+      const adminSigPad = adminSigPadRef.current;
+      if (adminSigPad && !adminSigPad.isEmpty()) {
+        const blob = await new Promise((resolve) => adminSigPad.getCanvas().toBlob(resolve));
+        if (blob) {
+          formData.append("adminSignature", blob, "admin_signature.png");
+        }
+      } else {
+        message.error("Vui lòng vẽ chữ ký Admin!");
+        return;
+      }
+      
+      // Lấy chữ ký user từ Signature Canvas
+      const userSigPad = userSigPadRef.current;
+      if (userSigPad && !userSigPad.isEmpty()) {
+        const blob = await new Promise((resolve) => userSigPad.getCanvas().toBlob(resolve));
+        if (blob) {
+          formData.append("userSignature", blob, "user_signature.png");
+        }
+      } else {
+        message.error("Vui lòng vẽ chữ ký User!");
+        return;
+      }
+
+      await ownerContractsApi.create(formData);
+      message.success("Thêm User vào Owner Contract thành công!");
+      handleCloseAddUserModal();
       fetchOwnerContracts();
-      fetchApprovedContracts();
+      fetchApprovedUsers();
     } catch (error) {
-      console.error("Error creating owner contract:", error);
-      message.error("Không thể tạo Owner Contract!");
+      const errorMessage = error.response?.data?.message || error.message || "Không thể thêm User!";
+      message.error(errorMessage);
     }
   };
 
@@ -145,53 +205,61 @@ const OwnerContractManagement = () => {
 
   const columns = [
     {
-      title: "Mã Owner Contract",
+      title: "Owner Contract ID",
       dataIndex: "ownerContractId",
       key: "ownerContractId",
+      width: 150,
       render: (id, record) => id || record.id || "-",
     },
     {
-      title: "Mã Contract",
-      key: "contract",
-      render: (_, record) => record.contract?.contractId || record.contractId || "-",
-    },
-    {
-      title: "Người ký (Chủ xe)",
-      key: "user",
+      title: "Họ và Tên",
+      key: "userFullName",
+      width: 200,
       render: (_, record) => {
-        const user = record.contract?.user || record.user;
-        return user?.fullName || user?.email || "-";
+        const user = record.user || record.contract?.user;
+        return user?.fullName || user?.full_name || "-";
       },
     },
     {
-      title: "Xe",
-      key: "vehicle",
+      title: "Email",
+      key: "userEmail",
+      width: 200,
       render: (_, record) => {
-        const v = record.contract?.vehicle || record.vehicle;
-        return v ? `${v.brand} ${v.model} (${v.plateNumber})` : "-";
+        const user = record.user || record.contract?.user;
+        return user?.email || "-";
       },
     },
     {
-      title: "% Sở hữu",
-      key: "salePercentage",
-      render: (_, record) => `${record.contract?.salePercentage || record.salePercentage || 0}%`,
+      title: "Số Điện Thoại",
+      key: "userPhone",
+      width: 150,
+      render: (_, record) => {
+        const user = record.user || record.contract?.user;
+        return user?.phone || "-";
+      },
     },
     {
-      title: "Ngày tạo",
-      dataIndex: "createdAt",
-      key: "createdAt",
-      render: (date) => {
-        const d = parseDate(date);
-        return d && !isNaN(d) ? d.toLocaleDateString("vi-VN") : "-";
+      title: "Share Percentage",
+      key: "sharePercentage",
+      width: 150,
+      render: (_, record) => {
+        const sharePercentage = record.sharePercentage || record.contract?.salePercentage || record.salePercentage;
+        return sharePercentage ? `${sharePercentage}%` : "-";
       },
     },
     {
       title: "Hành động",
       key: "action",
+      width: 150,
       render: (_, record) => (
-        <Tooltip title="Xem chi tiết">
-          <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewDetails(record)} />
-        </Tooltip>
+        <Space>
+          <Tooltip title="Xem chi tiết">
+            <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewDetails(record)} />
+          </Tooltip>
+          <Tooltip title="Thêm User">
+            <Button type="link" icon={<UserAddOutlined />} onClick={() => handleAddUser(record)} />
+          </Tooltip>
+        </Space>
       ),
     },
   ];
@@ -200,9 +268,6 @@ const OwnerContractManagement = () => {
     <div style={{ padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <Title level={2}>Quản Lý Owner Contract</Title>
-        <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateOwnerContract}>
-          Tạo Owner Contract
-        </Button>
       </div>
 
       {loading ? (
@@ -220,180 +285,221 @@ const OwnerContractManagement = () => {
 
       {/* 🔍 Modal chi tiết */}
       <Modal
-        title="Chi tiết Owner Contract"
-        open={detailModalVisible}
-        onCancel={handleCloseDetailModal}
-        footer={<Button onClick={handleCloseDetailModal}>Đóng</Button>}
-        width={900}
-      >
-        {selectedOwnerContract && (() => {
-          const contract = selectedOwnerContract.contract || {};
-          const user = contract.user || selectedOwnerContract.user;
-          const vehicle = contract.vehicle || selectedOwnerContract.vehicle;
+  title="Chi tiết Owner Contract"
+  open={detailModalVisible}
+  onCancel={handleCloseDetailModal}
+  footer={<Button onClick={handleCloseDetailModal}>Đóng</Button>}
+  width={900}
+>
+  {selectedOwnerContract && (() => {
+    const user = selectedOwnerContract.user;
+    const admin = selectedOwnerContract.admin;
+    const adminSig = buildUrl(selectedOwnerContract.adminSignature);
+    const userSig = buildUrl(selectedOwnerContract.userSignature);
 
-          const adminSig = buildUrl(contract.adminSignature);
-          const userSig = buildUrl(contract.userSignature);
+    return (
+      <Descriptions bordered column={2}>
+        <Descriptions.Item label="Mã Owner Contract">
+          {selectedOwnerContract.ownerContractId || "-"}
+        </Descriptions.Item>
 
-          return (
-            <Descriptions bordered column={2}>
-              <Descriptions.Item label="Mã Owner Contract">
-                {selectedOwnerContract.ownerContractId || selectedOwnerContract.id || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ngày tạo">
-                {parseDate(selectedOwnerContract.createdAt)?.toLocaleString("vi-VN") || "-"}
-              </Descriptions.Item>
+        <Descriptions.Item label="Mã Contract">
+          {selectedOwnerContract.contractId || selectedOwnerContract.contract_Id || selectedOwnerContract.contract?.contractId || selectedOwnerContract.contract?.id || "-"}
+        </Descriptions.Item>
 
-              <Descriptions.Item label="Mã Contract">
-                {contract.contractId || contract.id || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Trạng thái Contract">
-                {renderStatus(contract.status)}
-              </Descriptions.Item>
+        <Descriptions.Item label="Ngày tạo">
+          {parseDate(selectedOwnerContract.createdAt)?.toLocaleString("vi-VN") || "-"}
+        </Descriptions.Item>
 
-              <Descriptions.Item label="Người ký (Chủ xe)" span={2}>
-                {user ? user.fullName || user.email : "-"}
-              </Descriptions.Item>
+        <Descriptions.Item label="Trạng thái hợp đồng">
+          {renderStatus(selectedOwnerContract.contractStatus)}
+        </Descriptions.Item>
 
-              <Descriptions.Item label="Xe" span={2}>
-                {vehicle ? `${vehicle.brand} ${vehicle.model} (${vehicle.plateNumber})` : "-"}
-              </Descriptions.Item>
+        <Descriptions.Item label="% Sở hữu">
+          {selectedOwnerContract.sharePercentage
+            ? `${selectedOwnerContract.sharePercentage}%`
+            : "-"}
+        </Descriptions.Item>
 
-              <Descriptions.Item label="Màu sắc">{vehicle?.color || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Năm SX">{vehicle?.year || "-"}</Descriptions.Item>
-              <Descriptions.Item label="Giá/phần">
-                {contract.pricePerShare
-                  ? `${contract.pricePerShare.toLocaleString()} VND`
-                  : "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="% Sở hữu">
-                {contract.salePercentage ? `${contract.salePercentage}%` : "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ngày bắt đầu">
-                {parseDate(contract.startDate)?.toLocaleDateString("vi-VN") || "-"}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ngày kết thúc">
-                {parseDate(contract.endDate)?.toLocaleDateString("vi-VN") || "-"}
-              </Descriptions.Item>
+        <Descriptions.Item label="Chủ xe (User)" span={2}>
+          {user
+            ? `${user.fullName || "-"} (${user.email || "Không có email"})`
+            : "-"}
+        </Descriptions.Item>
 
-              <Descriptions.Item label="Chữ ký Admin">
-                {adminSig ? (
-                  <img
-                    src={adminSig}
-                    alt="Admin Signature"
-                    style={{ maxHeight: 100, border: "1px solid #ccc", borderRadius: 4 }}
-                  />
-                ) : (
-                  "Không có"
-                )}
-              </Descriptions.Item>
-              <Descriptions.Item label="Chữ ký User">
-                {userSig ? (
-                  <img
-                    src={userSig}
-                    alt="User Signature"
-                    style={{ maxHeight: 100, border: "1px solid #ccc", borderRadius: 4 }}
-                  />
-                ) : (
-                  "Không có"
-                )}
-              </Descriptions.Item>
-            </Descriptions>
-          );
-        })()}
-      </Modal>
+        <Descriptions.Item label="Số điện thoại (User)">
+          {user?.phone || "-"}
+        </Descriptions.Item>
 
-      {/* 🆕 Modal tạo mới */}
+        <Descriptions.Item label="Trạng thái xác thực (User)">
+          {user?.verifyStatus || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Admin duyệt" span={2}>
+          {admin
+            ? `${admin.fullName || "-"} (${admin.email || "Không có email"})`
+            : "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Số điện thoại (Admin)">
+          {admin?.phone || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Trạng thái xác thực (Admin)">
+          {admin?.verifyStatus || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Chữ ký Admin">
+          {adminSig ? (
+            <img
+              src={adminSig}
+              alt="Admin Signature"
+              style={{
+                maxHeight: 100,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+              }}
+            />
+          ) : (
+            "Không có"
+          )}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Chữ ký User">
+          {userSig ? (
+            <img
+              src={userSig}
+              alt="User Signature"
+              style={{
+                maxHeight: 100,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+              }}
+            />
+          ) : (
+            "Không có"
+          )}
+        </Descriptions.Item>
+      </Descriptions>
+    );
+  })()}
+</Modal>
+
+
+      {/* Modal thêm User vào Owner Contract */}
       <Modal
-        title="Tạo Owner Contract Mới"
-        open={createModalVisible}
-        onOk={handleCreateSubmit}
-        onCancel={handleCloseCreateModal}
-        okText="Tạo"
+        title="Thêm User vào Owner Contract"
+        open={addUserModalVisible}
+        onOk={handleAddUserSubmit}
+        onCancel={handleCloseAddUserModal}
+        okText="Thêm"
         cancelText="Hủy"
-        width={800}
+        width={700}
       >
-        <Form form={createForm} layout="vertical">
+        {selectedOwnerContract && (
+          <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
+            <Typography.Text strong>Owner Contract ID: </Typography.Text>
+            <Typography.Text>{selectedOwnerContract.ownerContractId || selectedOwnerContract.id}</Typography.Text>
+            <br />
+            <Typography.Text strong>Contract ID: </Typography.Text>
+            <Typography.Text>
+              {selectedOwnerContract.contractId || selectedOwnerContract.contract?.contractId || selectedOwnerContract.contract?.id || "-"}
+            </Typography.Text>
+          </div>
+        )}
+        <Form form={addUserForm} layout="vertical">
           <Form.Item
-            name="contractId"
-            label="Chọn Contract (chỉ hiển thị contract đã APPROVED)"
-            rules={[{ required: true, message: "Vui lòng chọn contract!" }]}
+            name="userId"
+            label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
+            rules={[{ required: true, message: "Vui lòng chọn user!" }]}
           >
             <Select 
-              placeholder="Chọn contract" 
+              placeholder="Chọn user" 
               showSearch
-              onChange={handleContractSelect}
+              filterOption={(input, option) =>
+                (option?.children?.props?.children || option?.children || "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
             >
-              {contracts.map((contract) => {
-                const v = contract.vehicle;
-                const u = contract.user;
+              {users.map((user) => {
+                // Lọc bỏ user đã có trong owner contract
+                const isExistingUser = selectedOwnerContract?.user?.id === user.id || 
+                                      selectedOwnerContract?.user?.userId === user.id;
+                if (isExistingUser) return null;
+                
                 return (
-                  <Select.Option
-                    key={contract.contractId || contract.id}
-                    value={contract.contractId || contract.id}
-                  >
-                    #{contract.contractId || contract.id} – {v ? `${v.brand} ${v.model}` : "N/A"} –{" "}
-                    {u ? u.fullName || u.email : "N/A"}
+                  <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
+                    {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
                   </Select.Option>
                 );
               })}
             </Select>
           </Form.Item>
 
-          {/* Hiển thị thông tin khi đã chọn contract */}
-          {selectedContractForCreate && (
-            <div style={{ marginTop: 24, padding: 16, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
-              <Typography.Title level={5} style={{ marginBottom: 16 }}>Thông tin Owner Contract sẽ được tạo:</Typography.Title>
-              <Descriptions bordered column={2} size="small">
-                <Descriptions.Item label="Owner Contract ID" span={1}>
-                  <span style={{ color: '#999', fontStyle: 'italic' }}>Sẽ được tạo tự động</span>
-                </Descriptions.Item>
-                <Descriptions.Item label="Ngày tạo" span={1}>
-                  {new Date().toLocaleString('vi-VN')}
-                </Descriptions.Item>
+          <Form.Item
+            name="sharePercentage"
+            label="Share Percentage (%)"
+            rules={[
+              { required: true, message: 'Vui lòng nhập share percentage!' },
+              { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
+            ]}
+          >
+            <InputNumber 
+              style={{ width: '100%' }} 
+              min={0} 
+              max={100} 
+              placeholder="Nhập share percentage (0-100%)"
+            />
+          </Form.Item>
 
-                <Descriptions.Item label="User (Chủ xe)" span={1}>
-                  {selectedContractForCreate.user ? (
-                    selectedContractForCreate.user.fullName || selectedContractForCreate.user.email || 'N/A'
-                  ) : 'N/A'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Admin" span={1}>
-                  <span style={{ color: '#999', fontStyle: 'italic' }}>Sẽ được gán tự động</span>
-                </Descriptions.Item>
+          <Form.Item
+            label="Chữ ký Admin"
+          >
+            <SignatureCanvas
+              ref={adminSigPadRef}
+              penColor="black"
+              canvasProps={{
+                width: 500,
+                height: 150,
+                className: "signatureCanvas",
+                style: { border: "1px solid #ccc", borderRadius: "6px" },
+              }}
+            />
+            <Button
+              type="link"
+              onClick={() => {
+                if (adminSigPadRef.current) adminSigPadRef.current.clear();
+              }}
+              style={{ padding: 0, marginTop: 5 }}
+            >
+              Xóa chữ ký Admin
+            </Button>
+          </Form.Item>
 
-                <Descriptions.Item label="Share Percentage" span={1}>
-                  {selectedContractForCreate.salePercentage ? `${selectedContractForCreate.salePercentage}%` : '-'}
-                </Descriptions.Item>
-                <Descriptions.Item label="Contract Status" span={1}>
-                  {renderStatus(selectedContractForCreate.status)}
-                </Descriptions.Item>
-
-                <Descriptions.Item label="User Signature" span={1}>
-                  {buildUrl(selectedContractForCreate.userSignature) ? (
-                    <img
-                      src={buildUrl(selectedContractForCreate.userSignature)}
-                      alt="User Signature"
-                      style={{ maxWidth: 200, maxHeight: 80, border: "1px solid #ccc", borderRadius: 4 }}
-                      onError={(e) => e.target.style.display = "none"}
-                    />
-                  ) : (
-                    <span style={{ color: "#999" }}>Không có</span>
-                  )}
-                </Descriptions.Item>
-                <Descriptions.Item label="Admin Signature" span={1}>
-                  {buildUrl(selectedContractForCreate.adminSignature) ? (
-                    <img
-                      src={buildUrl(selectedContractForCreate.adminSignature)}
-                      alt="Admin Signature"
-                      style={{ maxWidth: 200, maxHeight: 80, border: "1px solid #ccc", borderRadius: 4 }}
-                      onError={(e) => e.target.style.display = "none"}
-                    />
-                  ) : (
-                    <span style={{ color: "#999" }}>Không có</span>
-                  )}
-                </Descriptions.Item>
-              </Descriptions>
-            </div>
-          )}
+          <Form.Item
+            label="Chữ ký User (Co-owner)"
+          >
+            <SignatureCanvas
+              ref={userSigPadRef}
+              penColor="black"
+              canvasProps={{
+                width: 500,
+                height: 150,
+                className: "signatureCanvas",
+                style: { border: "1px solid #ccc", borderRadius: "6px" },
+              }}
+            />
+            <Button
+              type="link"
+              onClick={() => {
+                if (userSigPadRef.current) userSigPadRef.current.clear();
+              }}
+              style={{ padding: 0, marginTop: 5 }}
+            >
+              Xóa chữ ký User
+            </Button>
+          </Form.Item>
         </Form>
       </Modal>
     </div>
@@ -401,3 +507,4 @@ const OwnerContractManagement = () => {
 };
 
 export default OwnerContractManagement;
+
