@@ -5,6 +5,8 @@ import { ThunderboltOutlined, DollarOutlined, CalendarOutlined, DashboardOutline
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import "./style.scss";
 
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
+
 const { Title, Text } = Typography;
 
 const MyCars = () => {
@@ -79,6 +81,11 @@ const MyCars = () => {
       setCurrentCarId(id);
       setFade(false);
     }, 300);
+  };
+
+  const getCarImageUrl = (imagePath) => {
+    if (!imagePath) return ""; // fallback
+    return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
   };
 
   const columns = [
@@ -174,7 +181,7 @@ const MyCars = () => {
 
           {/* Image & overlay */}
           <div className="image-wrap">
-            <img src={chosenCar.imageUrl} alt={chosenCar.model} />
+            <img src={getCarImageUrl(chosenCar.imageUrl)} alt={chosenCar.model} />
             <div className="overlay">
               <div className="left">
                 <Title level={3} className="car-name">
@@ -314,7 +321,7 @@ const MyCars = () => {
               <Col xs={12} sm={6}>
                 <Statistic
                   title="Phí vận hành mỗi tháng"
-                  value={chosenCar.operatingCostPerKm}
+                  value={chosenCar.operationPerM}
                   suffix="₫"
                   prefix={<DollarOutlined />}
                   valueStyle={{ fontSize: 20 }}
@@ -381,7 +388,8 @@ const MyCars = () => {
                   }`}
                 cover={
                   <div className="mini-card-cover">
-                    <img src={car.imageUrl} alt={car.model} />
+                    <img src={getCarImageUrl(car.imageUrl)} alt={car.model} />
+
                     <div className="overlay">
                       <div className="mini-title">
                         {car.brand} {car.model}
