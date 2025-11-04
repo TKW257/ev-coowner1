@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Typography, Button, Skeleton } from "antd"; 
+import { Card, Row, Col, Typography, Button, Skeleton } from "antd";
 import { ThunderboltOutlined } from "@ant-design/icons";
 import vehiclesApi from "../../../../api/vehiclesApi";
 import "./style.scss";
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const { Title, Text } = Typography;
 
@@ -17,8 +18,8 @@ const ExploreCars = () => {
         const vehicles = Array.isArray(res)
           ? res
           : Array.isArray(res?.content)
-          ? res.content
-          : [];
+            ? res.content
+            : [];
         setCars(vehicles);
       } catch (err) {
         console.error("❌ Lỗi khi lấy danh sách xe:", err);
@@ -32,6 +33,11 @@ const ExploreCars = () => {
 
   const handleViewAll = () => {
     window.location.href = "/cars";
+  };
+
+  const getCarImageUrl = (imagePath) => {
+    if (!imagePath) return "";
+    return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
   };
 
   const renderSkeletons = Array.from({ length: 4 }, (_, index) => (
@@ -60,7 +66,7 @@ const ExploreCars = () => {
           hoverable
           cover={
             <img
-              src={car.imageUrl || "https://placehold.co/400x250?text=No+Image"}
+              src={getCarImageUrl(car.imageUrl) || "https://placehold.co/400x250?text=No+Image"}
               alt={`${car.brand} ${car.model}`}
               className="car-img"
             />

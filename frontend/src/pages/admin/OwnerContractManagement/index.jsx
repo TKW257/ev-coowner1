@@ -6,10 +6,7 @@ import {
   Form,
   Select,
   InputNumber,
-  message,
   Space,
-  Tag,
-  Descriptions,
   Tooltip,
   Typography,
   Spin,
@@ -19,6 +16,8 @@ import { EyeOutlined, UserAddOutlined } from "@ant-design/icons";
 import ownerContractsApi from "../../../api/owner-contractsApi";
 import userApi from "../../../api/userApi";
 import SignatureCanvas from "react-signature-canvas";
+import OwnerContract from "../../../components/ContractOwner";
+import { App } from "antd";
 
 const { Title } = Typography;
 
@@ -34,30 +33,31 @@ const OwnerContractManagement = () => {
   const [addUserForm] = Form.useForm();
   const adminSigPadRef = useRef(null);
   const userSigPadRef = useRef(null);
+  const { message } = App.useApp();
 
   useEffect(() => {
     fetchOwnerContracts();
     fetchApprovedUsers();
   }, []);
 
-  /** Chuyển array ngày [YYYY,MM,DD] thành Date */
-  const parseDate = (dateArr) => {
-    if (!dateArr) return null;
-    if (Array.isArray(dateArr)) {
-      const [year, month, day, hour = 0, minute = 0, second = 0] = dateArr;
-      return new Date(year, month - 1, day, hour, minute, second);
-    }
-    return new Date(dateArr);
-  };
+  // /** Chuyển array ngày [YYYY,MM,DD] thành Date */
+  // const parseDate = (dateArr) => {
+  //   if (!dateArr) return null;
+  //   if (Array.isArray(dateArr)) {
+  //     const [year, month, day, hour = 0, minute = 0, second = 0] = dateArr;
+  //     return new Date(year, month - 1, day, hour, minute, second);
+  //   }
+  //   return new Date(dateArr);
+  // };
 
-  /** Xây URL ảnh đầy đủ */
-  const buildUrl = (path) => {
-    if (!path) return null;
-    const fixedPath = path.replace(/\\/g, "/");
-    return fixedPath.startsWith("http")
-      ? fixedPath
-      : `${BASE_URL}${fixedPath.startsWith("/") ? fixedPath : `/${fixedPath}`}`;
-  };
+  // /** Xây URL ảnh đầy đủ */
+  // const buildUrl = (path) => {
+  //   if (!path) return null;
+  //   const fixedPath = path.replace(/\\/g, "/");
+  //   return fixedPath.startsWith("http")
+  //     ? fixedPath
+  //     : `${BASE_URL}${fixedPath.startsWith("/") ? fixedPath : `/${fixedPath}`}`;
+  // };
 
   const fetchOwnerContracts = async () => {
     setLoading(true);
@@ -68,7 +68,7 @@ const OwnerContractManagement = () => {
       if (Array.isArray(response)) data = response;
       else if (response?.data && Array.isArray(response.data)) data = response.data;
       else if (response?.content && Array.isArray(response.content)) data = response.content;
-      
+
       setOwnerContracts(data);
     } catch {
       message.error("Không tải được danh sách Owner Contract!");
@@ -85,7 +85,7 @@ const OwnerContractManagement = () => {
       if (Array.isArray(response)) usersData = response;
       else if (response?.data && Array.isArray(response.data)) usersData = response.data;
       else if (response?.content && Array.isArray(response.content)) usersData = response.content;
-      
+
       // Lọc chỉ lấy users đã APPROVED
       const approvedUsers = usersData.filter(
         (user) => user.verifyStatus === "APPROVED" && user.role === "USER"
@@ -128,13 +128,13 @@ const OwnerContractManagement = () => {
   const handleAddUserSubmit = async () => {
     try {
       const values = await addUserForm.validateFields();
-      
+
       // Lấy contractId từ ownerContract
-      const contractId = selectedOwnerContract?.contract_Id || 
-                        selectedOwnerContract?.contractId || 
-                        selectedOwnerContract?.contract?.contractId || 
-                        selectedOwnerContract?.contract?.id;
-      
+      const contractId = selectedOwnerContract?.contract_Id ||
+        selectedOwnerContract?.contractId ||
+        selectedOwnerContract?.contract?.contractId ||
+        selectedOwnerContract?.contract?.id;
+
       if (!contractId) {
         message.error("Không tìm thấy Contract ID!");
         return;
@@ -155,7 +155,7 @@ const OwnerContractManagement = () => {
       formData.append("contractId", contractId.toString());
       formData.append("userId", values.userId.toString());
       formData.append("sharePercentage", values.sharePercentage.toString());
-      
+
       // Lấy chữ ký admin từ Signature Canvas
       const adminSigPad = adminSigPadRef.current;
       if (adminSigPad && !adminSigPad.isEmpty()) {
@@ -167,7 +167,7 @@ const OwnerContractManagement = () => {
         message.error("Vui lòng vẽ chữ ký Admin!");
         return;
       }
-      
+
       // Lấy chữ ký user từ Signature Canvas
       const userSigPad = userSigPadRef.current;
       if (userSigPad && !userSigPad.isEmpty()) {
@@ -191,17 +191,17 @@ const OwnerContractManagement = () => {
     }
   };
 
-  /** Hiển thị trạng thái tiếng Việt */
-  const renderStatus = (status) => {
-    const map = {
-      PENDING: { text: "Đang chờ duyệt", color: "orange" },
-      APPROVED: { text: "Đã được duyệt", color: "green" },
-      COMPLETED: { text: "Đã bán đủ cổ phần", color: "blue" },
-      EXPIRED: { text: "Hết hạn hợp đồng", color: "red" },
-    };
-    const { text, color } = map[status] || { text: status || "-", color: "default" };
-    return <Tag color={color}>{text}</Tag>;
-  };
+  // /** Hiển thị trạng thái tiếng Việt */
+  // const renderStatus = (status) => {
+  //   const map = {
+  //     PENDING: { text: "Đang chờ duyệt", color: "orange" },
+  //     APPROVED: { text: "Đã được duyệt", color: "green" },
+  //     COMPLETED: { text: "Đã bán đủ cổ phần", color: "blue" },
+  //     EXPIRED: { text: "Hết hạn hợp đồng", color: "red" },
+  //   };
+  //   const { text, color } = map[status] || { text: status || "-", color: "default" };
+  //   return <Tag color={color}>{text}</Tag>;
+  // };
 
   const columns = [
     {
@@ -284,106 +284,13 @@ const OwnerContractManagement = () => {
       )}
 
       {/* 🔍 Modal chi tiết */}
-      <Modal
-  title="Chi tiết Owner Contract"
-  open={detailModalVisible}
-  onCancel={handleCloseDetailModal}
-  footer={<Button onClick={handleCloseDetailModal}>Đóng</Button>}
-  width={900}
->
-  {selectedOwnerContract && (() => {
-    const user = selectedOwnerContract.user;
-    const admin = selectedOwnerContract.admin;
-    const adminSig = buildUrl(selectedOwnerContract.adminSignature);
-    const userSig = buildUrl(selectedOwnerContract.userSignature);
-
-    return (
-      <Descriptions bordered column={2}>
-        <Descriptions.Item label="Mã Owner Contract">
-          {selectedOwnerContract.ownerContractId || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Mã Contract">
-          {selectedOwnerContract.contractId || selectedOwnerContract.contract_Id || selectedOwnerContract.contract?.contractId || selectedOwnerContract.contract?.id || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Ngày tạo">
-          {parseDate(selectedOwnerContract.createdAt)?.toLocaleString("vi-VN") || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Trạng thái hợp đồng">
-          {renderStatus(selectedOwnerContract.contractStatus)}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="% Sở hữu">
-          {selectedOwnerContract.sharePercentage
-            ? `${selectedOwnerContract.sharePercentage}%`
-            : "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Chủ xe (User)" span={2}>
-          {user
-            ? `${user.fullName || "-"} (${user.email || "Không có email"})`
-            : "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Số điện thoại (User)">
-          {user?.phone || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Trạng thái xác thực (User)">
-          {user?.verifyStatus || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Admin duyệt" span={2}>
-          {admin
-            ? `${admin.fullName || "-"} (${admin.email || "Không có email"})`
-            : "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Số điện thoại (Admin)">
-          {admin?.phone || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Trạng thái xác thực (Admin)">
-          {admin?.verifyStatus || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Chữ ký Admin">
-          {adminSig ? (
-            <img
-              src={adminSig}
-              alt="Admin Signature"
-              style={{
-                maxHeight: 100,
-                border: "1px solid #ccc",
-                borderRadius: 4,
-              }}
-            />
-          ) : (
-            "Không có"
-          )}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Chữ ký User">
-          {userSig ? (
-            <img
-              src={userSig}
-              alt="User Signature"
-              style={{
-                maxHeight: 100,
-                border: "1px solid #ccc",
-                borderRadius: 4,
-              }}
-            />
-          ) : (
-            "Không có"
-          )}
-        </Descriptions.Item>
-      </Descriptions>
-    );
-  })()}
-</Modal>
+      {/* Contract Details Modal */}
+      <OwnerContract
+        contract={selectedOwnerContract}
+        visible={detailModalVisible}
+        onClose={handleCloseDetailModal}
+        baseURL={BASE_URL}
+      />
 
 
       {/* Modal thêm User vào Owner Contract */}
@@ -413,8 +320,8 @@ const OwnerContractManagement = () => {
             label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
             rules={[{ required: true, message: "Vui lòng chọn user!" }]}
           >
-            <Select 
-              placeholder="Chọn user" 
+            <Select
+              placeholder="Chọn user"
               showSearch
               filterOption={(input, option) =>
                 (option?.children?.props?.children || option?.children || "")
@@ -424,10 +331,10 @@ const OwnerContractManagement = () => {
             >
               {users.map((user) => {
                 // Lọc bỏ user đã có trong owner contract
-                const isExistingUser = selectedOwnerContract?.user?.id === user.id || 
-                                      selectedOwnerContract?.user?.userId === user.id;
+                const isExistingUser = selectedOwnerContract?.user?.id === user.id ||
+                  selectedOwnerContract?.user?.userId === user.id;
                 if (isExistingUser) return null;
-                
+
                 return (
                   <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
                     {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
@@ -445,10 +352,10 @@ const OwnerContractManagement = () => {
               { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
             ]}
           >
-            <InputNumber 
-              style={{ width: '100%' }} 
-              min={0} 
-              max={100} 
+            <InputNumber
+              style={{ width: '100%' }}
+              min={0}
+              max={100}
               placeholder="Nhập share percentage (0-100%)"
             />
           </Form.Item>

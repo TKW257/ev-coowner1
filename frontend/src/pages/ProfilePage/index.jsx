@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { App } from "antd";
 import { Form, Input, Button, Upload, Row, Col, Typography, Card, Divider, Alert } from "antd";
 import { UploadOutlined, UserOutlined } from "@ant-design/icons";
-import userApi from "../../../api/userApi";
+import userApi from "../../api/userApi";
 
 const { Title, Text } = Typography;
 

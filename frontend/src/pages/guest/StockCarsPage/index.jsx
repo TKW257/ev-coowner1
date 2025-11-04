@@ -16,6 +16,8 @@ import { ThunderboltOutlined, FilterOutlined } from "@ant-design/icons";
 import vehiclesApi from "../../../api/vehiclesApi";
 import "./style.scss";
 
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
+
 const { Title, Text } = Typography;
 const { Option } = Select;
 
@@ -35,6 +37,11 @@ const StockCarsPage = () => {
   // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(8);
+
+    const getCarImageUrl = (imagePath) => {
+    if (!imagePath) return "";
+    return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
+  };
 
   // 🔹 Lấy danh sách xe ban đầu
   const fetchVehicles = useCallback(async () => {
@@ -119,7 +126,7 @@ const StockCarsPage = () => {
             hoverable
             cover={
               <img
-                src={car.imageUrl || "https://placehold.co/400x250?text=No+Image"}
+                src={getCarImageUrl(car.imageUrl) || "https://placehold.co/400x250?text=No+Image"}
                 alt={`${car.brand} ${car.model}`}
                 className="car-img"
               />
