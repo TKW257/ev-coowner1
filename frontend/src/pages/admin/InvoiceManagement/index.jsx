@@ -12,6 +12,11 @@ import {
   Spin,
   Empty,
   Checkbox,
+  Space,
+  Form,
+  Input,
+  InputNumber,
+  Select,
 } from "antd";
 import {
   DollarOutlined,
@@ -20,12 +25,16 @@ import {
   ClockCircleOutlined,
   DownloadOutlined,
   PlusOutlined,
+  FileAddOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import invoiceApi from "../../../api/invoiceApi";
 import userApi from "../../../api/userApi";
+import feeApi from "../../../api/feeApi";
+import ownerShipsApi from "../../../api/ownerShipsApi";
+import vehiclesApi from "../../../api/vehiclesApi";
 import MonthInvoice from "../../../components/MonthInvoice";
 
 
@@ -43,20 +52,13 @@ const AdminInvoiceDashboard = () => {
   const [openBulkCreate, setOpenBulkCreate] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
 
-  const roleOptions = [
-    { value: "USER", label: "User" },
-    { value: "STAFF", label: "Staff" },
-    { value: "ADMIN", label: "Admin" },
-  ];
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case "ADMIN": return "red";
-      case "STAFF": return "blue";
-      case "USER": return "green";
-      default: return "default";
-    }
-  };
+  // === Variable Fee Invoice ===
+  const [variableFeeModalVisible, setVariableFeeModalVisible] = useState(false);
+  const [variableFeeForm] = Form.useForm();
+  const [variableFeeLoading, setVariableFeeLoading] = useState(false);
+  const [emailOptions, setEmailOptions] = useState([]);
+  const [loadingEmails, setLoadingEmails] = useState(false);
+  const [vehicles, setVehicles] = useState([]);
 
   // Dịch trạng thái sang tiếng Việt
   const getStatusLabel = (status) => {
@@ -79,7 +81,11 @@ const AdminInvoiceDashboard = () => {
     try {
       const response = await userApi.getAll();
       const usersData = Array.isArray(response) ? response : [];
-      setUsers(usersData);
+      // Chỉ lấy những users có role là "USER"
+      const filteredUsers = usersData.filter(user => 
+        user.role === "USER" || user.role === "user"
+      );
+      setUsers(filteredUsers);
     } catch (error) {
       message.error("Không thể tải danh sách người dùng!");
       console.error("❌ [InvoiceDashboard] Error fetching users:", error);
@@ -90,7 +96,20 @@ const AdminInvoiceDashboard = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchVehicles();
   }, []);
+
+  const fetchVehicles = async () => {
+    try {
+      const res = await vehiclesApi.getAllVehicles();
+      const data = Array.isArray(res) ? res : res?.data ?? res?.content;
+      setVehicles(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching vehicles:", error);
+      message.error("Không thể tải danh sách xe!");
+      setVehicles([]);
+    }
+  };
 
   // === Fetch invoices ===
   useEffect(() => {
@@ -132,7 +151,7 @@ const AdminInvoiceDashboard = () => {
         }
       } catch (err) {
         console.error("❌ [InvoiceManagement] Fetch suma invoices failed:", err);
-        message.error("Không thể tải danh sách hóa đơn.");
+        message.error("Không thể tải danh sách hóa đơn!");
       } finally {
         setLoading(false);
       }
@@ -143,15 +162,24 @@ const AdminInvoiceDashboard = () => {
   // const handleView = (record) => setSelectedInvoice(record);
 
   const handleDownloadPDF = async () => {
-    const element = pdfRef.current;
-    if (!element) return;
-    const canvas = await html2canvas(element, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgWidth = 190;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
-    pdf.save(`Invoice_SUMA-${selectedInvoice.sumaInvoiceId}.pdf`);
+    try {
+      const element = pdfRef.current;
+      if (!element) {
+        message.warning("Không tìm thấy nội dung để tải xuống!");
+        return;
+      }
+      const canvas = await html2canvas(element, { scale: 2 });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgWidth = 190;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+      pdf.save(`Invoice_SUMA-${selectedInvoice.sumaInvoiceId}.pdf`);
+      message.success("Tải PDF thành công!");
+    } catch (error) {
+      console.error("Error downloading PDF:", error);
+      message.error("Không thể tải PDF. Vui lòng thử lại!");
+    }
   };
 
   // === Bulk invoice logic ===
@@ -179,44 +207,184 @@ const AdminInvoiceDashboard = () => {
       setSelectedUserIds([]);
 
       // refresh invoices
-      const updated = await invoiceApi.getAllSumaInvoices();
-      if (Array.isArray(updated)) {
-        const formatted = updated.map((sumaInv) => ({
-          sumaInvoiceId: sumaInv.sumaInvoiceId,
-          userName: sumaInv.userName,
-          month: sumaInv.month,
-          totalAmount: sumaInv.totalAmount,
-          status: sumaInv.status,
-          invoices: sumaInv.invoices || [],
-          invoiceId: sumaInv.sumaInvoiceId,
-          invoiceMonth: sumaInv.month,
-          email: sumaInv.invoices?.[0]?.email || "",
-          phone: sumaInv.invoices?.[0]?.phone || "",
-          vehicleName: sumaInv.invoices?.[0]?.vehicleName || "",
-          plateNumber: sumaInv.invoices?.[0]?.plateNumber || "",
-          issuedDate: sumaInv.invoices?.[0]?.issuedDate
-            ? new Date(...sumaInv.invoices[0].issuedDate.slice(0, 6))
-            : new Date(),
-          dueDate: sumaInv.invoices?.[0]?.dueDate
-            ? new Date(...sumaInv.invoices[0].dueDate.slice(0, 6))
-            : new Date(),
-          note: `Tổng hợp hóa đơn tháng ${sumaInv.month}`,
-          details:
-            sumaInv.invoices?.map((inv, invIndex) => ({
-              detailId: inv.invoiceId || invIndex,
-              feeType: "Tổng hợp",
-              sourceType: "Suma Invoice",
-              description: `Hóa đơn ${inv.invoiceId || invIndex + 1}`,
-              amount: inv.totalAmount || 0,
-            })) || [],
-        }));
-        setInvoices(formatted);
+      try {
+        const updated = await invoiceApi.getAllSumaInvoices();
+        if (Array.isArray(updated)) {
+          const formatted = updated.map((sumaInv) => ({
+            sumaInvoiceId: sumaInv.sumaInvoiceId,
+            userName: sumaInv.userName,
+            month: sumaInv.month,
+            totalAmount: sumaInv.totalAmount,
+            status: sumaInv.status,
+            invoices: sumaInv.invoices || [],
+            invoiceId: sumaInv.sumaInvoiceId,
+            invoiceMonth: sumaInv.month,
+            email: sumaInv.invoices?.[0]?.email || "",
+            phone: sumaInv.invoices?.[0]?.phone || "",
+            vehicleName: sumaInv.invoices?.[0]?.vehicleName || "",
+            plateNumber: sumaInv.invoices?.[0]?.plateNumber || "",
+            issuedDate: sumaInv.invoices?.[0]?.issuedDate
+              ? new Date(...sumaInv.invoices[0].issuedDate.slice(0, 6))
+              : new Date(),
+            dueDate: sumaInv.invoices?.[0]?.dueDate
+              ? new Date(...sumaInv.invoices[0].dueDate.slice(0, 6))
+              : new Date(),
+            note: `Tổng hợp hóa đơn tháng ${sumaInv.month}`,
+            details:
+              sumaInv.invoices?.map((inv, invIndex) => ({
+                detailId: inv.invoiceId || invIndex,
+                feeType: "Tổng hợp",
+                sourceType: "Suma Invoice",
+                description: `Hóa đơn ${inv.invoiceId || invIndex + 1}`,
+                amount: inv.totalAmount || 0,
+              })) || [],
+          }));
+          setInvoices(formatted);
+          message.success("Đã cập nhật danh sách hóa đơn!");
+        }
+      } catch (refreshError) {
+        console.error("Error refreshing invoices:", refreshError);
+        message.warning("Tạo hóa đơn thành công nhưng không thể cập nhật danh sách!");
       }
     } catch (error) {
       console.error("❌ [InvoiceDashboard] Bulk invoice creation failed:", error);
       message.error("Tạo hóa đơn hàng loạt thất bại!");
     } finally {
       setCreating(false);
+    }
+  };
+
+  // === Variable Fee Invoice logic ===
+  const handleCreateVariableFee = () => {
+    variableFeeForm.resetFields();
+    setVariableFeeModalVisible(true);
+    setEmailOptions([]);
+  };
+
+  const handleVehicleChange = async (vehicleId) => {
+    if (!vehicleId) {
+      setEmailOptions([]);
+      variableFeeForm.setFieldsValue({ email: undefined });
+      return;
+    }
+
+    setLoadingEmails(true);
+    try {
+      const res = await ownerShipsApi.getMyGroupOwnership(vehicleId);
+      const data = Array.isArray(res) ? res : res?.data || [];
+      
+      // Trích xuất userName từ danh sách ownership
+      const userNames = data
+        .map((item) => {
+          const userName = item.userName || item.user?.userName;
+          return userName;
+        })
+        .filter(userName => userName && userName.trim());
+      
+      // Tạo options cho Select
+      const emailList = userNames.map(userName => ({
+        label: userName,
+        value: userName,
+      }));
+      
+      setEmailOptions(emailList);
+      
+      // Tự động set email đầu tiên nếu có
+      if (userNames.length > 0) {
+        variableFeeForm.setFieldsValue({ email: userNames });
+        message.success(`Đã tải ${userNames.length} người dùng sở hữu xe!`);
+      } else {
+        message.warning("Không tìm thấy người dùng nào sở hữu xe này!");
+      }
+    } catch (err) {
+      console.error("Error fetching group ownership:", err);
+      message.error("Không thể tải danh sách email!");
+      setEmailOptions([]);
+    } finally {
+      setLoadingEmails(false);
+    }
+  };
+
+  const handleCreateVariableFeeSubmit = async () => {
+    try {
+      const values = await variableFeeForm.validateFields();
+      setVariableFeeLoading(true);
+
+      const vehicleId = typeof values.vehicleId === 'string' ? parseInt(values.vehicleId, 10) : values.vehicleId;
+      const emails = Array.isArray(values.email)
+        ? values.email
+        : [values.email.trim()];
+
+      // Gửi song song tất cả email bằng Promise.all
+      await Promise.all(
+        emails.map(email => {
+          const payload = {
+            vehicleId,
+            email,
+            type: "Upgrade",
+            amount: Number(values.amount),
+            description: values.description.trim(),
+          };
+          return feeApi.createVariableFee(payload);
+        })
+      );
+
+      message.success(`Đã tạo hóa đơn phát sinh cho ${emails.length} người dùng!`);
+      variableFeeForm.resetFields();
+      setVariableFeeModalVisible(false);
+      setEmailOptions([]);
+
+      // Refresh invoices
+      try {
+        const updated = await invoiceApi.getAllSumaInvoices();
+        if (Array.isArray(updated)) {
+          const formatted = updated.map((sumaInv) => ({
+            sumaInvoiceId: sumaInv.sumaInvoiceId,
+            userName: sumaInv.userName,
+            month: sumaInv.month,
+            totalAmount: sumaInv.totalAmount,
+            status: sumaInv.status,
+            invoices: sumaInv.invoices || [],
+            invoiceId: sumaInv.sumaInvoiceId,
+            invoiceMonth: sumaInv.month,
+            email: sumaInv.invoices?.[0]?.email || "",
+            phone: sumaInv.invoices?.[0]?.phone || "",
+            vehicleName: sumaInv.invoices?.[0]?.vehicleName || "",
+            plateNumber: sumaInv.invoices?.[0]?.plateNumber || "",
+            issuedDate: sumaInv.invoices?.[0]?.issuedDate
+              ? new Date(...sumaInv.invoices[0].issuedDate.slice(0, 6))
+              : new Date(),
+            dueDate: sumaInv.invoices?.[0]?.dueDate
+              ? new Date(...sumaInv.invoices[0].dueDate.slice(0, 6))
+              : new Date(),
+            note: `Tổng hợp hóa đơn tháng ${sumaInv.month}`,
+            details:
+              sumaInv.invoices?.map((inv, invIndex) => ({
+                detailId: inv.invoiceId || invIndex,
+                feeType: "Tổng hợp",
+                sourceType: "Suma Invoice",
+                description: `Hóa đơn ${inv.invoiceId || invIndex + 1}`,
+                amount: inv.totalAmount || 0,
+              })) || [],
+          }));
+          setInvoices(formatted);
+          message.success("Đã cập nhật danh sách hóa đơn!");
+        }
+      } catch (refreshError) {
+        console.error("Error refreshing invoices:", refreshError);
+        message.warning("Tạo hóa đơn thành công nhưng không thể cập nhật danh sách!");
+      }
+    } catch (err) {
+      if (err?.response?.status === 403) {
+        message.error("Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại với tài khoản ADMIN.");
+      } else if (err?.response?.status === 401) {
+        message.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      } else {
+        const serverMsg = err?.response?.data?.message ?? err?.message ?? "Không thể tạo hóa đơn phát sinh";
+        message.error(serverMsg);
+      }
+    } finally {
+      setVariableFeeLoading(false);
     }
   };
 
@@ -288,14 +456,24 @@ const AdminInvoiceDashboard = () => {
 
       <Card>
         <Row justify="end" style={{ marginBottom: 12 }}>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            loading={creating}
-            onClick={() => setOpenBulkCreate(true)}
-          >
-            Tạo hóa đơn
-          </Button>
+          <Space>
+            <Button
+              type="primary"
+              icon={<FileAddOutlined />}
+              loading={variableFeeLoading}
+              onClick={handleCreateVariableFee}
+            >
+              Tạo hóa đơn phát sinh
+            </Button>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              loading={creating}
+              onClick={() => setOpenBulkCreate(true)}
+            >
+              Tạo hóa đơn
+            </Button>
+          </Space>
         </Row>
 
         {loading ? (
@@ -361,9 +539,6 @@ const AdminInvoiceDashboard = () => {
                     <div style={{ fontWeight: 500 }}>{user.fullName || user.full_name}</div>
                     <div style={{ color: "#666", fontSize: 12 }}>{user.email} | {user.phone}</div>
                   </div>
-                  <Tag color={getRoleColor(user.role)}>
-                    {roleOptions.find((r) => r.value === user.role)?.label || user.role}
-                  </Tag>
                 </div>
               ))}
             </div>
@@ -376,6 +551,86 @@ const AdminInvoiceDashboard = () => {
             </div>
           </>
         )}
+      </Modal>
+
+      {/* === Modal tạo hóa đơn phát sinh === */}
+      <Modal
+        open={variableFeeModalVisible}
+        title="Tạo Hóa Đơn Phát Sinh"
+        onOk={handleCreateVariableFeeSubmit}
+        onCancel={() => {
+          setVariableFeeModalVisible(false);
+          variableFeeForm.resetFields();
+          setEmailOptions([]);
+        }}
+        okText="Tạo"
+        cancelText="Hủy"
+        confirmLoading={variableFeeLoading}
+        destroyOnClose
+        width={600}
+      >
+        <Form form={variableFeeForm} layout="vertical">
+          <Form.Item
+            name="vehicleId"
+            label="Chọn Xe"
+            rules={[{ required: true, message: "Vui lòng chọn xe!" }]}
+          >
+            <Select
+              placeholder="Chọn xe"
+              showSearch
+              onChange={handleVehicleChange}
+              optionFilterProp="children"
+            >
+              {vehicles.map((v) => (
+                <Select.Option key={v.vehicleId || v.id} value={v.vehicleId || v.id}>
+                  {v.brand} {v.model} ({v.licensePlate || v.plateNumber || v.plate || "N/A"})
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              { required: true, message: "Vui lòng chọn ít nhất một email!" },
+            ]}
+          >
+            <Select
+              mode="multiple"
+              placeholder={loadingEmails ? "Đang tải danh sách email..." : "Chọn email người dùng"}
+              options={emailOptions}
+              loading={loadingEmails}
+              notFoundContent={loadingEmails ? "Đang tải..." : "Không có email nào"}
+              style={{ width: '100%' }}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="amount"
+            label="Số tiền"
+            rules={[
+              { required: true, message: "Vui lòng nhập số tiền!" },
+              { type: 'number', min: 0, message: "Số tiền phải lớn hơn 0!" }
+            ]}
+          >
+            <InputNumber
+              min={0}
+              placeholder="Nhập số tiền"
+              style={{ width: '100%' }}
+              formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={value => value.replace(/\$\s?|(,*)/g, '')}
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="description"
+            label="Mô tả"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
+          >
+            <Input.TextArea rows={3} placeholder="Nhập mô tả hóa đơn phát sinh" />
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );
