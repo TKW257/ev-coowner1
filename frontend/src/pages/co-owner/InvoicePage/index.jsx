@@ -6,7 +6,9 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import invoiceApi from "../../../api/invoiceApi";
 import paymentApi from "../../../api/paymentApi";
-import InvoiceMonthDetail from "./MonthInvoice";
+import MonthInvoice from "../../../components/MonthInvoice";
+import './style.scss';
+
 
 const UserInvoiceDashboard = () => {
   const [invoiceList, setInvoiceList] = useState([]);
@@ -110,16 +112,19 @@ const UserInvoiceDashboard = () => {
 
   return (
     <div style={{ padding: 24 }}>
-      <Card style={{ marginBottom: 24 }}>
-        <Row>
-          <Radio.Group value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-            <Radio.Button value="ALL">Tất cả</Radio.Button>
-            <Radio.Button value="OPEN">Chưa thanh toán ({stats.OPEN})</Radio.Button>
-            <Radio.Button value="SETTLED">Đã thanh toán ({stats.SETTLED})</Radio.Button>
-          </Radio.Group>
+<Card className="filter-status-card">
+  <Row>
+    <Radio.Group
+      value={filterStatus}
+      onChange={(e) => setFilterStatus(e.target.value)}
+    >
+      <Radio.Button value="ALL">Tất cả</Radio.Button>
+      <Radio.Button value="OPEN">Chưa thanh toán ({stats.OPEN})</Radio.Button>
+      <Radio.Button value="SETTLED">Đã thanh toán ({stats.SETTLED})</Radio.Button>
+    </Radio.Group>
+  </Row>
+</Card>
 
-        </Row>
-      </Card>
 
       {filteredInvoices.length === 0 ? (
         <Empty description="Không có hóa đơn" style={{ marginTop: 50 }} />
@@ -199,7 +204,7 @@ const UserInvoiceDashboard = () => {
         ]}
       >
         <div ref={pdfRef}>
-          <InvoiceMonthDetail selectedMonth={selectedMonth} />
+          <MonthInvoice selectedMonth={selectedMonth} />
         </div>
       </Modal>
     </div>
