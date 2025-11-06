@@ -19,6 +19,7 @@ import { PlusOutlined, EyeOutlined, CalculatorOutlined, SearchOutlined, FileText
 import voteApi from "../../../api/voteApi";
 import vehiclesApi from "../../../api/vehiclesApi";
 import feeApi from "../../../api/feeApi";
+import ownerShipsApi from "../../../api/ownerShipsApi";
 
 export default function AdminVoteListPage() {
   const [topics, setTopics] = useState([]);
@@ -39,6 +40,8 @@ export default function AdminVoteListPage() {
   const [feeModalVisible, setFeeModalVisible] = useState(false);
   const [feeForm] = Form.useForm();
   const [feeLoading, setFeeLoading] = useState(false);
+  const [emailOptions, setEmailOptions] = useState([]);
+  const [loadingEmails, setLoadingEmails] = useState(false);
   
   // Filter states
   const [selectedVehicles, setSelectedVehicles] = useState([]);
@@ -56,8 +59,7 @@ export default function AdminVoteListPage() {
       const res = await voteApi.getAllTopics();
       const data = Array.isArray(res) ? res : res?.data ?? res?.content;
       setTopics(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("fetchTopics error:", err);
+    } catch {
       message.error("Không thể tải danh sách chủ đề");
     } finally {
       setLoading(false);
@@ -69,8 +71,7 @@ export default function AdminVoteListPage() {
       const res = await vehiclesApi.getAllVehicles();
       const data = Array.isArray(res) ? res : res?.data ?? res?.content;
       setVehicles(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error("fetchVehicles error:", err);
+    } catch {
       message.error("Không thể tải danh sách xe");
     }
   };
@@ -89,6 +90,7 @@ export default function AdminVoteListPage() {
           typeof values.requiredRatioPercent === "number"
             ? Number((values.requiredRatioPercent / 100).toFixed(4))
             : undefined,
+        amount: values.amount ? Number(values.amount) : undefined,
       };
 
       await voteApi.createTopic(payload);
@@ -97,7 +99,6 @@ export default function AdminVoteListPage() {
       setModalVisible(false);
       fetchTopics();
     } catch (err) {
-      console.error("Create topic failed:", err);
       // Try to show server message if present
       const serverMsg =
         err?.response?.data?.message ?? err?.message ?? "Không thể tạo chủ đề";
@@ -106,7 +107,6 @@ export default function AdminVoteListPage() {
   };
 
   const handleCalculate = (id) => {
-    console.log("[AdminVoteListPage] handleCalculate clicked with id:", id);
     setCalculatingId(id);
     setConfirmCalculateVisible(true);
   };
@@ -114,17 +114,13 @@ export default function AdminVoteListPage() {
   const confirmCalculate = async () => {
     if (!calculatingId) return;
     
-    console.log("[AdminVoteListPage] confirmCalculate called with id:", calculatingId);
     try {
-      const result = await voteApi.calculateResult(calculatingId);
-      console.log("[AdminVoteListPage] calculateResult success:", result);
+      await voteApi.calculateResult(calculatingId);
       message.success("Đã tính kết quả bình chọn");
       setConfirmCalculateVisible(false);
       setCalculatingId(null);
       fetchTopics();
     } catch (err) {
-      console.error("[AdminVoteListPage] calculateResult error:", err);
-      console.error("[AdminVoteListPage] Error response:", err?.response?.data);
       const serverMsg = err?.response?.data?.message ?? err?.message ?? "Không thể tính kết quả";
       message.error(serverMsg);
     }
@@ -138,11 +134,9 @@ export default function AdminVoteListPage() {
     try {
       const id = record.topicId ?? record.id;
       const res = await voteApi.getVotesByTopic(id);
-      console.log("[AdminVoteListPage] Votes response:", res);
       const data = Array.isArray(res) ? res : res?.data ?? [];
       setVotes(data);
-    } catch (err) {
-      console.error("[AdminVoteListPage] Error fetching votes:", err);
+    } catch {
       message.error("Không thể tải danh sách phiếu bầu");
       setVotes([]);
     } finally {
@@ -150,40 +144,125 @@ export default function AdminVoteListPage() {
     }
   };
 
-  const handleCreateFee = (record) => {
+  const handleCreateFee = async (record) => {
     feeForm.resetFields();
-    feeForm.setFieldsValue({
-      vehicleId: record.vehicleId,
-    });
     setFeeModalVisible(true);
+    setLoadingEmails(true);
+    
+    try {
+      // Gọi API để lấy danh sách ownership theo vehicleId
+      console.log("===========================================");
+      console.log("🔍 [CREATE FEE] Gọi API getMyGroupOwnership");
+      console.log("VehicleId:", record.vehicleId);
+      console.log("===========================================");
+      
+      const res = await ownerShipsApi.getMyGroupOwnership(record.vehicleId);
+      
+      console.log("✅ [CREATE FEE] API Response nhận được:");
+      console.log("Full Response:", JSON.stringify(res, null, 2));
+      console.log("Response Type:", typeof res);
+      console.log("Is Array:", Array.isArray(res));
+      console.log("Response Keys:", Object.keys(res || {}));
+      
+      const data = Array.isArray(res) ? res : res?.data || [];
+      
+      console.log("📋 [CREATE FEE] Data sau khi xử lý:");
+      console.log("Data Array:", JSON.stringify(data, null, 2));
+      console.log("Data Length:", data.length);
+      
+      // Log từng item để xem cấu trúc
+      if (data.length > 0) {
+        console.log("\n📦 [CREATE FEE] Chi tiết từng item trong response:");
+        data.forEach((item, index) => {
+          console.log(`\n--- Item ${index + 1} ---`);
+          console.log(JSON.stringify(item, null, 2));
+          console.log("Keys:", Object.keys(item));
+          if (item.user) {
+            console.log("User object:", JSON.stringify(item.user, null, 2));
+            console.log("User keys:", Object.keys(item.user));
+          }
+        });
+      } else {
+        console.log("⚠️ [CREATE FEE] Data rỗng - không có ownership nào");
+      }
+      
+      // Trích xuất userName từ danh sách ownership
+      const userNames = data
+        .map((item, index) => {
+          const userName = item.userName || item.user?.userName;
+          console.log(`[AdminVoteListPage] Item ${index} userName extraction:`, {
+            item,
+            userName,
+            'item.userName': item.userName,
+            'item.user?.userName': item.user?.userName,
+          });
+          return userName;
+        })
+        .filter(userName => userName && userName.trim()); // Loại bỏ userName rỗng
+      
+      console.log("[AdminVoteListPage] Extracted userNames:", userNames);
+      
+      // Tạo options cho Select
+      const emailList = userNames.map(userName => ({
+        label: userName,
+        value: userName,
+      }));
+      
+      console.log("[AdminVoteListPage] Email options list (from userName):", emailList);
+      setEmailOptions(emailList);
+      
+      // Tự động set userName đầu tiên nếu có
+      const formValues = {
+        vehicleId: record.vehicleId,
+        amount: record.amount || undefined,
+        email: userNames.length > 0 ? userNames : undefined,
+      };
+      console.log("[AdminVoteListPage] Setting form values:", formValues);
+      feeForm.setFieldsValue(formValues);
+    } catch (err) {
+      console.error("[AdminVoteListPage] Error fetching group ownership:", err);
+      console.error("[AdminVoteListPage] Error response:", err?.response);
+      console.error("[AdminVoteListPage] Error response data:", err?.response?.data);
+      console.error("[AdminVoteListPage] Error message:", err?.message);
+      message.error("Không thể tải danh sách email");
+      setEmailOptions([]);
+      feeForm.setFieldsValue({
+        vehicleId: record.vehicleId,
+        amount: record.amount || undefined,
+      });
+    } finally {
+      setLoadingEmails(false);
+    }
   };
 
   const handleCreateFeeSubmit = async () => {
     try {
       const values = await feeForm.validateFields();
       setFeeLoading(true);
-      
-      // Đảm bảo vehicleId là số
+  
       const vehicleId = typeof values.vehicleId === 'string' ? parseInt(values.vehicleId, 10) : values.vehicleId;
-      
-      const payload = {
-        vehicleId: vehicleId,
-        email: values.email.trim(),
-        type: values.type,
-        amount: Number(values.amount),
-        description: values.description.trim(),
-      };
-
-      console.log("[AdminVoteListPage] Creating fee with payload:", payload);
-      await feeApi.createVariableFee(payload);
-      message.success("Tạo hóa đơn phát sinh thành công!");
+      const emails = Array.isArray(values.email)
+        ? values.email
+        : [values.email.trim()];
+  
+      // Gửi song song tất cả email bằng Promise.all
+      await Promise.all(
+        emails.map(email => {
+          const payload = {
+            vehicleId,
+            email,
+            type: "Upgrade",
+            amount: Number(values.amount),
+            description: values.description.trim(),
+          };
+          return feeApi.createVariableFee(payload);
+        })
+      );
+  
+      message.success(`Đã tạo hóa đơn phát sinh cho ${emails.length} người dùng!`);
       feeForm.resetFields();
       setFeeModalVisible(false);
     } catch (err) {
-      console.error("Create fee failed:", err);
-      console.error("Error details:", err?.response?.data);
-      
-      // Xử lý các loại lỗi khác nhau
       if (err?.response?.status === 403) {
         message.error("Bạn không có quyền thực hiện thao tác này. Vui lòng đăng nhập lại với tài khoản ADMIN.");
       } else if (err?.response?.status === 401) {
@@ -446,7 +525,7 @@ export default function AdminVoteListPage() {
             // set sensible defaults
             form.setFieldsValue({
               decisionType: "MINOR",
-              requiredRatioPercent: 50,
+              requiredRatioPercent: 40,
             });
             setModalVisible(true);
           }}
@@ -511,7 +590,18 @@ export default function AdminVoteListPage() {
               { required: true, message: "Vui lòng chọn loại quyết định!" },
             ]}
           >
-            <Select>
+            <Select
+              onChange={(value) => {
+                // Tự động set tỷ lệ yêu cầu dựa trên loại quyết định
+                if (value === "MINOR") {
+                  form.setFieldsValue({ requiredRatioPercent: 40 });
+                } else if (value === "MEDIUM") {
+                  form.setFieldsValue({ requiredRatioPercent: 60 });
+                } else if (value === "MAJOR") {
+                  form.setFieldsValue({ requiredRatioPercent: 80 });
+                }
+              }}
+            >
               <Select.Option value="MINOR">Minor</Select.Option>
               <Select.Option value="MEDIUM">Medium</Select.Option>
               <Select.Option value="MAJOR">Major</Select.Option>
@@ -523,15 +613,33 @@ export default function AdminVoteListPage() {
             label="Tỷ lệ yêu cầu (%)"
             rules={[
               { required: true, message: "Vui lòng nhập tỷ lệ yêu cầu!" },
-              { type: 'number', min: 1, max: 100, message: "Tỷ lệ phải từ 1 đến 100!" }
+              { type: 'number', min: 0, max: 100, message: "Tỷ lệ phải từ 0 đến 100!" }
             ]}
           >
             <InputNumber
-              min={1}
+              min={0}
               max={100}
-              placeholder="Nhập tỷ lệ yêu cầu (1-100%)"
+              placeholder="Tự động theo loại quyết định"
               style={{ width: '100%' }}
               addonAfter="%"
+              disabled
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="amount"
+            label="Giá tiền"
+            rules={[
+              { required: true, message: "Vui lòng nhập giá tiền!" },
+              { type: 'number', min: 0, message: "Giá tiền phải lớn hơn hoặc bằng 0!" }
+            ]}
+          >
+            <InputNumber
+              min={0}
+              placeholder="Nhập giá tiền"
+              style={{ width: '100%' }}
+              formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={value => value.replace(/\$\s?|(,*)/g, '')}
             />
           </Form.Item>
         </Form>
@@ -594,6 +702,11 @@ export default function AdminVoteListPage() {
                   ? `${(selectedTopic.requiredRatio * 100).toFixed(2)}%`
                   : "N/A"}
               </Descriptions.Item>
+              <Descriptions.Item label="Giá tiền">
+                {selectedTopic.amount 
+                  ? `${selectedTopic.amount.toLocaleString('vi-VN')} VNĐ`
+                  : "N/A"}
+              </Descriptions.Item>
             </Descriptions>
 
             <div>
@@ -640,26 +753,17 @@ export default function AdminVoteListPage() {
             name="email"
             label="Email"
             rules={[
-              { required: true, message: "Vui lòng nhập email!" },
-              { type: 'email', message: "Email không hợp lệ!" }
+              { required: true, message: "Vui lòng chọn ít nhất một email!" },
             ]}
           >
-            <Input placeholder="Nhập email người dùng" />
-          </Form.Item>
-
-          <Form.Item
-            name="type"
-            label="Loại phí biến động"
-            rules={[{ required: true, message: "Vui lòng chọn loại phí!" }]}
-          >
-            <Select placeholder="Chọn loại phí biến động">
-              <Select.Option value="MAINTENANCE">Bảo trì</Select.Option>
-              <Select.Option value="REPAIR">Sửa chữa</Select.Option>
-              <Select.Option value="PARKING">Đỗ xe</Select.Option>
-              <Select.Option value="TOLL">Phí cầu đường</Select.Option>
-              <Select.Option value="INSURANCE">Bảo hiểm</Select.Option>
-              <Select.Option value="OTHER">Khác</Select.Option>
-            </Select>
+            <Select
+              mode="multiple"
+              placeholder={loadingEmails ? "Đang tải danh sách email..." : "Chọn email người dùng"}
+              options={emailOptions}
+              loading={loadingEmails}
+              notFoundContent={loadingEmails ? "Đang tải..." : "Không có email nào"}
+              style={{ width: '100%' }}
+            />
           </Form.Item>
 
           <Form.Item
@@ -672,10 +776,11 @@ export default function AdminVoteListPage() {
           >
             <InputNumber
               min={0}
-              placeholder="Nhập số tiền"
+              placeholder="Tự động từ giá tiền của chủ đề"
               style={{ width: '100%' }}
               formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
               parser={value => value.replace(/\$\s?|(,*)/g, '')}
+              disabled
             />
           </Form.Item>
 

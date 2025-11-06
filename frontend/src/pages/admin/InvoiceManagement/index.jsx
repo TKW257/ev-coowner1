@@ -43,21 +43,6 @@ const AdminInvoiceDashboard = () => {
   const [openBulkCreate, setOpenBulkCreate] = useState(false);
   const [selectedUserIds, setSelectedUserIds] = useState([]);
 
-  const roleOptions = [
-    { value: "USER", label: "User" },
-    { value: "STAFF", label: "Staff" },
-    { value: "ADMIN", label: "Admin" },
-  ];
-
-  const getRoleColor = (role) => {
-    switch (role) {
-      case "ADMIN": return "red";
-      case "STAFF": return "blue";
-      case "USER": return "green";
-      default: return "default";
-    }
-  };
-
   // Dịch trạng thái sang tiếng Việt
   const getStatusLabel = (status) => {
     switch (status) {
@@ -79,7 +64,11 @@ const AdminInvoiceDashboard = () => {
     try {
       const response = await userApi.getAll();
       const usersData = Array.isArray(response) ? response : [];
-      setUsers(usersData);
+      // Chỉ lấy những users có role là "USER"
+      const filteredUsers = usersData.filter(user => 
+        user.role === "USER" || user.role === "user"
+      );
+      setUsers(filteredUsers);
     } catch (error) {
       message.error("Không thể tải danh sách người dùng!");
       console.error("❌ [InvoiceDashboard] Error fetching users:", error);
@@ -391,9 +380,6 @@ const AdminInvoiceDashboard = () => {
                     <div style={{ fontWeight: 500 }}>{user.fullName || user.full_name}</div>
                     <div style={{ color: "#666", fontSize: 12 }}>{user.email} | {user.phone}</div>
                   </div>
-                  <Tag color={getRoleColor(user.role)}>
-                    {roleOptions.find((r) => r.value === user.role)?.label || user.role}
-                  </Tag>
                 </div>
               ))}
             </div>

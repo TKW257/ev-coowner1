@@ -15,8 +15,9 @@ import {
   Spin,
   Empty,
 } from "antd";
-import { EyeOutlined, UserAddOutlined } from "@ant-design/icons";
+import { EyeOutlined, UserAddOutlined, PlusOutlined } from "@ant-design/icons";
 import ownerContractsApi from "../../../api/owner-contractsApi";
+import contractApi from "../../../api/contractApi";
 import userApi from "../../../api/userApi";
 import SignatureCanvas from "react-signature-canvas";
 
@@ -27,18 +28,38 @@ const BASE_URL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 const OwnerContractManagement = () => {
   const [ownerContracts, setOwnerContracts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [addUserModalVisible, setAddUserModalVisible] = useState(false);
+  const [createContractModalVisible, setCreateContractModalVisible] = useState(false);
+  const [selectContractModalVisible, setSelectContractModalVisible] = useState(false);
   const [selectedOwnerContract, setSelectedOwnerContract] = useState(null);
+  const [selectedContractId, setSelectedContractId] = useState(null);
   const [addUserForm] = Form.useForm();
+  const [selectContractForm] = Form.useForm();
   const adminSigPadRef = useRef(null);
   const userSigPadRef = useRef(null);
 
   useEffect(() => {
     fetchOwnerContracts();
     fetchApprovedUsers();
+    fetchContracts();
   }, []);
+
+  const fetchContracts = async () => {
+    try {
+      const response = await contractApi.getAll();
+      let data = [];
+      if (Array.isArray(response)) data = response;
+      else if (response?.data && Array.isArray(response.data)) data = response.data;
+      else if (response?.content && Array.isArray(response.content)) data = response.content;
+      
+      setContracts(data);
+    } catch {
+      setContracts([]);
+    }
+  };
 
   /** Chuyển array ngày [YYYY,MM,DD] thành Date */
   const parseDate = (dateArr) => {
@@ -125,12 +146,44 @@ const OwnerContractManagement = () => {
     if (userSigPadRef.current) userSigPadRef.current.clear();
   };
 
+  const handleSelectContract = () => {
+    selectContractForm.validateFields().then(values => {
+      setSelectedContractId(values.contractId);
+      setSelectContractModalVisible(false);
+      setCreateContractModalVisible(true);
+      addUserForm.resetFields();
+      // Xóa chữ ký
+      if (adminSigPadRef.current) adminSigPadRef.current.clear();
+      if (userSigPadRef.current) userSigPadRef.current.clear();
+    }).catch(() => {});
+  };
+
+  const handleOpenCreateContract = () => {
+    setSelectContractModalVisible(true);
+    selectContractForm.resetFields();
+  };
+
+  const handleCloseSelectContractModal = () => {
+    setSelectContractModalVisible(false);
+    selectContractForm.resetFields();
+  };
+
+  const handleCloseCreateContractModal = () => {
+    setCreateContractModalVisible(false);
+    setSelectedContractId(null);
+    addUserForm.resetFields();
+    // Xóa chữ ký
+    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+    if (userSigPadRef.current) userSigPadRef.current.clear();
+  };
+
   const handleAddUserSubmit = async () => {
     try {
       const values = await addUserForm.validateFields();
       
-      // Lấy contractId từ ownerContract
-      const contractId = selectedOwnerContract?.contract_Id || 
+      // Lấy contractId từ ownerContract hoặc từ selectedContractId
+      const contractId = selectedContractId || 
+                        selectedOwnerContract?.contract_Id || 
                         selectedOwnerContract?.contractId || 
                         selectedOwnerContract?.contract?.contractId || 
                         selectedOwnerContract?.contract?.id;
@@ -182,7 +235,13 @@ const OwnerContractManagement = () => {
 
       await ownerContractsApi.create(formData);
       message.success("Thêm User vào Owner Contract thành công!");
-      handleCloseAddUserModal();
+      
+      if (selectedContractId) {
+        handleCloseCreateContractModal();
+      } else {
+        handleCloseAddUserModal();
+      }
+      
       fetchOwnerContracts();
       fetchApprovedUsers();
     } catch (error) {
@@ -268,6 +327,13 @@ const OwnerContractManagement = () => {
     <div style={{ padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <Title level={2}>Quản Lý Owner Contract</Title>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleOpenCreateContract}
+        >
+          Tạo Owner Contract
+        </Button>
       </div>
 
       {loading ? (
@@ -386,6 +452,40 @@ const OwnerContractManagement = () => {
 </Modal>
 
 
+      {/* Modal chọn Contract ID */}
+      <Modal
+        title="Chọn Contract"
+        open={selectContractModalVisible}
+        onOk={handleSelectContract}
+        onCancel={handleCloseSelectContractModal}
+        okText="Tiếp tục"
+        cancelText="Hủy"
+      >
+        <Form form={selectContractForm} layout="vertical">
+          <Form.Item
+            name="contractId"
+            label="Chọn Contract ID"
+            rules={[{ required: true, message: "Vui lòng chọn Contract ID!" }]}
+          >
+            <Select 
+              placeholder="Chọn contract" 
+              showSearch
+              filterOption={(input, option) =>
+                (option?.children?.props?.children || option?.children || "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+            >
+              {contracts.map((contract) => (
+                <Select.Option key={contract.contractId || contract.id} value={contract.contractId || contract.id}>
+                  Contract ID: {contract.contractId || contract.id} - {contract.vehicleName || contract.vehicle?.model || contract.vehicleId || "N/A"}
+                </Select.Option>
+              ))}
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
       {/* Modal thêm User vào Owner Contract */}
       <Modal
         title="Thêm User vào Owner Contract"
@@ -434,6 +534,111 @@ const OwnerContractManagement = () => {
                   </Select.Option>
                 );
               })}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            name="sharePercentage"
+            label="Share Percentage (%)"
+            rules={[
+              { required: true, message: 'Vui lòng nhập share percentage!' },
+              { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
+            ]}
+          >
+            <InputNumber 
+              style={{ width: '100%' }} 
+              min={0} 
+              max={100} 
+              placeholder="Nhập share percentage (0-100%)"
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Chữ ký Admin"
+          >
+            <SignatureCanvas
+              ref={adminSigPadRef}
+              penColor="black"
+              canvasProps={{
+                width: 500,
+                height: 150,
+                className: "signatureCanvas",
+                style: { border: "1px solid #ccc", borderRadius: "6px" },
+              }}
+            />
+            <Button
+              type="link"
+              onClick={() => {
+                if (adminSigPadRef.current) adminSigPadRef.current.clear();
+              }}
+              style={{ padding: 0, marginTop: 5 }}
+            >
+              Xóa chữ ký Admin
+            </Button>
+          </Form.Item>
+
+          <Form.Item
+            label="Chữ ký User (Co-owner)"
+          >
+            <SignatureCanvas
+              ref={userSigPadRef}
+              penColor="black"
+              canvasProps={{
+                width: 500,
+                height: 150,
+                className: "signatureCanvas",
+                style: { border: "1px solid #ccc", borderRadius: "6px" },
+              }}
+            />
+            <Button
+              type="link"
+              onClick={() => {
+                if (userSigPadRef.current) userSigPadRef.current.clear();
+              }}
+              style={{ padding: 0, marginTop: 5 }}
+            >
+              Xóa chữ ký User
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal Tạo Owner Contract mới (từ Contract ID đã chọn) */}
+      <Modal
+        title="Tạo Owner Contract"
+        open={createContractModalVisible}
+        onOk={handleAddUserSubmit}
+        onCancel={handleCloseCreateContractModal}
+        okText="Tạo"
+        cancelText="Hủy"
+        width={700}
+      >
+        {selectedContractId && (
+          <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
+            <Typography.Text strong>Contract ID: </Typography.Text>
+            <Typography.Text>{selectedContractId}</Typography.Text>
+          </div>
+        )}
+        <Form form={addUserForm} layout="vertical">
+          <Form.Item
+            name="userId"
+            label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
+            rules={[{ required: true, message: "Vui lòng chọn user!" }]}
+          >
+            <Select 
+              placeholder="Chọn user" 
+              showSearch
+              filterOption={(input, option) =>
+                (option?.children?.props?.children || option?.children || "")
+                  .toLowerCase()
+                  .includes(input.toLowerCase())
+              }
+            >
+              {users.map((user) => (
+                <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
+                  {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
+                </Select.Option>
+              ))}
             </Select>
           </Form.Item>
 
