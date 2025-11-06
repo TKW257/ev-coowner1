@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Row, Col, Tag, Typography, Button, Statistic, Modal, Table, Spin } from "antd";
-import { ThunderboltOutlined, DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined, TeamOutlined } from "@ant-design/icons";
+import { Card, Row, Col, Tag, Typography, Button, Statistic, Modal, Table, Spin, Alert } from "antd";
+import { ThunderboltOutlined, DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined, TeamOutlined, RightOutlined, LeftOutlined } from "@ant-design/icons";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import "./style.scss";
+
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const { Title, Text } = Typography;
 
@@ -12,18 +14,28 @@ const MyCars = () => {
   const [currentCarId, setCurrentCarId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [fade, setFade] = useState(false);
+  const [showAllCars, setShowAllCars] = useState(false);
+
   const [groupModalVisible, setGroupModalVisible] = useState(false);
   const [groupLoading, setGroupLoading] = useState(false);
   const [groupData, setGroupData] = useState([]);
+
   const navigate = useNavigate();
   const chosenCar = currentCarId ? carsObj[String(currentCarId)] : null;
 
   const totalMembers = groupData.length;
-  const totalPercentage = groupData.reduce(
-    (sum, item) => sum + (item.totalSharePercentage || 0),
-    0
-  );
+  const totalPercentage = groupData.reduce((sum, item) => sum + (item.totalSharePercentage || 0), 0);
 
+  const carList = Object.values(carsObj);
+  const totalCars = carList.length;
+  const visibleCars = showAllCars ? carList : carList.slice(0, 3);
+
+  const getCarImageUrl = (imagePath) => {
+    if (!imagePath) return "";
+    return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
+  };
+
+  /** -------------------- Render Xe -------------------- */
   useEffect(() => {
     const fetchMyVehicles = async () => {
       try {
@@ -52,12 +64,13 @@ const MyCars = () => {
     fetchMyVehicles();
   }, []);
 
+  /** -------------------- Booking-------------------- */
   const handleBook = (car) => {
     setCurrentCarId(car.vehicleId);
     navigate(`/owner/carbooking/${car.vehicleId}`);
   };
 
-  // get group của tôi 
+  /** -------------------- My Group-------------------- */
   const handleOpenGroupModal = async (car) => {
     setGroupModalVisible(true);
     setGroupLoading(true);
@@ -80,6 +93,8 @@ const MyCars = () => {
       setFade(false);
     }, 300);
   };
+
+
 
   const columns = [
     {
@@ -165,8 +180,6 @@ const MyCars = () => {
     );
   }
 
-  console.log("🟢 currentCarId:", currentCarId, "chosenCar:", chosenCar);
-
   return (
     <div className="mycars-root">
       {chosenCar && (
@@ -174,7 +187,7 @@ const MyCars = () => {
 
           {/* Image & overlay */}
           <div className="image-wrap">
-            <img src={chosenCar.imageUrl} alt={chosenCar.model} />
+            <img src={getCarImageUrl(chosenCar.imageUrl)} alt={chosenCar.model} />
             <div className="overlay">
               <div className="left">
                 <Title level={3} className="car-name">
@@ -280,7 +293,6 @@ const MyCars = () => {
             )}
           </Modal>
 
-
           {/* Specs */}
           <div className="specs-row">
             <Row gutter={[16, 16]}>
@@ -293,28 +305,46 @@ const MyCars = () => {
                   valueStyle={{ fontSize: 20 }}
                 />
               </Col>
+
               <Col xs={12} sm={6}>
                 <Statistic
-                  title="Phí sac mỗi kWh"
-                  value={chosenCar.feeChargingPerKwh}
+                  title="Phí sạc mỗi kWh"
+                  value={
+                    Math.round(
+                      (chosenCar.feeChargingPerKwh || 0) *
+                      ((chosenCar.totalSharePercentage || 0) / 100)
+                    )
+                  }
                   suffix="₫"
                   prefix={<DollarOutlined />}
                   valueStyle={{ fontSize: 20 }}
                 />
               </Col>
+
               <Col xs={12} sm={6}>
                 <Statistic
                   title="Phí vượt quá số km giới hạn"
-                  value={chosenCar.feeOverKm}
+                  value={
+                    Math.round(
+                      (chosenCar.feeOverKm || 0) *
+                      ((chosenCar.totalSharePercentage || 0) / 100)
+                    )
+                  }
                   suffix="₫"
                   prefix={<DollarOutlined />}
                   valueStyle={{ fontSize: 20 }}
                 />
               </Col>
+
               <Col xs={12} sm={6}>
                 <Statistic
-                  title="Phí vận hành mỗi tháng"
-                  value={chosenCar.operatingCostPerKm}
+                  title="Phí vận hành mỗi tháng "
+                  value={
+                    Math.round(
+                      (chosenCar.operationPerM || 0) *
+                      ((chosenCar.totalSharePercentage || 0) / 100)
+                    )
+                  }
                   suffix="₫"
                   prefix={<DollarOutlined />}
                   valueStyle={{ fontSize: 20 }}
@@ -322,6 +352,7 @@ const MyCars = () => {
               </Col>
             </Row>
           </div>
+
 
           {/* Ownership */}
           <div className="ownership-row ownership-row--fixed">
@@ -370,48 +401,72 @@ const MyCars = () => {
 
       {/* Car List */}
       <div className="car-list">
-        <Row gutter={[16, 16]}>
+        <div className="car-list-header">
+          <Alert
+            message={`Hiện có ${totalCars} xe trong danh sách`}
+            type="info"
+            style={{
+              marginBottom: 16,
+              borderRadius: 10,
+              background: "#f6ffed",
+              border: "1px solid #b7eb8f",
+              color: "#237804",
+            }}
+          />
+        </div>
 
-          {Object.values(carsObj).map((car) => (
-            <Col key={car.vehicleId} xs={24} sm={12} md={8} lg={6}>
-              <Card
-                hoverable
-                onClick={() => handleChangeCar(car.vehicleId)}
-                className={`mini-card ${car.vehicleId === currentCarId ? "active" : ""
-                  }`}
-                cover={
-                  <div className="mini-card-cover">
-                    <img src={car.imageUrl} alt={car.model} />
-                    <div className="overlay">
-                      <div className="mini-title">
-                        {car.brand} {car.model}
-                      </div>
-                      <div className="mini-tags">
-                        <Tag
-                          color={
-                            chosenCar.vehicleStatus?.toLowerCase() === "available"
-                              ? "green"
-                              : chosenCar.vehicleStatus?.toLowerCase() === "rented"
-                                ? "blue"
-                                : chosenCar.vehicleStatus?.toLowerCase() === "maintenance"
-                                  ? "red"
-                                  : "default"
-                          }
-                        >
-                          {car.vehicleStatus}
-                        </Tag>
-                        {car.vehicleId === currentCarId && (
-                          <Tag color="geekblue">Đang chọn</Tag>
-                        )}
-                      </div>
-                    </div>
+        <div className="car-list-flex">
+          {visibleCars.map((car) => (
+            <div
+              key={car.vehicleId}
+              className={`mini-card ${car.vehicleId === currentCarId ? "active" : ""}`}
+              onClick={() => handleChangeCar(car.vehicleId)}
+            >
+              <div className="mini-card-cover">
+                <img src={getCarImageUrl(car.imageUrl)} alt={car.model} />
+                <div className="overlay">
+                  <div className="mini-title">
+                    {car.brand} {car.model}
                   </div>
-                }
-              />
-            </Col>
+                  <div className="mini-tags">
+                    <Tag
+                      color={
+                        car.vehicleStatus?.toLowerCase() === "available"
+                          ? "green"
+                          : car.vehicleStatus?.toLowerCase() === "rented"
+                            ? "blue"
+                            : car.vehicleStatus?.toLowerCase() === "maintenance"
+                              ? "red"
+                              : "default"
+                      }
+                    >
+                      {car.vehicleStatus}
+                    </Tag>
+                    {car.vehicleId === currentCarId && <Tag color="geekblue">Đang chọn</Tag>}
+                  </div>
+                </div>
+              </div>
+            </div>
           ))}
-        </Row>
+
+          {/* ✅ Thẻ Xem thêm nằm cạnh xe (chỉ hiển thị icon mũi tên) */}
+          {totalCars > 4 && (
+            <Col xs={24} sm={12} md={8} lg={6}>
+              <div
+                className="see-more-card"
+                onClick={() => setShowAllCars(!showAllCars)}
+              >
+                {showAllCars ? (
+                  <LeftOutlined className="see-more-icon" />
+                ) : (
+                  <RightOutlined className="see-more-icon" />
+                )}
+              </div>
+            </Col>
+          )}
+        </div>
       </div>
+
     </div>
   );
 };

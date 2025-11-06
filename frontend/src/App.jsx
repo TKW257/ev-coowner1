@@ -20,8 +20,10 @@ import BookingPage from "./pages/co-owner/BookingPage";
 import BookingTrackingPage from "./pages/co-owner/BookingTrackingPage"
 import InvoicePage from "./pages/co-owner/InvoicePage";
 import SuccessPage from "./pages/co-owner/SucessPage";
-import VotingtPage from "./pages/co-owner/VotingPage";
-import ProfilePage from "./pages/co-owner/ProfilePage";
+import VotingPage from "./pages/co-owner/VotingPage";
+import ProfilePage from "./pages/ProfilePage";
+import ContractPage from "./pages/co-owner/ContractPage";
+import OwnerContractPage from "./pages/co-owner/OwnerContractPage";
 
 // ===== Admin Pages =====
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -32,6 +34,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
 import ContractManagement from "./pages/admin/ContractManagement";
 import OwnerContractManagement from "./pages/admin/OwnerContractManagement";
+
 
 import AdminVoteListPage from "./pages/admin/VotesManagement/AdminVoteListPage";
 import AdminCreateTopicPage from "./pages/admin/VotesManagement/AdminCreateTopicPage";
@@ -62,14 +65,15 @@ const router = createBrowserRouter([
       // </ProtectedRoute>
     ),
     children: [
-      { path: "profile", element: <ProfilePage /> },
       { path: "mycar", element: <MyCarPage /> },
       { path: "bookingtracking", element: <BookingTrackingPage /> },
       { path: "carbooking/:vehicleId", element: <BookingPage /> },
       { path: "carbooking", element: <BookingPage /> },
       { path: "invoice", element: <InvoicePage /> },
       { path: "success", element: <SuccessPage /> },
-      { path: "vote", element: <VotingtPage /> },
+      { path: "vote", element: <VotingPage /> },
+      { path: "contract", element: <ContractPage /> },
+      { path: "ownercontract", element: <OwnerContractPage /> },
     ],
   },
 
@@ -77,7 +81,7 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      // <ProtectedRoute allowedRoles={["ADMIN", "STAFF"]}>
+      // <ProtectedRoute allowedRoles={["ADMIN""]}>
       <DashboardLayout />
       // </ProtectedRoute>
     ),
@@ -95,6 +99,40 @@ const router = createBrowserRouter([
       { path: "vote", element: <AdminVoteListPage /> },
       { path: "vote/create", element: <AdminCreateTopicPage /> },
       { path: "vote/:id", element: <TopicDetailPage /> },
+    ],
+  },
+
+
+  // ===== STAFF =====
+  {
+    path: "/staff",
+    element: (
+      // <ProtectedRoute allowedRoles={["STAFF"]}>
+      <DashboardLayout />
+      // </ProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: "bookingmanage", element: <BookingManage /> },
+      { path: "staffchecking", element: <StaffCheckingManage /> },
+      { path: "vehicles", element: <VehicleManagement /> },
+      { path: "users", element: <UserManagement /> },
+
+      // Votes Management
+      { path: "vote", element: <AdminVoteListPage /> },
+      { path: "vote/create", element: <AdminCreateTopicPage /> },
+      { path: "vote/:id", element: <TopicDetailPage /> },
+    ],
+  },
+
+
+  {
+    path: "/public",
+    element: (
+      <DashboardLayout />
+    ),
+    children: [
+      { path: "profile", element: <ProfilePage /> },
     ],
   },
 

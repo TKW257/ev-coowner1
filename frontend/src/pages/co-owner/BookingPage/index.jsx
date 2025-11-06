@@ -8,6 +8,8 @@ import isBetween from "dayjs/plugin/isBetween";
 import "./style.scss";
 dayjs.extend(isBetween);
 
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
+
 const now = dayjs();
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -22,6 +24,11 @@ const BookingPage = ({ onBookingSuccess }) => {
 
   const [bookings, setBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
+
+   const getCarImageUrl = (imagePath) => {
+    if (!imagePath) return "";
+    return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
+  };
 
 
   //✅ lấy data 1 xe 
@@ -179,7 +186,7 @@ const handleBooking = async () => {
       {/* CURRENT CAR */}
       <Card className="car-card">
         <div className="car-card-content">
-          <img src={vehicle.imageUrl || "/placeholder-car.png"} alt={vehicle.model} className="car-image" />
+          <img src={getCarImageUrl(vehicle.imageUrl) || "/placeholder-car.png"} alt={vehicle.model} className="car-image" />
           <div className="car-info">
             <Title level={4} className="car-title">
               {vehicle.brand} {vehicle.model}

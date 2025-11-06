@@ -3,6 +3,16 @@
   min-height: 100vh;
   color: #222;
 
+  see-more-container {
+    text-align: center;
+    margin-top: 12px;
+
+    button {
+      font-weight: 600;
+      font-size: 15px;
+    }
+  }
+
   .chosen-car {
     border-radius: 12px;
     overflow: hidden;
@@ -158,72 +168,96 @@
   }
 
   .car-list {
-    margin-top: 12px;
-    padding-bottom: 0;
+    margin-top: 16px;
 
-    .mini-card {
-      border-radius: 12px;
-      overflow: hidden;
-      position: relative;
-      transition: transform 0.2s ease;
-      cursor: pointer;
+    .car-list-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: stretch;
 
-      .ant-card-body {
-        display: none;
-        padding: 0;
-      }
+      .mini-card {
+        flex: 1 1 calc(25% - 16px);
+        max-width: calc(25% - 16px);
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s ease;
 
-      &:hover {
-        transform: scale(1.02);
-      }
-
-      &.active {
-        border: 2px solid #52c41a;
-      }
-
-      .mini-card-cover {
-        position: relative;
-        width: 100%;
-        height: 220px;
-
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
+        &:hover {
+          transform: scale(1.02);
         }
 
-        .overlay {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          background: linear-gradient(to top,
-              rgba(0, 0, 0, 0.6),
-              transparent);
-          color: #fff;
-          padding: 10px 12px;
-          backdrop-filter: blur(2px);
+        &.active {
+          border: 2px solid #52c41a;
+        }
 
-          .mini-title {
-            font-weight: 600;
-            font-size: 15px;
-            margin-bottom: 4px;
+        .mini-card-cover {
+          position: relative;
+          width: 100%;
+          height: 220px;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
           }
 
-          .mini-tags {
-            display: flex;
-            gap: 6px;
+          .overlay {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+            color: #fff;
+            padding: 10px;
 
-            .ant-tag {
-              margin: 0;
-              font-size: 12px;
+            .mini-title {
+              font-weight: 600;
+              font-size: 15px;
+              margin-bottom: 4px;
+            }
+
+            .mini-tags {
+              display: flex;
+              gap: 6px;
             }
           }
         }
       }
+
+      .see-more-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1 1 calc(25% - 16px);
+        max-width: calc(25% - 16px);
+        min-height: 220px;
+        border: 2px dashed #73d13d;
+        border-radius: 12px;
+        background: #f6ffed;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: #f6ffed;
+          border-color: #52c41a;
+          transform: scale(1.05);
+        }
+
+        .see-more-icon {
+          font-size: 48px;
+          color: #389e0d;
+          transition: transform 0.3s ease;
+
+          &:hover {
+            transform: scale(1.2);
+          }
+        }
+      }
+
     }
   }
+
 
   .ant-btn-primary {
     background-color: #52c41a !important;
@@ -234,4 +268,5 @@
       border-color: #73d13d !important;
     }
   }
+  
 }

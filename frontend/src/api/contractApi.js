@@ -1,6 +1,7 @@
 import axiosClient from "./axiosClient";
 
 const contractApi = {
+  
   // Tạo contract mới (dành cho ADMIN)
   create(data) {
     return axiosClient.post("/contracts/createContract", data, {
@@ -12,11 +13,6 @@ const contractApi = {
   getAll() {
     return axiosClient.get("/contracts/getAllContract");
   },
-
-  // Lấy contract theo ID
-  // getById(id) {
-  //   return axiosClient.get(`/contracts/${id}`);
-  // },
 
   // Lấy contracts của user hiện tại (dành cho USER)
   getMyContracts() {
