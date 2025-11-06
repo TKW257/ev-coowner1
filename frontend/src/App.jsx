@@ -25,7 +25,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ContractPage from "./pages/co-owner/ContractPage";
 import OwnerContractPage from "./pages/co-owner/OwnerContractPage";
 
-// ===== Admin Pages =====
+// ===== Admin/Staff Pages =====
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import BookingManage from "./pages/admin/BookingManagement";
 import StaffCheckingManage from "./pages/admin/StaffCheckingManagement";
@@ -34,6 +34,7 @@ import UserManagement from "./pages/admin/UserManagement";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
 import ContractManagement from "./pages/admin/ContractManagement";
 import OwnerContractManagement from "./pages/admin/OwnerContractManagement";
+import DisputeManagement from "./pages/admin/DisputeManagement"
 
 
 import AdminVoteListPage from "./pages/admin/VotesManagement/AdminVoteListPage";
@@ -94,6 +95,7 @@ const router = createBrowserRouter([
       { path: "invoice", element: <InvoiceManagement /> },
       { path: "contracts", element: <ContractManagement /> },
       { path: "owner-contracts", element: <OwnerContractManagement /> },
+      { path: "disputes", element: <DisputeManagement /> },
 
       // Votes Management
       { path: "vote", element: <AdminVoteListPage /> },
@@ -117,6 +119,7 @@ const router = createBrowserRouter([
       { path: "staffchecking", element: <StaffCheckingManage /> },
       { path: "vehicles", element: <VehicleManagement /> },
       { path: "users", element: <UserManagement /> },
+      { path: "disputes", element: <DisputeManagement /> },
 
       // Votes Management
       { path: "vote", element: <AdminVoteListPage /> },

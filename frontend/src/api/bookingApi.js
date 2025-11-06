@@ -59,6 +59,18 @@ const bookingApi = {
   viewAllStaffCheckings() {
     return axiosClient.get("/staff-checkings/viewAllStaffChecking");
   },
+
+
+    getDisputeWindows(vehicleId, year, month) {
+    return axiosClient.get(`/bookings/vehicles/${vehicleId}/dispute-windows`, {
+      params: { year, month },
+    });
+  },
+
+    getDisputedBookingsByVehicle(vehicleId) {
+    return axiosClient.get(`/bookings/vehicle/${vehicleId}/disputes`);
+  },
+
 };
 
 export default bookingApi;

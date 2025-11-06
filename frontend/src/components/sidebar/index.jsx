@@ -10,6 +10,7 @@ import {
   AuditOutlined,
   LogoutOutlined,
   CarOutlined,
+  FieldTimeOutlined,
   UserOutlined,
   FileDoneOutlined,
 } from "@ant-design/icons";
@@ -56,6 +57,11 @@ const Sidebar = () => {
         label: <Link to="/admin/staffchecking">Biên Bản Giao Nhận Xe</Link>,
       },
       {
+        key: "/admim/disputes",
+        icon: <FieldTimeOutlined />,
+        label: <Link to="/admin/disputes">Lịch sử tranh chấp </Link>,
+      },
+      {
         key: "/admin/vote",
         icon: <PieChartOutlined />,
         label: <Link to="/admin/vote">Quản Lý Bình Chọn</Link>,
@@ -98,6 +104,11 @@ const Sidebar = () => {
         key: "/staff/staffchecking",
         icon: <FileDoneOutlined />,
         label: <Link to="/staff/staffchecking">Biên bản giao nhận xe</Link>,
+      },
+      {
+        key: "/staff/disputes",
+        icon: <FieldTimeOutlined />,
+        label: <Link to="/staff/disputes">Lịch sử tranh chấp </Link>,
       },
       {
         key: "/staff/vote",

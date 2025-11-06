@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Steps, Card, Row, Col, Tag, Typography, Button, Space, Spin, Empty, Popconfirm, Modal } from "antd";
-import { CalendarOutlined, StopOutlined, CarOutlined, SwapOutlined } from "@ant-design/icons";
+import { CalendarOutlined, StopOutlined, SwapOutlined } from "@ant-design/icons";
 import bookingApi from "../../../api/bookingApi";
 import StaffCheckingReport from "../../../components/StaffCheckingReport";
 import { App } from "antd";
