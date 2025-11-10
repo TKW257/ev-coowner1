@@ -5,20 +5,17 @@ import {
   Space,
   Typography,
   Spin,
-  message,
+  Select,
   Row,
   Col,
   Button,
   Empty,
   Image,
-  Modal,
-  Descriptions,
 } from "antd";
 import {
   FileTextOutlined,
   CheckCircleOutlined,
-  ClockCircleOutlined,
-  CloseCircleOutlined,
+  SwapOutlined,
 } from "@ant-design/icons";
 import OwnerContractApi from "../../../api/owner-contractsApi";
 import OwnerContract from "../../../components/ContractOwner";
@@ -31,6 +28,10 @@ const MyCoOwnerContracts = () => {
   const [loading, setLoading] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+
+
+  const [filterStatus, setFilterStatus] = useState("ALL");
+  const [filteredContracts, setFilteredContracts] = useState([]);
 
   // 🧩 Fetch contracts
   const fetchContracts = async () => {
@@ -45,16 +46,9 @@ const MyCoOwnerContracts = () => {
       else if (data) contractsData = [data];
 
       setContracts(contractsData);
-
-      if (contractsData.length === 0)
-        message.info("Danh sách hợp đồng đồng sở hữu trống");
+      setFilteredContracts(contractsData);
     } catch (error) {
       console.error("❌ Error fetching co-owner contracts:", error);
-      const errMsg =
-        error.response?.data?.message ||
-        error.message ||
-        "Không tải được danh sách hợp đồng đồng sở hữu!";
-      message.error(errMsg);
     } finally {
       setLoading(false);
     }
@@ -75,30 +69,20 @@ const MyCoOwnerContracts = () => {
   // 🧩 Hiển thị trạng thái
   const getStatusTag = (status) => {
     switch (status) {
-      case "APPROVED":
+      case "ACTIVE":
         return (
           <Tag color="green" icon={<CheckCircleOutlined />}>
             Đã duyệt
           </Tag>
         );
-      case "COMPLETED":
+      case "TRANSFERRED":
         return (
-          <Tag color="cyan" icon={<CheckCircleOutlined />}>
+          <Tag color="cyan" icon={<SwapOutlined />}>
             Hoàn tất
           </Tag>
         );
-      case "CANCELLED":
-        return (
-          <Tag color="red" icon={<CloseCircleOutlined />}>
-            Đã hủy
-          </Tag>
-        );
       default:
-        return (
-          <Tag color="orange" icon={<ClockCircleOutlined />}>
-            Đang chờ
-          </Tag>
-        );
+        return <Tag>Không rõ</Tag>;
     }
   };
 
@@ -107,18 +91,41 @@ const MyCoOwnerContracts = () => {
     setModalVisible(true);
   };
 
+  const handleFilterChange = (value) => {
+    setFilterStatus(value);
+    setFilteredContracts(
+      value === "ALL" ? contracts : contracts.filter((c) => c.status === value)
+    );
+  };
+
   return (
     <div>
-      <Title level={4} style={{ marginBottom: 40 }}>
-      </Title>
+      <Space
+        style={{
+          width: "100%",
+          justifyContent: "space-between",
+          marginTop: 24,
+          marginBottom: 16,
+        }}
+      >
+        <Select
+          value={filterStatus}
+          onChange={handleFilterChange}
+          style={{ width: 200 }}
+        >
+          <Option value="ALL">Tất cả trạng thái</Option>
+          <Option value="ACTIVE">Đang sở hữu cổ phần</Option>
+          <Option value="TRANSFERRED">Đã chuyển nhượng</Option>
+        </Select>
+      </Space>
 
       {loading ? (
-        <Spin tip="Đang tải dữ liệu..." />
-      ) : contracts.length === 0 ? (
+        <Spin />
+      ) : filteredContracts.length === 0 ? (
         <Empty description="Không có hợp đồng nào" />
       ) : (
         <Space direction="vertical" style={{ width: "100%" }} size="large">
-          {contracts.map((contract) => (
+          {filteredContracts.map((contract) => (
             <Card
               key={contract.ownerContractId}
               hoverable

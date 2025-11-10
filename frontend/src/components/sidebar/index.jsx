@@ -69,7 +69,7 @@ const Sidebar = () => {
       {
         key: "/admin/invoice",
         icon: <FileTextOutlined />,
-        label: <Link to="/admin/invoice">Quản Lý Hóa Đơn</Link>,
+        label: <Link to="/admin/invoice">Quản Lý Chi Phí</Link>,
       },
       {
         key: "/admin/contracts",

@@ -21,6 +21,7 @@ import { PieChart, Pie, Cell, Tooltip as ReTooltip, Legend, ResponsiveContainer 
 import voteApi from "../../../api/voteApi";
 import vehiclesApi from "../../../api/vehiclesApi";
 import feeApi from "../../../api/feeApi";
+import dayjs from "dayjs";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 
 export default function AdminVoteListPage() {
@@ -44,7 +45,7 @@ export default function AdminVoteListPage() {
   const [feeLoading, setFeeLoading] = useState(false);
   const [emailOptions, setEmailOptions] = useState([]);
   const [loadingEmails, setLoadingEmails] = useState(false);
-  
+
   // Filter states
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
@@ -125,7 +126,7 @@ export default function AdminVoteListPage() {
 
   const confirmCalculate = async () => {
     if (!calculatingId) return;
-    
+
     try {
       await voteApi.calculateResult(calculatingId);
       message.success("Đã tính kết quả bình chọn");
@@ -160,28 +161,28 @@ export default function AdminVoteListPage() {
     feeForm.resetFields();
     setFeeModalVisible(true);
     setLoadingEmails(true);
-    
+
     try {
       // Gọi API để lấy danh sách ownership theo vehicleId
       console.log("===========================================");
       console.log("🔍 [CREATE FEE] Gọi API getMyGroupOwnership");
       console.log("VehicleId:", record.vehicleId);
       console.log("===========================================");
-      
+
       const res = await ownerShipsApi.getMyGroupOwnership(record.vehicleId);
-      
+
       console.log("✅ [CREATE FEE] API Response nhận được:");
       console.log("Full Response:", JSON.stringify(res, null, 2));
       console.log("Response Type:", typeof res);
       console.log("Is Array:", Array.isArray(res));
       console.log("Response Keys:", Object.keys(res || {}));
-      
+
       const data = Array.isArray(res) ? res : res?.data || [];
-      
+
       console.log("📋 [CREATE FEE] Data sau khi xử lý:");
       console.log("Data Array:", JSON.stringify(data, null, 2));
       console.log("Data Length:", data.length);
-      
+
       // Log từng item để xem cấu trúc
       if (data.length > 0) {
         console.log("\n📦 [CREATE FEE] Chi tiết từng item trong response:");
@@ -197,7 +198,7 @@ export default function AdminVoteListPage() {
       } else {
         console.log("⚠️ [CREATE FEE] Data rỗng - không có ownership nào");
       }
-      
+
       // Trích xuất userName từ danh sách ownership
       const userNames = data
         .map((item, index) => {
@@ -211,18 +212,18 @@ export default function AdminVoteListPage() {
           return userName;
         })
         .filter(userName => userName && userName.trim()); // Loại bỏ userName rỗng
-      
+
       console.log("[AdminVoteListPage] Extracted userNames:", userNames);
-      
+
       // Tạo options cho Select
       const emailList = userNames.map(userName => ({
         label: userName,
         value: userName,
       }));
-      
+
       console.log("[AdminVoteListPage] Email options list (from userName):", emailList);
       setEmailOptions(emailList);
-      
+
       // Tự động set userName đầu tiên nếu có
       const formValues = {
         vehicleId: record.vehicleId,
@@ -251,12 +252,12 @@ export default function AdminVoteListPage() {
     try {
       const values = await feeForm.validateFields();
       setFeeLoading(true);
-  
+
       const vehicleId = typeof values.vehicleId === 'string' ? parseInt(values.vehicleId, 10) : values.vehicleId;
       const emails = Array.isArray(values.email)
         ? values.email
         : [values.email.trim()];
-  
+
       // Gửi song song tất cả email bằng Promise.all
       await Promise.all(
         emails.map(email => {
@@ -270,7 +271,7 @@ export default function AdminVoteListPage() {
           return feeApi.createVariableFee(payload);
         })
       );
-  
+
       message.success(`Đã tạo hóa đơn phát sinh cho ${emails.length} người dùng!`);
       feeForm.resetFields();
       setFeeModalVisible(false);
@@ -311,11 +312,27 @@ export default function AdminVoteListPage() {
       dataIndex: "weight",
       key: "weight",
     },
+
     {
-      title: "Thời gian bình chọn",
+      title: "Thời gian",
       dataIndex: "votedAt",
       key: "votedAt",
+      render: (votedAt) => {
+        if (!votedAt) return "Không có dữ liệu";
+
+        const date = new Date(
+          votedAt[0],
+          votedAt[1] - 1, // month 0-based
+          votedAt[2],
+          votedAt[3],
+          votedAt[4],
+          votedAt[5]
+        );
+
+        return dayjs(date).format("DD/MM/YYYY HH:mm:ss");
+      },
     },
+    // các cột khác...
   ];
 
   const getStatusTag = (topic) => {
@@ -715,7 +732,7 @@ export default function AdminVoteListPage() {
                   : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Giá tiền">
-                {selectedTopic.amount 
+                {selectedTopic.amount
                   ? `${selectedTopic.amount.toLocaleString('vi-VN')} VNĐ`
                   : "N/A"}
               </Descriptions.Item>

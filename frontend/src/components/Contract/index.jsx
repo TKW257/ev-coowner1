@@ -1,7 +1,7 @@
 import React from "react";
 import { Modal, Button, Divider, Typography, Row, Col, Image, message } from "antd";
 import { DownloadOutlined } from "@ant-design/icons";
-import "./style.scss"; 
+import "./style.scss";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -32,7 +32,7 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
       onCancel={onClose}
       width={850}
       centered
-      rootClassName="contract-modal" 
+      rootClassName="contract-modal"
       footer={[
         <Button key="download" icon={<DownloadOutlined />} onClick={handleDownload}>
           Tải xuống
@@ -50,7 +50,7 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
           <Text className="contract-motto">Độc lập - Tự do - Hạnh phúc</Text>
           <Divider className="contract-divider" />
           <Title level={4} className="contract-title">
-            HỢP ĐỒNG ĐỒNG SỞ HỮU XE ĐIỆN
+            HỢP ĐỒNG HỢP TÁC KINH DOANH XE ĐIỆN
           </Title>
         </div>
       }
@@ -64,13 +64,17 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
           <Text strong>BÊN A (Chủ xe):</Text> <br />
           Họ và tên: {contract.user?.fullName || "____________________"} <br />
           Email: {contract.user?.email || "____________________"} <br />
-          Số điện thoại: {contract.user?.phone || "____________________"}
+          Số điện thoại: {contract.user?.phone || "____________________"} <br />
+          CCCD: {contract.user?.cccd || "____________________"}
         </Paragraph>
 
         <Paragraph>
           <Text strong>BÊN B (Nền tảng ECVs):</Text> <br />
           Đại diện: {contract.admin?.fullName || "____________________"} <br />
-          Chức vụ: Quản Trị Viên
+          Chức vụ: Quản Trị Viên <br />
+          Email: {contract.admin?.email || "____________________"} <br />
+          Số điện thoại: {contract.admin?.phone || "____________________"} <br />
+          CCCD: {contract.admin?.cccd || "____________________"}
         </Paragraph>
 
         <Title level={5} className="contract-section">
@@ -83,7 +87,7 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
           Mẫu xe: {contract.vehicle?.model || "__________"} <br />
           Biển số: {contract.vehicle?.plateNumber || "__________"} <br />
           Màu xe: {contract.vehicle?.color || "__________"} <br />
-          Dung lượng pin: {contract.vehicle?.batteryCapacityKwh || "____"} kWh <br />
+          Số chỗ: {contract.vehicle?.seat || "____"} <br />
           Năm sản xuất: {contract.vehicle?.year || "____"}
         </Paragraph>
 
@@ -135,7 +139,7 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
         </Paragraph>
 
         <Paragraph style={{ textAlign: "right", marginTop: 24 }}>
-            
+
           <i> Ngày lập: {formatDate(contract.createdAt)} </i>
         </Paragraph>
 

@@ -30,7 +30,7 @@ import userApi from "../../../api/userApi";
 import SignatureCanvas from "react-signature-canvas";
 import Contract from "../../../components/Contract";
 
-const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
+//const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const { Title } = Typography;
 

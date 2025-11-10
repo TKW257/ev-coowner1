@@ -148,9 +148,9 @@ const VehicleDisputePage = () => {
             key: "disputeWinner",
             render: (winner) =>
                 winner === true ? (
-                    <Tag color="green">Người thuê thắng</Tag>
+                    <Tag color="green">Chấp nhận</Tag>
                 ) : winner === false ? (
-                    <Tag color="red">Người cho thuê thắng</Tag>
+                    <Tag color="red">Thất bại</Tag>
                 ) : (
                     <Tag color="orange">Đang tranh chấp</Tag>
                 ),

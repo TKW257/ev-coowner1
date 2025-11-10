@@ -5,7 +5,6 @@ import {
   Space,
   Typography,
   Spin,
-  message,
   Select,
   Row,
   Col,
@@ -47,10 +46,8 @@ const MyContracts = () => {
 
       setContracts(contractsData);
       setFilteredContracts(contractsData);
-      if (contractsData.length === 0) message.info("Danh sách hợp đồng trống");
     } catch (error) {
       console.error("Error fetching contracts:", error);
-      message.error("Không tải được danh sách hợp đồng!");
     } finally {
       setLoading(false);
     }
@@ -117,7 +114,7 @@ const MyContracts = () => {
       </Space>
 
       {loading ? (
-        <Spin tip="Đang tải dữ liệu..." />
+        <Spin/>
       ) : filteredContracts.length === 0 ? (
         <Empty description="Không có hợp đồng nào" />
       ) : (

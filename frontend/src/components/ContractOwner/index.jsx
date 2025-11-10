@@ -74,16 +74,21 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
           I. THÔNG TIN CÁC BÊN
         </Title>
         <Paragraph>
-          <Text strong>BÊN A (Chủ xe):</Text> <br />
-          Họ và tên: {contract.admin?.fullName || "________________"} <br />
+          <Text strong>BÊN A (Nền tảng ECVs):</Text> <br />
+          Đại diện: {contract.admin?.fullName || "________________"} <br />
+          Chức vụ: Quản Trị Viên <br />
           Mã hợp đồng chính: {contract.contractId || "________________"} <br />
-          Email: {contract.admin?.email || "________________"}
+          Email: {contract.admin?.email || "________________"} <br />
+          Số điện thoại: {contract.admin?.phone || "____________________"} <br />
+          CCCD: {contract.admin?.cccd || "____________________"}
         </Paragraph>
 
         <Paragraph>
           <Text strong>BÊN B (Thành viên đồng sở hữu):</Text> <br />
           Họ và tên: {contract.user?.fullName || "________________"} <br />
           Email: {contract.user?.email || "________________"} <br />
+          Số điện thoại: {contract.user?.phone || "____________________"} <br />
+          CCCD: {contract.user?.cccd || "____________________"} <br />
           Tỷ lệ cổ phần mua: {contract.sharePercentage || "____"}% <br />
           Ngày tham gia: {formatDate(contract.createdAt)}
         </Paragraph>
@@ -93,9 +98,20 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
           II. THÔNG TIN HỢP ĐỒNG CON
         </Title>
         <Paragraph>
+          <Text strong>1. Thông tin hành chính của hợp đồng:</Text> <br />
           Mã hợp đồng đồng sở hữu: {contract.ownerContractId || "__________"} <br />
           Tham chiếu hợp đồng chính: {contract.contractId || "__________"} <br />
           Ngày tạo: {formatDate(contract.createdAt)}
+        </Paragraph>
+
+        <Paragraph>
+          <Text strong>2. Thông tin xe được đăng ký đồng sở hữu:</Text> <br />
+          Hãng xe: {contract.vehicle?.brand || "__________"} <br />
+          Mẫu xe: {contract.vehicle?.model || "__________"} <br />
+          Biển số: {contract.vehicle?.plateNumber || "__________"} <br />
+          Màu xe: {contract.vehicle?.color || "__________"} <br />
+          Số chỗ: {contract.vehicle?.seat || "____"} <br />
+          Năm sản xuất: {contract.vehicle?.year || "____"}
         </Paragraph>
 
         {/* III. QUYỀN VÀ NGHĨA VỤ */}
@@ -103,7 +119,7 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
           III. QUYỀN VÀ NGHĨA VỤ CỦA CÁC BÊN
         </Title>
         <Paragraph>
-          <Text strong>1. Bên A (Chủ xe):</Text> <br />
+          <Text strong>1. Bên A (Nền tảng ECVs):</Text> <br />
           - Cung cấp quyền sử dụng cổ phần xe cho Bên B theo phần trăm đã thỏa thuận. <br />
           - Hỗ trợ việc chuyển nhượng, chia lợi nhuận theo chính sách của hệ thống.
         </Paragraph>
@@ -130,6 +146,10 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
         <Paragraph>
           Hai bên đồng ý với toàn bộ điều khoản và cam kết tuân thủ các quy định của hệ thống. <br />
           Hợp đồng có hiệu lực kể từ ngày ký.
+        </Paragraph>
+
+        <Paragraph style={{ textAlign: "right", marginTop: 24 }}>
+          <i> Ngày lập: {formatDate(contract.createdAt)} </i>
         </Paragraph>
 
         {/* Chữ ký */}

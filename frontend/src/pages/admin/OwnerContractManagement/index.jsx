@@ -61,25 +61,6 @@ const OwnerContractManagement = () => {
     }
   };
 
-  /** Chuyển array ngày [YYYY,MM,DD] thành Date */
-  const parseDate = (dateArr) => {
-    if (!dateArr) return null;
-    if (Array.isArray(dateArr)) {
-      const [year, month, day, hour = 0, minute = 0, second = 0] = dateArr;
-      return new Date(year, month - 1, day, hour, minute, second);
-    }
-    return new Date(dateArr);
-  };
-
-  /** Xây URL ảnh đầy đủ */
-  const buildUrl = (path) => {
-    if (!path) return null;
-    const fixedPath = path.replace(/\\/g, "/");
-    return fixedPath.startsWith("http")
-      ? fixedPath
-      : `${BASE_URL}${fixedPath.startsWith("/") ? fixedPath : `/${fixedPath}`}`;
-  };
-
   const fetchOwnerContracts = async () => {
     setLoading(true);
     try {
@@ -128,14 +109,14 @@ const OwnerContractManagement = () => {
     setDetailModalVisible(false);
   };
 
-  const handleAddUser = (record) => {
-    setSelectedOwnerContract(record);
-    setAddUserModalVisible(true);
-    addUserForm.resetFields();
-    // Xóa chữ ký
-    if (adminSigPadRef.current) adminSigPadRef.current.clear();
-    if (userSigPadRef.current) userSigPadRef.current.clear();
-  };
+  // const handleAddUser = (record) => {
+  //   setSelectedOwnerContract(record);
+  //   setAddUserModalVisible(true);
+  //   addUserForm.resetFields();
+  //   // Xóa chữ ký
+  //   if (adminSigPadRef.current) adminSigPadRef.current.clear();
+  //   if (userSigPadRef.current) userSigPadRef.current.clear();
+  // };
 
   const handleCloseAddUserModal = () => {
     setAddUserModalVisible(false);
@@ -315,9 +296,9 @@ const OwnerContractManagement = () => {
           <Tooltip title="Xem chi tiết">
             <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewDetails(record)} />
           </Tooltip>
-          <Tooltip title="Thêm User">
+          {/* <Tooltip title="Thêm User">
             <Button type="link" icon={<UserAddOutlined />} onClick={() => handleAddUser(record)} />
-          </Tooltip>
+          </Tooltip> */}
         </Space>
       ),
     },
