@@ -32,6 +32,9 @@ import vehiclesApi from "../../../api/vehiclesApi";
 import userApi from "../../../api/userApi";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import SignatureCanvas from "react-signature-canvas";
+import Contract from "../../../components/Contract";
+
+//const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const { Title } = Typography;
 
@@ -323,7 +326,7 @@ const ContractManagement = () => {
           : "N/A"
     },
     {
-      title: "% Sở hữu",
+      title: "% Chào bán",
       dataIndex: "salePercentage",
       key: "salePercentage",
       width: 120,

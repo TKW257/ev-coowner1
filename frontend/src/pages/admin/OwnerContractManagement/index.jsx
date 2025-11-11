@@ -9,8 +9,6 @@ import {
   Slider,
   message,
   Space,
-  Tag,
-  Descriptions,
   Tooltip,
   Typography,
   Spin,
@@ -23,6 +21,8 @@ import ownerContractsApi from "../../../api/owner-contractsApi";
 import contractApi from "../../../api/contractApi";
 import userApi from "../../../api/userApi";
 import SignatureCanvas from "react-signature-canvas";
+import OwnerContract from "../../../components/ContractOwner";
+import { App } from "antd";
 
 const { Title } = Typography;
 
@@ -44,6 +44,7 @@ const OwnerContractManagement = () => {
   const [selectContractForm] = Form.useForm();
   const adminSigPadRef = useRef(null);
   const userSigPadRef = useRef(null);
+  const { message } = App.useApp();
 
   useEffect(() => {
     fetchOwnerContracts();
@@ -65,25 +66,6 @@ const OwnerContractManagement = () => {
     }
   };
 
-  /** Chuyển array ngày [YYYY,MM,DD] thành Date */
-  const parseDate = (dateArr) => {
-    if (!dateArr) return null;
-    if (Array.isArray(dateArr)) {
-      const [year, month, day, hour = 0, minute = 0, second = 0] = dateArr;
-      return new Date(year, month - 1, day, hour, minute, second);
-    }
-    return new Date(dateArr);
-  };
-
-  /** Xây URL ảnh đầy đủ */
-  const buildUrl = (path) => {
-    if (!path) return null;
-    const fixedPath = path.replace(/\\/g, "/");
-    return fixedPath.startsWith("http")
-      ? fixedPath
-      : `${BASE_URL}${fixedPath.startsWith("/") ? fixedPath : `/${fixedPath}`}`;
-  };
-
   const fetchOwnerContracts = async () => {
     setLoading(true);
     try {
@@ -93,7 +75,7 @@ const OwnerContractManagement = () => {
       if (Array.isArray(response)) data = response;
       else if (response?.data && Array.isArray(response.data)) data = response.data;
       else if (response?.content && Array.isArray(response.content)) data = response.content;
-      
+
       setOwnerContracts(data);
     } catch {
       message.error("Không tải được danh sách Owner Contract!");
@@ -110,7 +92,7 @@ const OwnerContractManagement = () => {
       if (Array.isArray(response)) usersData = response;
       else if (response?.data && Array.isArray(response.data)) usersData = response.data;
       else if (response?.content && Array.isArray(response.content)) usersData = response.content;
-      
+
       // Lọc chỉ lấy users đã APPROVED
       const approvedUsers = usersData.filter(
         (user) => user.verifyStatus === "APPROVED" && user.role === "USER"
@@ -132,14 +114,14 @@ const OwnerContractManagement = () => {
     setDetailModalVisible(false);
   };
 
-  const handleAddUser = (record) => {
-    setSelectedOwnerContract(record);
-    setAddUserModalVisible(true);
-    addUserForm.resetFields();
-    // Xóa chữ ký
-    if (adminSigPadRef.current) adminSigPadRef.current.clear();
-    if (userSigPadRef.current) userSigPadRef.current.clear();
-  };
+  // const handleAddUser = (record) => {
+  //   setSelectedOwnerContract(record);
+  //   setAddUserModalVisible(true);
+  //   addUserForm.resetFields();
+  //   // Xóa chữ ký
+  //   if (adminSigPadRef.current) adminSigPadRef.current.clear();
+  //   if (userSigPadRef.current) userSigPadRef.current.clear();
+  // };
 
   const handleCloseAddUserModal = () => {
     setAddUserModalVisible(false);
@@ -293,7 +275,7 @@ const OwnerContractManagement = () => {
         message.error("Vui lòng vẽ chữ ký Admin!");
         return;
       }
-      
+
       // Lấy chữ ký user từ Signature Canvas
       const userSigPad = userSigPadRef.current;
       if (userSigPad && !userSigPad.isEmpty()) {
@@ -323,17 +305,17 @@ const OwnerContractManagement = () => {
     }
   };
 
-  /** Hiển thị trạng thái tiếng Việt */
-  const renderStatus = (status) => {
-    const map = {
-      PENDING: { text: "Đang chờ duyệt", color: "orange" },
-      APPROVED: { text: "Đã được duyệt", color: "green" },
-      COMPLETED: { text: "Đã bán đủ cổ phần", color: "blue" },
-      EXPIRED: { text: "Hết hạn hợp đồng", color: "red" },
-    };
-    const { text, color } = map[status] || { text: status || "-", color: "default" };
-    return <Tag color={color}>{text}</Tag>;
-  };
+  // /** Hiển thị trạng thái tiếng Việt */
+  // const renderStatus = (status) => {
+  //   const map = {
+  //     PENDING: { text: "Đang chờ duyệt", color: "orange" },
+  //     APPROVED: { text: "Đã được duyệt", color: "green" },
+  //     COMPLETED: { text: "Đã bán đủ cổ phần", color: "blue" },
+  //     EXPIRED: { text: "Hết hạn hợp đồng", color: "red" },
+  //   };
+  //   const { text, color } = map[status] || { text: status || "-", color: "default" };
+  //   return <Tag color={color}>{text}</Tag>;
+  // };
 
   const columns = [
     {
