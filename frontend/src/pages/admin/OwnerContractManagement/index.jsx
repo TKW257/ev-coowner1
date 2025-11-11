@@ -388,9 +388,7 @@ const OwnerContractManagement = () => {
           <Tooltip title="Xem chi tiết">
             <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewDetails(record)} />
           </Tooltip>
-          <Tooltip title="Thêm User">
-            <Button type="link" icon={<UserAddOutlined />} onClick={() => handleAddUser(record)} />
-          </Tooltip>
+
         </Space>
       ),
     },
@@ -660,41 +658,13 @@ const OwnerContractManagement = () => {
                   { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
                 ]}
               >
-                <Form.Item shouldUpdate={(prevValues, currentValues) => prevValues.sharePercentage !== currentValues.sharePercentage} noStyle>
-                  {({ getFieldValue }) => {
-                    const currentValue = getFieldValue('sharePercentage') || 0;
-                    return (
-                      <div>
-                        <Slider
-                          min={0}
-                          max={100}
-                          step={10}
-                          marks={{
-                            0: '0%',
-                            10: '10%',
-                            20: '20%',
-                            30: '30%',
-                            40: '40%',
-                            50: '50%',
-                            60: '60%',
-                            70: '70%',
-                            80: '80%',
-                            90: '90%',
-                            100: '100%'
-                          }}
-                          tooltip={{
-                            formatter: (value) => `${value}%`
-                          }}
-                        />
-                        <div style={{ textAlign: 'center', marginTop: 8 }}>
-                          <Typography.Text strong style={{ fontSize: 16 }}>
-                            Giá trị: <span style={{ color: '#1890ff' }}>{currentValue}%</span>
-                          </Typography.Text>
-                        </div>
-                      </div>
-                    );
-                  }}
-                </Form.Item>
+                <Select placeholder="Chọn phần trăm chia sẻ">
+                  {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(percentage => (
+                    <Select.Option key={percentage} value={percentage}>
+                      {percentage}%
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
           </Row>
@@ -899,16 +869,17 @@ const OwnerContractManagement = () => {
                 name="sharePercentage"
                 label="Share Percentage (%)"
                 rules={[
-                  { required: true, message: 'Vui lòng nhập share percentage!' },
+                  { required: true, message: 'Vui lòng chọn share percentage!' },
                   { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
                 ]}
               >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  max={100} 
-                  placeholder="Nhập share percentage (0-100%)"
-                />
+                <Select placeholder="Chọn phần trăm chia sẻ">
+                  {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(percentage => (
+                    <Select.Option key={percentage} value={percentage}>
+                      {percentage}%
+                    </Select.Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
           </Row>
