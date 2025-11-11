@@ -69,7 +69,7 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
         </Paragraph>
 
         <Paragraph>
-          <Text strong>BÊN B (Nền tảng ECVs):</Text> <br />
+          <Text strong>BÊN B (Nền tảng CoEv):</Text> <br />
           Đại diện: {contract.admin?.fullName || "____________________"} <br />
           Chức vụ: Quản Trị Viên <br />
           Email: {contract.admin?.email || "____________________"} <br />

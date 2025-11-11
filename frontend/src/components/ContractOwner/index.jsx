@@ -74,7 +74,7 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
           I. THÔNG TIN CÁC BÊN
         </Title>
         <Paragraph>
-          <Text strong>BÊN A (Nền tảng ECVs):</Text> <br />
+          <Text strong>BÊN A (Nền tảng CoEV):</Text> <br />
           Đại diện: {contract.admin?.fullName || "________________"} <br />
           Chức vụ: Quản Trị Viên <br />
           Mã hợp đồng chính: {contract.contractId || "________________"} <br />
@@ -155,7 +155,7 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
         {/* Chữ ký */}
         <Row gutter={48} style={{ marginTop: 32, textAlign: "center" }}>
           <Col span={12}>
-            <Text strong>ĐẠI DIỆN BÊN A (Chủ xe)</Text>
+            <Text strong>ĐẠI DIỆN BÊN A (Nền tảng CoEV)</Text>
             <div style={{ marginTop: 60 }}>
               {contract.adminSignature ? (
                 <Image
