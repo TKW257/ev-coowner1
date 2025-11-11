@@ -14,6 +14,8 @@ import {
   Typography,
   Spin,
   Empty,
+  Row,
+  Col,
 } from "antd";
 import { EyeOutlined, UserAddOutlined, PlusOutlined } from "@ant-design/icons";
 import ownerContractsApi from "../../../api/owner-contractsApi";
@@ -24,6 +26,19 @@ import SignatureCanvas from "react-signature-canvas";
 const { Title } = Typography;
 
 const BASE_URL = "https://vallate-enzootically-sterling.ngrok-free.dev";
+
+const formatNumberWithCommas = (value) => {
+  if (value === undefined || value === null || value === "") return "";
+  const [integerPart, decimalPart] = value.toString().split(".");
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+};
+
+const parseNumberFromFormatted = (value) => {
+  if (value === undefined || value === null || value === "") return value;
+  if (typeof value === "number") return value;
+  return value.replace(/,/g, "");
+};
 
 const OwnerContractManagement = () => {
   const [ownerContracts, setOwnerContracts] = useState([]);
@@ -208,6 +223,21 @@ const OwnerContractManagement = () => {
       formData.append("contractId", contractId.toString());
       formData.append("userId", values.userId.toString());
       formData.append("sharePercentage", values.sharePercentage.toString());
+      if (values.insurance !== undefined && values.insurance !== null) {
+        formData.append("insurance", values.insurance.toString());
+      }
+      if (values.registration !== undefined && values.registration !== null) {
+        formData.append("registration", values.registration.toString());
+      }
+      if (values.maintenance !== undefined && values.maintenance !== null) {
+        formData.append("maintenance", values.maintenance.toString());
+      }
+      if (values.cleaning !== undefined && values.cleaning !== null) {
+        formData.append("cleaning", values.cleaning.toString());
+      }
+      if (values.operationPerMonth !== undefined && values.operationPerMonth !== null) {
+        formData.append("operationPerMonth", values.operationPerMonth.toString());
+      }
       
       // Lấy chữ ký admin từ Signature Canvas
       const adminSigPad = adminSigPadRef.current;
@@ -360,8 +390,16 @@ const OwnerContractManagement = () => {
   {selectedOwnerContract && (() => {
     const user = selectedOwnerContract.user;
     const admin = selectedOwnerContract.admin;
+    const contract = selectedOwnerContract.contract;
     const adminSig = buildUrl(selectedOwnerContract.adminSignature);
     const userSig = buildUrl(selectedOwnerContract.userSignature);
+    
+    // Lấy các trường từ ownerContract hoặc contract
+    const insurance = selectedOwnerContract.insurance ?? contract?.insurance;
+    const registration = selectedOwnerContract.registration ?? contract?.registration;
+    const maintenance = selectedOwnerContract.maintenance ?? contract?.maintenance;
+    const cleaning = selectedOwnerContract.cleaning ?? contract?.cleaning;
+    const operationPerMonth = selectedOwnerContract.operationPerMonth ?? contract?.operationPerMonth;
 
     return (
       <Descriptions bordered column={2}>
@@ -370,7 +408,7 @@ const OwnerContractManagement = () => {
         </Descriptions.Item>
 
         <Descriptions.Item label="Mã Contract">
-          {selectedOwnerContract.contractId || selectedOwnerContract.contract_Id || selectedOwnerContract.contract?.contractId || selectedOwnerContract.contract?.id || "-"}
+          {selectedOwnerContract.contractId || selectedOwnerContract.contract_Id || contract?.contractId || contract?.id || "-"}
         </Descriptions.Item>
 
         <Descriptions.Item label="Ngày tạo">
@@ -386,6 +424,36 @@ const OwnerContractManagement = () => {
             ? `${selectedOwnerContract.sharePercentage}%`
             : "-"}
         </Descriptions.Item>
+
+        {insurance !== undefined && insurance !== null && (
+          <Descriptions.Item label="Bảo hiểm">
+            {insurance.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        {registration !== undefined && registration !== null && (
+          <Descriptions.Item label="Đăng ký">
+            {registration.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        {maintenance !== undefined && maintenance !== null && (
+          <Descriptions.Item label="Bảo trì">
+            {maintenance.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        {cleaning !== undefined && cleaning !== null && (
+          <Descriptions.Item label="Vệ sinh">
+            {cleaning.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        {operationPerMonth !== undefined && operationPerMonth !== null && (
+          <Descriptions.Item label="Chi phí vận hành/tháng">
+            {operationPerMonth.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
 
         <Descriptions.Item label="Chủ xe (User)" span={2}>
           {user
@@ -494,7 +562,7 @@ const OwnerContractManagement = () => {
         onCancel={handleCloseAddUserModal}
         okText="Thêm"
         cancelText="Hủy"
-        width={700}
+        width={1000}
       >
         {selectedOwnerContract && (
           <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
@@ -508,98 +576,196 @@ const OwnerContractManagement = () => {
           </div>
         )}
         <Form form={addUserForm} layout="vertical">
-          <Form.Item
-            name="userId"
-            label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
-            rules={[{ required: true, message: "Vui lòng chọn user!" }]}
-          >
-            <Select 
-              placeholder="Chọn user" 
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children?.props?.children || option?.children || "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-            >
-              {users.map((user) => {
-                // Lọc bỏ user đã có trong owner contract
-                const isExistingUser = selectedOwnerContract?.user?.id === user.id || 
-                                      selectedOwnerContract?.user?.userId === user.id;
-                if (isExistingUser) return null;
-                
-                return (
-                  <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
-                    {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
-                  </Select.Option>
-                );
-              })}
-            </Select>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="userId"
+                label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
+                rules={[{ required: true, message: "Vui lòng chọn user!" }]}
+              >
+                <Select 
+                  placeholder="Chọn user" 
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.children?.props?.children || option?.children || "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                >
+                  {users.map((user) => {
+                    // Lọc bỏ user đã có trong owner contract
+                    const isExistingUser = selectedOwnerContract?.user?.id === user.id || 
+                                          selectedOwnerContract?.user?.userId === user.id;
+                    if (isExistingUser) return null;
+                    
+                    return (
+                      <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
+                        {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
+                      </Select.Option>
+                    );
+                  })}
+                </Select>
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            name="sharePercentage"
-            label="Share Percentage (%)"
-            rules={[
-              { required: true, message: 'Vui lòng nhập share percentage!' },
-              { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
-            ]}
-          >
-            <InputNumber 
-              style={{ width: '100%' }} 
-              min={0} 
-              max={100} 
-              placeholder="Nhập share percentage (0-100%)"
-            />
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="sharePercentage"
+                label="Share Percentage (%)"
+                rules={[
+                  { required: true, message: 'Vui lòng nhập share percentage!' },
+                  { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
+                ]}
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  max={100} 
+                  placeholder="Nhập share percentage (0-100%)"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            label="Chữ ký Admin"
-          >
-            <SignatureCanvas
-              ref={adminSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                className: "signatureCanvas",
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button
-              type="link"
-              onClick={() => {
-                if (adminSigPadRef.current) adminSigPadRef.current.clear();
-              }}
-              style={{ padding: 0, marginTop: 5 }}
-            >
-              Xóa chữ ký Admin
-            </Button>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="insurance"
+                label="Bảo hiểm"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí bảo hiểm"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            label="Chữ ký User (Co-owner)"
-          >
-            <SignatureCanvas
-              ref={userSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                className: "signatureCanvas",
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button
-              type="link"
-              onClick={() => {
-                if (userSigPadRef.current) userSigPadRef.current.clear();
-              }}
-              style={{ padding: 0, marginTop: 5 }}
-            >
-              Xóa chữ ký User
-            </Button>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="registration"
+                label="Đăng ký"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí đăng ký"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="maintenance"
+                label="Bảo trì"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí bảo trì"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item
+                name="cleaning"
+                label="Vệ sinh"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí vệ sinh"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="operationPerMonth"
+                label="Chi phí vận hành/tháng"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí vận hành mỗi tháng"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Chữ ký Admin"
+              >
+                <SignatureCanvas
+                  ref={adminSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    className: "signatureCanvas",
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+                  }}
+                  style={{ padding: 0, marginTop: 5 }}
+                >
+                  Xóa chữ ký Admin
+                </Button>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item
+                label="Chữ ký User (Co-owner)"
+              >
+                <SignatureCanvas
+                  ref={userSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    className: "signatureCanvas",
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (userSigPadRef.current) userSigPadRef.current.clear();
+                  }}
+                  style={{ padding: 0, marginTop: 5 }}
+                >
+                  Xóa chữ ký User
+                </Button>
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 
@@ -611,7 +777,7 @@ const OwnerContractManagement = () => {
         onCancel={handleCloseCreateContractModal}
         okText="Tạo"
         cancelText="Hủy"
-        width={700}
+        width={1000}
       >
         {selectedContractId && (
           <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
@@ -620,91 +786,189 @@ const OwnerContractManagement = () => {
           </div>
         )}
         <Form form={addUserForm} layout="vertical">
-          <Form.Item
-            name="userId"
-            label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
-            rules={[{ required: true, message: "Vui lòng chọn user!" }]}
-          >
-            <Select 
-              placeholder="Chọn user" 
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children?.props?.children || option?.children || "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-            >
-              {users.map((user) => (
-                <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
-                  {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="userId"
+                label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
+                rules={[{ required: true, message: "Vui lòng chọn user!" }]}
+              >
+                <Select 
+                  placeholder="Chọn user" 
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.children?.props?.children || option?.children || "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                >
+                  {users.map((user) => (
+                    <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
+                      {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            name="sharePercentage"
-            label="Share Percentage (%)"
-            rules={[
-              { required: true, message: 'Vui lòng nhập share percentage!' },
-              { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
-            ]}
-          >
-            <InputNumber 
-              style={{ width: '100%' }} 
-              min={0} 
-              max={100} 
-              placeholder="Nhập share percentage (0-100%)"
-            />
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="sharePercentage"
+                label="Share Percentage (%)"
+                rules={[
+                  { required: true, message: 'Vui lòng nhập share percentage!' },
+                  { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
+                ]}
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  max={100} 
+                  placeholder="Nhập share percentage (0-100%)"
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            label="Chữ ký Admin"
-          >
-            <SignatureCanvas
-              ref={adminSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                className: "signatureCanvas",
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button
-              type="link"
-              onClick={() => {
-                if (adminSigPadRef.current) adminSigPadRef.current.clear();
-              }}
-              style={{ padding: 0, marginTop: 5 }}
-            >
-              Xóa chữ ký Admin
-            </Button>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="insurance"
+                label="Bảo hiểm"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí bảo hiểm"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            label="Chữ ký User (Co-owner)"
-          >
-            <SignatureCanvas
-              ref={userSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                className: "signatureCanvas",
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button
-              type="link"
-              onClick={() => {
-                if (userSigPadRef.current) userSigPadRef.current.clear();
-              }}
-              style={{ padding: 0, marginTop: 5 }}
-            >
-              Xóa chữ ký User
-            </Button>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="registration"
+                label="Đăng ký"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí đăng ký"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="maintenance"
+                label="Bảo trì"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí bảo trì"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item
+                name="cleaning"
+                label="Vệ sinh"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí vệ sinh"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="operationPerMonth"
+                label="Chi phí vận hành/tháng"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí vận hành mỗi tháng"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Chữ ký Admin"
+              >
+                <SignatureCanvas
+                  ref={adminSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    className: "signatureCanvas",
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+                  }}
+                  style={{ padding: 0, marginTop: 5 }}
+                >
+                  Xóa chữ ký Admin
+                </Button>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item
+                label="Chữ ký User (Co-owner)"
+              >
+                <SignatureCanvas
+                  ref={userSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    className: "signatureCanvas",
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (userSigPadRef.current) userSigPadRef.current.clear();
+                  }}
+                  style={{ padding: 0, marginTop: 5 }}
+                >
+                  Xóa chữ ký User
+                </Button>
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
     </div>
