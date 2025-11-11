@@ -24,11 +24,13 @@ import {
   EditOutlined,
   DeleteOutlined,
   FileTextOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import contractApi from "../../../api/contractApi";
 import vehiclesApi from "../../../api/vehiclesApi";
 import userApi from "../../../api/userApi";
+import ownerShipsApi from "../../../api/ownerShipsApi";
 import SignatureCanvas from "react-signature-canvas";
 
 const { Title } = Typography;
@@ -54,9 +56,12 @@ const ContractManagement = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [ownershipModalVisible, setOwnershipModalVisible] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
   const [editingContract, setEditingContract] = useState(null);
   const [deletingContract, setDeletingContract] = useState(null);
+  const [ownershipData, setOwnershipData] = useState([]);
+  const [ownershipLoading, setOwnershipLoading] = useState(false);
   const [vehicles, setVehicles] = useState([]);
   const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
@@ -265,6 +270,35 @@ const ContractManagement = () => {
     }
   };
 
+  const handleViewOwnership = async (contract) => {
+    const vehicleId = contract?.vehicleId || contract?.vehicle?.vehicleId || contract?.vehicle?.id;
+    if (!vehicleId) {
+      message.error("Không tìm thấy Vehicle ID!");
+      return;
+    }
+
+    setOwnershipModalVisible(true);
+    setOwnershipLoading(true);
+    setOwnershipData([]);
+    
+    try {
+      const response = await ownerShipsApi.getMyGroupOwnership(vehicleId);
+      const data = Array.isArray(response) ? response : response?.data || [];
+      setOwnershipData(data);
+    } catch (error) {
+      console.error("Error fetching ownership:", error);
+      message.error("Không thể tải danh sách đồng sở hữu!");
+      setOwnershipData([]);
+    } finally {
+      setOwnershipLoading(false);
+    }
+  };
+
+  const handleCloseOwnershipModal = () => {
+    setOwnershipModalVisible(false);
+    setOwnershipData([]);
+  };
+
   const columns = [
     {
       title: "Mã HĐ",
@@ -333,15 +367,21 @@ const ContractManagement = () => {
               />
             </Tooltip>
           )}
-          {record.status === "APPROVED" && (
-            <Tooltip title="Quản lý Owner Contract">
-              <Button
-                type="link"
-                icon={<FileTextOutlined />}
-                onClick={() => navigate('/admin/owner-contracts')}
-              />
-            </Tooltip>
-          )}
+          <Tooltip title={record.status === "EXPIRED" ? "Hợp đồng đã hết hạn" : "Quản lý Owner Contract"}>
+            <Button
+              type="link"
+              icon={<FileTextOutlined />}
+              onClick={() => navigate('/admin/owner-contracts')}
+              disabled={record.status === "EXPIRED"}
+            />
+          </Tooltip>
+          <Tooltip title="Xem đồng sở hữu">
+            <Button
+              type="link"
+              icon={<TeamOutlined />}
+              onClick={() => handleViewOwnership(record)}
+            />
+          </Tooltip>
           <Tooltip title="Xóa">
             <Button
               type="link"
@@ -704,6 +744,75 @@ const ContractManagement = () => {
             </Col>
           </Row>
         </Form>
+      </Modal>
+
+      {/* Modal xem đồng sở hữu */}
+      <Modal
+        title="Danh sách đồng sở hữu"
+        open={ownershipModalVisible}
+        onCancel={handleCloseOwnershipModal}
+        footer={[
+          <Button key="close" onClick={handleCloseOwnershipModal}>
+            Đóng
+          </Button>
+        ]}
+        width={800}
+      >
+        {ownershipLoading ? (
+          <div style={{ textAlign: "center", padding: 50 }}>
+            <Spin size="large" tip="Đang tải danh sách đồng sở hữu..." />
+          </div>
+        ) : ownershipData.length === 0 ? (
+          <Empty description="Không có đồng sở hữu nào" />
+        ) : (
+          <Table
+            rowKey={(record, index) => record.ownershipId || record.id || index}
+            dataSource={ownershipData}
+            columns={[
+              {
+                title: "Thành viên",
+                key: "userName",
+                render: (_, record) => {
+                  if (record.userName) return record.userName;
+                  if (record.user?.fullName) return record.user.fullName;
+                  if (record.user?.full_name) return record.user.full_name;
+                  if (record.user?.email) return record.user.email;
+                  return "N/A";
+                },
+              },
+              {
+                title: "Email",
+                key: "email",
+                render: (_, record) => {
+                  if (record.user?.email) return record.user.email;
+                  return "-";
+                },
+              },
+              {
+                title: "Tỷ lệ sở hữu (%)",
+                key: "totalSharePercentage",
+                render: (_, record) => {
+                  const percentage = record.totalSharePercentage || record.sharePercentage || 0;
+                  return `${percentage}%`;
+                },
+              },
+              {
+                title: "Trạng thái",
+                key: "status",
+                render: (_, record) => {
+                  const status = record.status || "N/A";
+                  const statusLower = status.toLowerCase();
+                  let color = "default";
+                  if (statusLower === "active") color = "green";
+                  else if (statusLower === "inactive") color = "default";
+                  else if (statusLower === "pending") color = "orange";
+                  return <Tag color={color}>{status}</Tag>;
+                },
+              },
+            ]}
+            pagination={{ pageSize: 10 }}
+          />
+        )}
       </Modal>
     </div>
   );
