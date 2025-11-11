@@ -132,7 +132,25 @@ const VoteDashboard = () => {
       render: (choice) => (choice ? "Đồng ý" : "Không đồng ý"),
     },
     { title: "Trọng số", dataIndex: "weight", key: "weight" },
-    { title: "Thời gian", dataIndex: "votedAt", key: "votedAt" },
+    {
+      title: "Thời gian",
+      dataIndex: "votedAt",
+      key: "votedAt",
+      render: (votedAt) => {
+        if (!votedAt) return "Không có dữ liệu";
+
+        const date = new Date(
+          votedAt[0],
+          votedAt[1] - 1,
+          votedAt[2],
+          votedAt[3],
+          votedAt[4],
+          votedAt[5]
+        );
+
+        return dayjs(date).format("DD/MM/YYYY HH:mm:ss");
+      },
+    },
   ];
 
   const getStatusColor = (status) => {
@@ -152,7 +170,7 @@ const VoteDashboard = () => {
     <div style={{ padding: 24 }}>
 
       {/* Bộ lọc trong Card */}
-     <Card className="vote-filter-card" style={{ marginBottom: 24 }}>
+      <Card className="vote-filter-card" style={{ marginBottom: 24 }}>
 
         <Row gutter={16} align="middle">
           <Col>
@@ -240,16 +258,23 @@ const VoteDashboard = () => {
                     </Space>
                   </Col>
 
+
                   <Col>
                     <Space>
-
-                      <Text type="secondary">
-                        Tạo vào:
-                      </Text>
+                      <Text type="secondary">Tạo vào:</Text>
                       <Text type="secondary">
                         {topic.createdAt
-                          ? new Date(topic.createdAt).toLocaleString()
-                          : "null"}
+                          ? dayjs(
+                            new Date(
+                              topic.createdAt[0],
+                              topic.createdAt[1] - 1, // tháng bắt đầu từ 0
+                              topic.createdAt[2],
+                              topic.createdAt[3],
+                              topic.createdAt[4],
+                              topic.createdAt[5]
+                            )
+                          ).format("DD/MM/YYYY HH:mm:ss")
+                          : "Không có dữ liệu"}
                       </Text>
                     </Space>
                   </Col>

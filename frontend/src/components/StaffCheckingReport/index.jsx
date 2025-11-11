@@ -24,7 +24,7 @@ const StaffCheckingReport = ({ checking }) => {
   };
 
   const reportTitle =
-    checking.checkingType === "CheckOut"
+    checking.checkingType === "CheckIn"
       ? "BIÊN BẢN BÀN GIAO XE"
       : "BIÊN BẢN NHẬN XE";
 

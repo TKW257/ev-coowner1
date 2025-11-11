@@ -1,0 +1,28 @@
+.filter-status-card {
+  margin-bottom: 24px;
+
+  .ant-radio-group {
+    display: flex;
+    gap: 8px;
+    background-color: #f0fff0; // nền nhạt xanh lá
+    padding: 4px;
+    border-radius: 8px; // bo góc cho cả nhóm
+  }
+
+  .ant-radio-button-wrapper {
+    border-color: #52c41a; // viền mặc định
+    color: #52c41a;
+    border-radius: 6px; // bo góc cho từng button
+    background-color: transparent;
+
+    &:hover {
+      background-color: rgba(82, 196, 26, 0.1); // hover nhạt
+    }
+
+    &.ant-radio-button-wrapper-checked {
+      background-color: #52c41a; // background xanh lá khi chọn
+      color: white; // chữ trắng khi chọn
+      border-color: #52c41a;
+    }
+  }
+}

@@ -27,7 +27,7 @@ const DashboardHeader = ({ children }) => {
   };
 
   const handleGoToDashboard = () => {
-    if (role === "STAFF") navigate("/admin");
+    if (role === "STAFF") navigate("/staff/bookingmanage");
     else if (role == "ADMIN") navigate("/admin")
     else if (role === "USER") navigate("/owner/mycar");
     else navigate("/");
@@ -39,7 +39,7 @@ const DashboardHeader = ({ children }) => {
         key: "profile",
         label: <span>Trang cá nhân</span>,
         icon: <UserOutlined />,
-        onClick: () => navigate("/owner/profile"),
+        onClick: () => navigate("/public/profile"),
       },
       {
         key: "dashboard",

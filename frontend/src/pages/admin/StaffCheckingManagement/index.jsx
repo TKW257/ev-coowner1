@@ -112,7 +112,7 @@ const StaffCheckingManagement = () => {
       width: 120,
       render: (type) => (
         <Tag color={type === "CheckIn" ? "green" : "blue"}>
-          {type === "CheckIn" ? "Check-in" : "Check-out"}
+          {type === "CheckIn" ? "Giao Xe" : "Nhận Xe"}
         </Tag>
       ),
     },
@@ -148,15 +148,14 @@ const StaffCheckingManagement = () => {
   ];
 
   return (
-    <div style={{ padding: "24px", color: "black" }}>
-      <h2>Quản lý Staff Checking</h2>
-
+    <div style={{ padding: "24px" }}>
+      
       {/* Thống kê */}
       <Row gutter={16} style={{ marginBottom: "24px" }}>
         <Col span={6}>
           <Card>
             <Statistic
-              title="Tổng Checking"
+              title="Tổng Biên Bản"
               value={stats.totalCheckings}
               prefix={<CalendarOutlined />}
               valueStyle={{ color: "#1890ff" }}
@@ -166,7 +165,7 @@ const StaffCheckingManagement = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Check-in"
+              title="Bàn Giao Xe"
               value={stats.checkIns}
               prefix={<CheckCircleOutlined />}
               valueStyle={{ color: "#52c41a" }}
@@ -176,7 +175,7 @@ const StaffCheckingManagement = () => {
         <Col span={6}>
           <Card>
             <Statistic
-              title="Check-out"
+              title="Nhận Xe"
               value={stats.checkOuts}
               prefix={<ClockCircleOutlined />}
               valueStyle={{ color: "#faad14" }}
@@ -204,8 +203,8 @@ const StaffCheckingManagement = () => {
           onChange={setFilterType}
         >
           <Select.Option value="all">Tất cả</Select.Option>
-          <Select.Option value="CheckIn">Check-in</Select.Option>
-          <Select.Option value="CheckOut">Check-out</Select.Option>
+          <Select.Option value="CheckIn">Bàn Giao Xe</Select.Option>
+          <Select.Option value="CheckOut">Nhận Xe</Select.Option>
         </Select>
       </div>
 

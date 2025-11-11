@@ -21,9 +21,11 @@ function LoginPage() {
       message.success("Đăng nhập thành công 🎉");
 
       if (user.role === "STAFF") {
-        navigate("/admin/bookingmanage");
+        navigate("/staff/bookingmanage");
       } else if (user.role === "USER") {
         navigate("/owner/mycar");
+      } else if (user.role == "ADMIN") {
+        navigate("/admin/")
       } else {
         navigate("/");
       }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Steps, Card, Row, Col, Tag, Typography, Button, Space, Spin, Empty, Popconfirm, Modal } from "antd";
-import { CalendarOutlined, StopOutlined, CarOutlined, SwapOutlined } from "@ant-design/icons";
+import { CalendarOutlined, StopOutlined, SwapOutlined } from "@ant-design/icons";
 import bookingApi from "../../../api/bookingApi";
 import StaffCheckingReport from "../../../components/StaffCheckingReport";
 import { App } from "antd";
@@ -9,8 +9,9 @@ import { useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
-
 import "./style.scss";
+
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const { Title, Text } = Typography;
 const { Step } = Steps;
@@ -48,6 +49,11 @@ const BookingTracking = () => {
     InProgress: "#1890ff",
     Completed: "#52c41a",
     Cancelled: "red",
+  };
+
+  const getCarImageUrl = (imagePath) => {
+    if (!imagePath) return ""; // fallback
+    return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
   };
 
   const convertDateArray = (arr) => {
@@ -161,8 +167,6 @@ const BookingTracking = () => {
       console.error(err);
     }
   };
-
-
 
 
   const openModal = async (booking, type) => {
@@ -367,14 +371,7 @@ const BookingTracking = () => {
           <Card key={b.bookingId} className="booking-card">
             <Row gutter={16} align="middle">
               <Col xs={24} sm={8} md={6}>
-                <img
-                  src={
-                    b.imageUrl ||
-                    "https://via.placeholder.com/250x150?text=No+Image"
-                  }
-                  alt={b.vehicleName}
-                  className="booking-card-image"
-                />
+                <img src={getCarImageUrl(b.imageUrl)} alt={b.vehicleName} className="booking-card-image"/>
               </Col>
 
               <Col xs={24} sm={16} md={18}>

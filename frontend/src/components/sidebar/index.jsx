@@ -3,14 +3,14 @@ import { Menu } from "antd";
 import {
   HomeOutlined,
   CalendarOutlined,
-  BookOutlined,
+  WalletOutlined,
   DashboardOutlined,
   FileTextOutlined,
   PieChartOutlined,
+  AuditOutlined,
   LogoutOutlined,
-  CheckCircleOutlined,
-  LikeOutlined,
   CarOutlined,
+  FieldTimeOutlined,
   UserOutlined,
   FileDoneOutlined,
 } from "@ant-design/icons";
@@ -29,7 +29,7 @@ const Sidebar = () => {
 
   let menuItems = [];
 
-  if (role === "STAFF" || role === "ADMIN") {
+  if (role === "ADMIN") {
     menuItems = [
       {
         key: "/admin",
@@ -54,7 +54,12 @@ const Sidebar = () => {
       {
         key: "/admin/staffchecking",
         icon: <FileDoneOutlined />,
-        label: <Link to="/admin/staffchecking">Biên bản giao nhận xe</Link>,
+        label: <Link to="/admin/staffchecking">Biên Bản Giao Nhận Xe</Link>,
+      },
+      {
+        key: "/admim/disputes",
+        icon: <FieldTimeOutlined />,
+        label: <Link to="/admin/disputes">Lịch sử tranh chấp </Link>,
       },
       {
         key: "/admin/vote",
@@ -64,7 +69,7 @@ const Sidebar = () => {
       {
         key: "/admin/invoice",
         icon: <FileTextOutlined />,
-        label: <Link to="/admin/invoice">Quản Lý Hóa Đơn</Link>,
+        label: <Link to="/admin/invoice">Quản Lý Chi Phí</Link>,
       },
       {
         key: "/admin/contracts",
@@ -73,10 +78,45 @@ const Sidebar = () => {
       },
       {
         key: "/admin/owner-contracts",
-        icon: <FileTextOutlined />,
-        label: <Link to="/admin/owner-contracts">Quản Lý Owner Contract</Link>,
+        icon: <AuditOutlined />,
+        label: <Link to="/admin/owner-contracts">Quản Lý HĐ Sở Hữu</Link>,
       },
     ];
+
+  } else if (role === "STAFF") {
+    menuItems = [
+      {
+        key: "/staff/users",
+        icon: <UserOutlined />,
+        label: <Link to="/staff/users">Quản Lý Người Dùng</Link>,
+      },
+      {
+        key: "/staff/vehicles",
+        icon: <CarOutlined />,
+        label: <Link to="/staff/vehicles">Quản Lý Phương Tiện</Link>,
+      },
+      {
+        key: "/staff/bookingmanage",
+        icon: <CalendarOutlined />,
+        label: <Link to="/staff/bookingmanage">Quản Lý Đặt Xe</Link>,
+      },
+      {
+        key: "/staff/staffchecking",
+        icon: <FileDoneOutlined />,
+        label: <Link to="/staff/staffchecking">Biên bản giao nhận xe</Link>,
+      },
+      {
+        key: "/staff/disputes",
+        icon: <FieldTimeOutlined />,
+        label: <Link to="/staff/disputes">Lịch sử tranh chấp </Link>,
+      },
+      {
+        key: "/staff/vote",
+        icon: <PieChartOutlined />,
+        label: <Link to="/staff/vote">Quản Lý Bình Chọn</Link>,
+      },
+    ];
+
   } else if (role === "USER") {
     menuItems = [
       {
@@ -96,8 +136,18 @@ const Sidebar = () => {
       },
       {
         key: "/owner/invoice",
-        icon: <FileTextOutlined />,
+        icon: <WalletOutlined />,
         label: <Link to="/owner/invoice">Thanh Toán</Link>,
+      },
+      {
+        key: "/owner/contract",
+        icon: <FileDoneOutlined />,
+        label: <Link to="/owner/contract">HĐ Phương Tiện</Link>,
+      },
+      {
+        key: "/owner/ownercontract",
+        icon: <AuditOutlined />,
+        label: <Link to="/owner/ownercontract">HĐ Đồng Sở Hữu</Link>,
       },
     ];
   }
@@ -109,7 +159,7 @@ const Sidebar = () => {
     {
       key: "/owner/profile",
       icon: <UserOutlined />,
-      label: <Link to="/owner/profile">Hồ Sơ Người Dùng</Link>,
+      label: <Link to="/public/profile">Hồ Sơ Người Dùng</Link>,
     },
     {
       key: "logout",
