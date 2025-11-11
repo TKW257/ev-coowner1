@@ -1,0 +1,79 @@
+.explore-section {
+  padding: 40px 80px;
+  background-color: #f9fafb;
+
+  .explore-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+  }
+
+  .car-card {
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+
+    &:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .car-img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ant-skeleton-image {
+      width: 240px !important;
+      height: 200px !important;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .car-info {
+      padding: 14px 16px;
+    }
+
+    .car-name {
+      margin-bottom: 8px;
+      color: #111;
+    }
+
+    .car-details {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+
+      .car-battery {
+        font-size: 15px;
+        color: #333;
+        font-weight: 500;
+      }
+
+      .car-status {
+        font-size: 14px;
+        font-weight: 600;
+        text-transform: capitalize;
+
+        &.status-active {
+          color: #27ae60;
+        }
+
+        &.status-inactive {
+          color: #e74c3c;
+        }
+      }
+    }
+
+    .car-actions {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+
+}

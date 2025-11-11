@@ -1,0 +1,272 @@
+.mycars-root {
+  padding: 24px;
+  min-height: 100vh;
+  color: #222;
+
+  see-more-container {
+    text-align: center;
+    margin-top: 12px;
+
+    button {
+      font-weight: 600;
+      font-size: 15px;
+    }
+  }
+
+  .chosen-car {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    background: white;
+    box-shadow: 0 8px 28px rgba(20, 20, 40, 0.06);
+
+    .image-wrap {
+      position: relative;
+      height: 44vh;
+      min-height: 320px;
+      overflow: hidden;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 22px;
+        background: linear-gradient(180deg,
+            rgba(0, 0, 0, 0) 30%,
+            rgba(0, 0, 0, 0.55) 100%);
+
+        .left {
+          color: #fff;
+
+          .car-name {
+            margin: 0;
+            color: #fff;
+            text-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+          }
+
+          .plate {
+            color: rgba(255, 255, 255, 0.9);
+            display: block;
+            margin: 6px 0 8px;
+            font-weight: 500;
+          }
+        }
+
+        .right {
+          .buttons-row {
+            display: flex;
+            gap: 20px;
+
+            .btn-book {
+              background-color: #52c41a !important;
+              border-color: #52c41a !important;
+              font-size: 1.1rem;
+              font-weight: 600;
+              padding: 12px 28px;
+              border-radius: 10px;
+              box-shadow: 0 6px 16px rgba(82, 196, 26, 0.3);
+              transition: all 0.25s ease;
+
+              &:hover {
+                background-color: #73d13d !important;
+                border-color: #73d13d !important;
+                transform: translateY(-2px) scale(1.05);
+                box-shadow: 0 10px 20px rgba(82, 196, 26, 0.4);
+              }
+
+              &:disabled {
+                background-color: #b7eb8f !important;
+                border-color: #b7eb8f !important;
+                color: #fff;
+                box-shadow: none;
+                transform: none;
+              }
+            }
+
+            .btn-group {
+              background-color: #fa8c16 !important;
+              border-color: #fa8c16 !important;
+              font-size: 1.1rem;
+              color: white;
+              font-weight: 600;
+              padding: 12px 28px;
+              border-radius: 10px;
+              box-shadow: 0 6px 16px rgba(250, 140, 22, 0.3);
+              transition: all 0.25s ease;
+
+              &:hover {
+                background-color: #ffa940 !important;
+                border-color: #ffa940 !important;
+                transform: translateY(-2px) scale(1.05);
+                box-shadow: 0 10px 20px rgba(250, 140, 22, 0.4);
+              }
+
+              &:disabled {
+                background-color: #ffd591 !important;
+                border-color: #ffd591 !important;
+                color: #fff;
+                box-shadow: none;
+                transform: none;
+              }
+            }
+          }
+        }
+
+      }
+    }
+
+    .specs-row {
+      padding: 18px 22px;
+      border-top: 1px solid #f0f0f0;
+      background: #fff;
+    }
+
+    .ownership-row {
+      padding: 12px 22px 20px;
+      background: #fff;
+      border-top: 1px solid #eef2f6;
+
+      .ownership-block {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .ownership-title {
+          color: #7a8188;
+          font-size: 14px;
+        }
+
+        .ownership-value {
+          font-weight: 500;
+          font-size: 20px;
+        }
+      }
+
+      &--fixed {
+        .percent-style {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .pct-number {
+          font-size: 22px;
+          font-weight: 500;
+          color: #52c41a;
+        }
+      }
+    }
+  }
+
+  .car-list {
+    margin-top: 16px;
+
+    .car-list-flex {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: stretch;
+
+      .mini-card {
+        flex: 1 1 calc(25% - 16px);
+        max-width: calc(25% - 16px);
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: transform 0.2s ease;
+
+        &:hover {
+          transform: scale(1.02);
+        }
+
+        &.active {
+          border: 2px solid #52c41a;
+        }
+
+        .mini-card-cover {
+          position: relative;
+          width: 100%;
+          height: 220px;
+
+          img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .overlay {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
+            color: #fff;
+            padding: 10px;
+
+            .mini-title {
+              font-weight: 600;
+              font-size: 15px;
+              margin-bottom: 4px;
+            }
+
+            .mini-tags {
+              display: flex;
+              gap: 6px;
+            }
+          }
+        }
+      }
+
+      .see-more-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 1 1 calc(25% - 16px);
+        max-width: calc(25% - 16px);
+        min-height: 220px;
+        border: 2px dashed #73d13d;
+        border-radius: 12px;
+        background: #f6ffed;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: #f6ffed;
+          border-color: #52c41a;
+          transform: scale(1.05);
+        }
+
+        .see-more-icon {
+          font-size: 48px;
+          color: #389e0d;
+          transition: transform 0.3s ease;
+
+          &:hover {
+            transform: scale(1.2);
+          }
+        }
+      }
+
+    }
+  }
+
+
+  .ant-btn-primary {
+    background-color: #52c41a !important;
+    border-color: #52c41a !important;
+
+    &:hover {
+      background-color: #73d13d !important;
+      border-color: #73d13d !important;
+    }
+  }
+  
+}
