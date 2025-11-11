@@ -6,6 +6,7 @@ import {
   Form,
   Select,
   InputNumber,
+  Slider,
   message,
   Space,
   Tag,
@@ -27,19 +28,6 @@ const { Title } = Typography;
 
 const BASE_URL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
-const formatNumberWithCommas = (value) => {
-  if (value === undefined || value === null || value === "") return "";
-  const [integerPart, decimalPart] = value.toString().split(".");
-  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger;
-};
-
-const parseNumberFromFormatted = (value) => {
-  if (value === undefined || value === null || value === "") return value;
-  if (typeof value === "number") return value;
-  return value.replace(/,/g, "");
-};
-
 const OwnerContractManagement = () => {
   const [ownerContracts, setOwnerContracts] = useState([]);
   const [users, setUsers] = useState([]);
@@ -51,6 +39,7 @@ const OwnerContractManagement = () => {
   const [selectContractModalVisible, setSelectContractModalVisible] = useState(false);
   const [selectedOwnerContract, setSelectedOwnerContract] = useState(null);
   const [selectedContractId, setSelectedContractId] = useState(null);
+  const [selectedContract, setSelectedContract] = useState(null);
   const [addUserForm] = Form.useForm();
   const [selectContractForm] = Form.useForm();
   const adminSigPadRef = useRef(null);
@@ -161,16 +150,38 @@ const OwnerContractManagement = () => {
     if (userSigPadRef.current) userSigPadRef.current.clear();
   };
 
-  const handleSelectContract = () => {
-    selectContractForm.validateFields().then(values => {
-      setSelectedContractId(values.contractId);
+  const handleSelectContract = async () => {
+    try {
+      const values = await selectContractForm.validateFields();
+      const contractId = values.contractId;
+      
+      // Lấy tất cả contracts từ API và lọc ra contract cần thiết
+      const contractsResponse = await contractApi.getAll();
+      let contractsData = [];
+      if (Array.isArray(contractsResponse)) contractsData = contractsResponse;
+      else if (contractsResponse?.data && Array.isArray(contractsResponse.data)) contractsData = contractsResponse.data;
+      else if (contractsResponse?.content && Array.isArray(contractsResponse.content)) contractsData = contractsResponse.content;
+      
+      // Lọc ra contract theo contractId
+      const contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
+      
+      if (!contractData) {
+        message.error("Không tìm thấy hợp đồng!");
+        return;
+      }
+      
+      setSelectedContractId(contractId);
+      setSelectedContract(contractData);
       setSelectContractModalVisible(false);
       setCreateContractModalVisible(true);
       addUserForm.resetFields();
       // Xóa chữ ký
       if (adminSigPadRef.current) adminSigPadRef.current.clear();
       if (userSigPadRef.current) userSigPadRef.current.clear();
-    }).catch(() => {});
+    } catch (error) {
+      console.error("Error fetching contract:", error);
+      message.error("Không thể tải thông tin hợp đồng!");
+    }
   };
 
   const handleOpenCreateContract = () => {
@@ -186,6 +197,7 @@ const OwnerContractManagement = () => {
   const handleCloseCreateContractModal = () => {
     setCreateContractModalVisible(false);
     setSelectedContractId(null);
+    setSelectedContract(null);
     addUserForm.resetFields();
     // Xóa chữ ký
     if (adminSigPadRef.current) adminSigPadRef.current.clear();
@@ -218,25 +230,56 @@ const OwnerContractManagement = () => {
         return;
       }
 
+      // Lấy contract data để lấy các trường insurance, registration, etc.
+      let contractData = selectedContract;
+      
+      // Nếu không có selectedContract, tìm trong contracts list hoặc từ selectedOwnerContract
+      if (!contractData) {
+        if (selectedContractId) {
+          contractData = contracts.find(c => (c.contractId || c.id) === selectedContractId);
+        } else if (selectedOwnerContract?.contract) {
+          contractData = selectedOwnerContract.contract;
+        }
+      }
+      
+      // Nếu vẫn không có, gọi API getAllContract và lọc ra
+      if (!contractData && contractId) {
+        try {
+          const contractsResponse = await contractApi.getAll();
+          let contractsData = [];
+          if (Array.isArray(contractsResponse)) contractsData = contractsResponse;
+          else if (contractsResponse?.data && Array.isArray(contractsResponse.data)) contractsData = contractsResponse.data;
+          else if (contractsResponse?.content && Array.isArray(contractsResponse.content)) contractsData = contractsResponse.content;
+          
+          contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
+        } catch (error) {
+          console.error("Error fetching contract:", error);
+        }
+      }
+
       // Tạo FormData
       const formData = new FormData();
       formData.append("contractId", contractId.toString());
       formData.append("userId", values.userId.toString());
       formData.append("sharePercentage", values.sharePercentage.toString());
-      if (values.insurance !== undefined && values.insurance !== null) {
-        formData.append("insurance", values.insurance.toString());
-      }
-      if (values.registration !== undefined && values.registration !== null) {
-        formData.append("registration", values.registration.toString());
-      }
-      if (values.maintenance !== undefined && values.maintenance !== null) {
-        formData.append("maintenance", values.maintenance.toString());
-      }
-      if (values.cleaning !== undefined && values.cleaning !== null) {
-        formData.append("cleaning", values.cleaning.toString());
-      }
-      if (values.operationPerMonth !== undefined && values.operationPerMonth !== null) {
-        formData.append("operationPerMonth", values.operationPerMonth.toString());
+      
+      // Lấy các trường từ contract data
+      if (contractData) {
+        if (contractData.insurance !== undefined && contractData.insurance !== null) {
+          formData.append("insurance", contractData.insurance.toString());
+        }
+        if (contractData.registration !== undefined && contractData.registration !== null) {
+          formData.append("registration", contractData.registration.toString());
+        }
+        if (contractData.maintenance !== undefined && contractData.maintenance !== null) {
+          formData.append("maintenance", contractData.maintenance.toString());
+        }
+        if (contractData.cleaning !== undefined && contractData.cleaning !== null) {
+          formData.append("cleaning", contractData.cleaning.toString());
+        }
+        if (contractData.operationPerMonth !== undefined && contractData.operationPerMonth !== null) {
+          formData.append("operationPerMonth", contractData.operationPerMonth.toString());
+        }
       }
       
       // Lấy chữ ký admin từ Signature Canvas
@@ -328,7 +371,7 @@ const OwnerContractManagement = () => {
       },
     },
     {
-      title: "Share Percentage",
+      title: "Phần trăm chia sẻ",
       key: "sharePercentage",
       width: 150,
       render: (_, record) => {
@@ -613,102 +656,45 @@ const OwnerContractManagement = () => {
                 name="sharePercentage"
                 label="Share Percentage (%)"
                 rules={[
-                  { required: true, message: 'Vui lòng nhập share percentage!' },
+                  { required: true, message: 'Vui lòng chọn share percentage!' },
                   { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
                 ]}
               >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  max={100} 
-                  placeholder="Nhập share percentage (0-100%)"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="insurance"
-                label="Bảo hiểm"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí bảo hiểm"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item
-                name="registration"
-                label="Đăng ký"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí đăng ký"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="maintenance"
-                label="Bảo trì"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí bảo trì"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item
-                name="cleaning"
-                label="Vệ sinh"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí vệ sinh"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="operationPerMonth"
-                label="Chi phí vận hành/tháng"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí vận hành mỗi tháng"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
+                <Form.Item shouldUpdate={(prevValues, currentValues) => prevValues.sharePercentage !== currentValues.sharePercentage} noStyle>
+                  {({ getFieldValue }) => {
+                    const currentValue = getFieldValue('sharePercentage') || 0;
+                    return (
+                      <div>
+                        <Slider
+                          min={0}
+                          max={100}
+                          step={10}
+                          marks={{
+                            0: '0%',
+                            10: '10%',
+                            20: '20%',
+                            30: '30%',
+                            40: '40%',
+                            50: '50%',
+                            60: '60%',
+                            70: '70%',
+                            80: '80%',
+                            90: '90%',
+                            100: '100%'
+                          }}
+                          tooltip={{
+                            formatter: (value) => `${value}%`
+                          }}
+                        />
+                        <div style={{ textAlign: 'center', marginTop: 8 }}>
+                          <Typography.Text strong style={{ fontSize: 16 }}>
+                            Giá trị: <span style={{ color: '#1890ff' }}>{currentValue}%</span>
+                          </Typography.Text>
+                        </div>
+                      </div>
+                    );
+                  }}
+                </Form.Item>
               </Form.Item>
             </Col>
           </Row>
@@ -785,7 +771,104 @@ const OwnerContractManagement = () => {
             <Typography.Text>{selectedContractId}</Typography.Text>
           </div>
         )}
+        
         <Form form={addUserForm} layout="vertical">
+          <Form.Item shouldUpdate={(prevValues, currentValues) => prevValues.sharePercentage !== currentValues.sharePercentage}>
+            {({ getFieldValue }) => {
+              const sharePercentage = getFieldValue('sharePercentage') || 0;
+              const percentageMultiplier = sharePercentage / 100;
+              
+              return selectedContract && (
+                <div style={{ marginBottom: 16 }}>
+                  <Typography.Title level={5} style={{ marginBottom: 12 }}>
+                    Thông tin chi phí {sharePercentage > 0 ? `(${sharePercentage}% sở hữu)` : 'từ Contract'}
+                  </Typography.Title>
+                  <Descriptions bordered column={2} size="small">
+                    {selectedContract.insurance !== undefined && selectedContract.insurance !== null && (
+                      <Descriptions.Item label="Bảo hiểm">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.insurance * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.insurance.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.insurance.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                    {selectedContract.registration !== undefined && selectedContract.registration !== null && (
+                      <Descriptions.Item label="Đăng ký">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.registration * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.registration.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.registration.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                    {selectedContract.maintenance !== undefined && selectedContract.maintenance !== null && (
+                      <Descriptions.Item label="Bảo trì">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.maintenance * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.maintenance.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.maintenance.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                    {selectedContract.cleaning !== undefined && selectedContract.cleaning !== null && (
+                      <Descriptions.Item label="Vệ sinh">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.cleaning * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.cleaning.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.cleaning.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                    {selectedContract.operationPerMonth !== undefined && selectedContract.operationPerMonth !== null && (
+                      <Descriptions.Item label="Chi phí vận hành/tháng">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.operationPerMonth * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.operationPerMonth.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.operationPerMonth.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                  </Descriptions>
+                </div>
+              );
+            }}
+          </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -825,92 +908,6 @@ const OwnerContractManagement = () => {
                   min={0} 
                   max={100} 
                   placeholder="Nhập share percentage (0-100%)"
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="insurance"
-                label="Bảo hiểm"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí bảo hiểm"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item
-                name="registration"
-                label="Đăng ký"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí đăng ký"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="maintenance"
-                label="Bảo trì"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí bảo trì"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
-              </Form.Item>
-            </Col>
-
-            <Col span={12}>
-              <Form.Item
-                name="cleaning"
-                label="Vệ sinh"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí vệ sinh"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="operationPerMonth"
-                label="Chi phí vận hành/tháng"
-              >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
-                  placeholder="Nhập chi phí vận hành mỗi tháng"
-                  formatter={formatNumberWithCommas}
-                  parser={parseNumberFromFormatted}
                 />
               </Form.Item>
             </Col>

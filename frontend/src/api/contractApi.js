@@ -13,11 +13,6 @@ const contractApi = {
     return axiosClient.get("/contracts/getAllContract");
   },
 
-  // Lấy contract theo ID
-  // getById(id) {
-  //   return axiosClient.get(`/contracts/${id}`);
-  // },
-
   // Lấy contracts của user hiện tại (dành cho USER)
   getMyContracts() {
     return axiosClient.get("/contracts/myContracts");
