@@ -7,7 +7,6 @@ import {
   Select,
   InputNumber,
   Slider,
-  message,
   Space,
   Tooltip,
   Typography,
@@ -403,144 +402,32 @@ const OwnerContractManagement = () => {
       )}
 
       {/* 🔍 Modal chi tiết */}
-      <Modal
-  title="Chi tiết Owner Contract"
-  open={detailModalVisible}
-  onCancel={handleCloseDetailModal}
-  footer={<Button onClick={handleCloseDetailModal}>Đóng</Button>}
-  width={900}
->
-  {selectedOwnerContract && (() => {
-    const user = selectedOwnerContract.user;
-    const admin = selectedOwnerContract.admin;
-    const contract = selectedOwnerContract.contract;
-    const adminSig = buildUrl(selectedOwnerContract.adminSignature);
-    const userSig = buildUrl(selectedOwnerContract.userSignature);
-    
-    // Lấy các trường từ ownerContract hoặc contract
-    const insurance = selectedOwnerContract.insurance ?? contract?.insurance;
-    const registration = selectedOwnerContract.registration ?? contract?.registration;
-    const maintenance = selectedOwnerContract.maintenance ?? contract?.maintenance;
-    const cleaning = selectedOwnerContract.cleaning ?? contract?.cleaning;
-    const operationPerMonth = selectedOwnerContract.operationPerMonth ?? contract?.operationPerMonth;
+      {selectedOwnerContract && (() => {
+        // Chuẩn bị dữ liệu cho component OwnerContract
+        const contract = selectedOwnerContract.contract;
+        const contractData = {
+          ...selectedOwnerContract,
+          // Đảm bảo có vehicle từ contract
+          vehicle: selectedOwnerContract.vehicle || contract?.vehicle,
+          // Đảm bảo có contractId
+          contractId: selectedOwnerContract.contractId || selectedOwnerContract.contract_Id || contract?.contractId || contract?.id,
+          // Lấy các trường phí từ ownerContract hoặc contract
+          insurance: selectedOwnerContract.insurance ?? contract?.insurance,
+          registration: selectedOwnerContract.registration ?? contract?.registration,
+          maintenance: selectedOwnerContract.maintenance ?? contract?.maintenance,
+          cleaning: selectedOwnerContract.cleaning ?? contract?.cleaning,
+          operationPerMonth: selectedOwnerContract.operationPerMonth ?? contract?.operationPerMonth,
+        };
 
-    return (
-      <Descriptions bordered column={2}>
-        <Descriptions.Item label="Mã Owner Contract">
-          {selectedOwnerContract.ownerContractId || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Mã Contract">
-          {selectedOwnerContract.contractId || selectedOwnerContract.contract_Id || contract?.contractId || contract?.id || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Ngày tạo">
-          {parseDate(selectedOwnerContract.createdAt)?.toLocaleString("vi-VN") || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Trạng thái hợp đồng">
-          {renderStatus(selectedOwnerContract.contractStatus)}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="% Sở hữu">
-          {selectedOwnerContract.sharePercentage
-            ? `${selectedOwnerContract.sharePercentage}%`
-            : "-"}
-        </Descriptions.Item>
-
-        {insurance !== undefined && insurance !== null && (
-          <Descriptions.Item label="Bảo hiểm">
-            {insurance.toLocaleString('vi-VN')} VND
-          </Descriptions.Item>
-        )}
-
-        {registration !== undefined && registration !== null && (
-          <Descriptions.Item label="Đăng ký">
-            {registration.toLocaleString('vi-VN')} VND
-          </Descriptions.Item>
-        )}
-
-        {maintenance !== undefined && maintenance !== null && (
-          <Descriptions.Item label="Bảo trì">
-            {maintenance.toLocaleString('vi-VN')} VND
-          </Descriptions.Item>
-        )}
-
-        {cleaning !== undefined && cleaning !== null && (
-          <Descriptions.Item label="Vệ sinh">
-            {cleaning.toLocaleString('vi-VN')} VND
-          </Descriptions.Item>
-        )}
-
-        {operationPerMonth !== undefined && operationPerMonth !== null && (
-          <Descriptions.Item label="Chi phí vận hành/tháng">
-            {operationPerMonth.toLocaleString('vi-VN')} VND
-          </Descriptions.Item>
-        )}
-
-        <Descriptions.Item label="Chủ xe (User)" span={2}>
-          {user
-            ? `${user.fullName || "-"} (${user.email || "Không có email"})`
-            : "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Số điện thoại (User)">
-          {user?.phone || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Trạng thái xác thực (User)">
-          {user?.verifyStatus || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Admin duyệt" span={2}>
-          {admin
-            ? `${admin.fullName || "-"} (${admin.email || "Không có email"})`
-            : "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Số điện thoại (Admin)">
-          {admin?.phone || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Trạng thái xác thực (Admin)">
-          {admin?.verifyStatus || "-"}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Chữ ký Admin">
-          {adminSig ? (
-            <img
-              src={adminSig}
-              alt="Admin Signature"
-              style={{
-                maxHeight: 100,
-                border: "1px solid #ccc",
-                borderRadius: 4,
-              }}
-            />
-          ) : (
-            "Không có"
-          )}
-        </Descriptions.Item>
-
-        <Descriptions.Item label="Chữ ký User">
-          {userSig ? (
-            <img
-              src={userSig}
-              alt="User Signature"
-              style={{
-                maxHeight: 100,
-                border: "1px solid #ccc",
-                borderRadius: 4,
-              }}
-            />
-          ) : (
-            "Không có"
-          )}
-        </Descriptions.Item>
-      </Descriptions>
-    );
-  })()}
-</Modal>
+        return (
+          <OwnerContract
+            contract={contractData}
+            visible={detailModalVisible}
+            onClose={handleCloseDetailModal}
+            baseURL={BASE_URL}
+          />
+        );
+      })()}
 
 
       {/* Modal chọn Contract ID */}
