@@ -25,7 +25,7 @@ const GuestHeader = () => {
   };
 
   const handleGoToDashboard = () => {
-    if (role === "STAFF") navigate("/admin");
+    if (role === "STAFF") navigate("/staff/bookingmanage");
     else if (role == "ADMIN") navigate("/admin")
     else if (role === "USER") navigate("/owner/mycar");
     else navigate("/");
@@ -54,7 +54,7 @@ const GuestHeader = () => {
     items: [
       {
         key: "profile",
-        label: <NavLink to="/owner/profile">Trang cá nhân</NavLink>,
+        label: <NavLink to="/public/profile">Trang cá nhân</NavLink>,
         icon: <UserOutlined />,
       },
       {

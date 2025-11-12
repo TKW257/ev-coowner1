@@ -8,7 +8,6 @@ import {
   Tag,
   Button,
   Modal,
-  Descriptions,
   message,
   Spin,
   Empty,
@@ -36,6 +35,8 @@ import userApi from "../../../api/userApi";
 import feeApi from "../../../api/feeApi";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import vehiclesApi from "../../../api/vehiclesApi";
+import MonthInvoice from "../../../components/MonthInvoice";
+
 
 const AdminInvoiceDashboard = () => {
   const [invoices, setInvoices] = useState([]);
@@ -391,7 +392,6 @@ const AdminInvoiceDashboard = () => {
   const columns = [
     { title: "Mã HĐ", dataIndex: "sumaInvoiceId", render: (id) => `#SUMA-${id}` },
     { title: "Người dùng", dataIndex: "userName" },
-    { title: "Xe", dataIndex: "vehicleName" },
     { title: "Tháng", dataIndex: "invoiceMonth" },
     {
       title: "Tổng (₫)",
@@ -405,7 +405,7 @@ const AdminInvoiceDashboard = () => {
         const isOverdue = status === "OPEN" && dayjs(record.dueDate).isBefore(dayjs());
         let color = "orange";
         let displayStatus = status;
-        
+
         if (status === "SETTLED" || status === "PAID") {
           color = "green";
           displayStatus = "SETTLED";
@@ -415,7 +415,7 @@ const AdminInvoiceDashboard = () => {
         } else if (status === "OPEN") {
           displayStatus = "OPEN";
         }
-        
+
         return <Tag color={color}>{getStatusLabel(displayStatus)}</Tag>;
       },
     },
@@ -492,48 +492,19 @@ const AdminInvoiceDashboard = () => {
         open={open}
         title={`Hóa đơn #SUMA-${selectedInvoice?.sumaInvoiceId || ""}`}
         onCancel={() => setOpen(false)}
-        width={850}
+        width={1000}
         footer={[
           <Button key="close" onClick={() => setOpen(false)}>Đóng</Button>,
-          <Button key="download" type="primary" icon={<DownloadOutlined />} onClick={handleDownloadPDF}>Tải PDF</Button>,
+          <Button key="download" type="primary" icon={<DownloadOutlined />} onClick={handleDownloadPDF}>
+            Tải PDF
+          </Button>,
         ]}
       >
         {selectedInvoice && (
-          <div ref={pdfRef} style={{ padding: 10, background: "white" }}>
-            <Descriptions bordered column={1} size="small" title="Người dùng">
-              <Descriptions.Item label="Tên">{selectedInvoice.userName}</Descriptions.Item>
-              <Descriptions.Item label="Email">{selectedInvoice.email}</Descriptions.Item>
-              <Descriptions.Item label="SĐT">{selectedInvoice.phone}</Descriptions.Item>
-            </Descriptions>
-
-            <Descriptions bordered column={1} size="small" title="Thông tin xe" style={{ marginTop: 16 }}>
-              <Descriptions.Item label="Tên xe">{selectedInvoice.vehicleName}</Descriptions.Item>
-              <Descriptions.Item label="Biển số">{selectedInvoice.plateNumber}</Descriptions.Item>
-            </Descriptions>
-
-            <Descriptions bordered column={1} size="small" title="Chi tiết hóa đơn" style={{ marginTop: 16 }}>
-              <Descriptions.Item label="Tháng">{selectedInvoice.invoiceMonth}</Descriptions.Item>
-              <Descriptions.Item label="Trạng thái">
-                <Tag color={
-                  selectedInvoice.status === "SETTLED" || selectedInvoice.status === "PAID" 
-                    ? "green" 
-                    : (selectedInvoice.status === "OPEN" && dayjs(selectedInvoice.dueDate).isBefore(dayjs()))
-                    ? "red"
-                    : "orange"
-                }>
-                  {getStatusLabel(
-                    (selectedInvoice.status === "OPEN" && dayjs(selectedInvoice.dueDate).isBefore(dayjs()))
-                      ? "OVERDUE"
-                      : selectedInvoice.status === "PAID"
-                      ? "SETTLED"
-                      : selectedInvoice.status
-                  )}
-                </Tag>
-              </Descriptions.Item>
-            </Descriptions>
-          </div>
+          <MonthInvoice ref={pdfRef} selectedMonth={selectedInvoice} />
         )}
       </Modal>
+
 
       {/* === Modal tạo hóa đơn hàng loạt === */}
       <Modal

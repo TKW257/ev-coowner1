@@ -243,7 +243,7 @@ const VehicleManagement = () => {
     { title: "Mẫu xe", dataIndex: "model", key: "model" },
     { title: "Biển số", dataIndex: "plateNumber", key: "plateNumber" },
     {
-      title: "Giá thuê",
+      title: "Giá Xe",
       dataIndex: "price",
       key: "price",
       render: (v) => (v ? v.toLocaleString() + " VND" : "-"),
@@ -369,7 +369,7 @@ const VehicleManagement = () => {
 
           <Form.Item
             name="price"
-            label="Giá thuê"
+            label="Giá xe"
             rules={[{ required: true, message: 'Vui lòng nhập giá thuê!' }]}
           >
             <InputNumber style={{ width: '100%' }} min={0} step={0.01} />
@@ -511,7 +511,7 @@ const VehicleManagement = () => {
             <Descriptions.Item label="Số chỗ" span={1}>
               {selectedVehicle.seat || '-'}
             </Descriptions.Item>
-            <Descriptions.Item label="Giá thuê" span={1}>
+            <Descriptions.Item label="Giá xe" span={1}>
               {selectedVehicle.price !== null ? `${selectedVehicle.price} VND` : '-'}
             </Descriptions.Item>
             <Descriptions.Item label="Phí sạc / 1% pin" span={1}>
@@ -589,7 +589,7 @@ const VehicleManagement = () => {
             <InputNumber style={{ width: '100%' }} min={0} />
           </Form.Item>
 
-          <Form.Item name="price" label="Giá thuê" rules={[{ required: true }]}>
+          <Form.Item name="price" label="Giá xe" rules={[{ required: true }]}>
             <InputNumber style={{ width: '100%' }} min={0} />
           </Form.Item>
 

@@ -1,20 +1,10 @@
 import React, { useEffect, useState, useCallback } from "react";
-import {
-  Card,
-  Row,
-  Col,
-  Typography,
-  Button,
-  Skeleton,
-  Slider,
-  Select,
-  Pagination,
-  Space,
-  message,
-} from "antd";
+import { Card, Row, Col, Typography, Button, Skeleton, Select, Pagination, Space } from "antd";
 import { ThunderboltOutlined, FilterOutlined } from "@ant-design/icons";
 import vehiclesApi from "../../../api/vehiclesApi";
 import "./style.scss";
+
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -24,39 +14,38 @@ const StockCarsPage = () => {
   const [filteredCars, setFilteredCars] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // filter state
-  const [priceRange, setPriceRange] = useState([0, 2000000000]);
   const [status, setStatus] = useState(null);
   const [color, setColor] = useState(null);
   const [seat, setSeat] = useState(null);
   const [brand, setBrand] = useState(null);
   const [year, setYear] = useState(null);
 
-  // pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(8);
 
-  // 🔹 Lấy danh sách xe ban đầu
+  const getCarImageUrl = (imagePath) => {
+    if (!imagePath) return "";
+    return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
+  };
+
   const fetchVehicles = useCallback(async () => {
     try {
       setLoading(true);
       const response = await vehiclesApi.getAllVehicles();
-      const data = response?.data || response; // tuỳ backend trả về
+      const data = response?.data || response;
       setCars(data);
       setFilteredCars(data);
     } catch (error) {
       console.error(error);
-      message.error("Không thể tải danh sách xe 🚫");
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // 🔹 Hàm filter (dùng useCallback để tránh cảnh báo)
+  // hàm filter (dùng useCallback để tránh cảnh báo)
   const handleFilter = useCallback(() => {
     let result = [...cars];
     result = result.filter((v) => {
-      const matchPrice = v.price >= priceRange[0] && v.price <= priceRange[1];
       const matchStatus = status ? v.status === status : true;
       const matchColor = color
         ? v.color?.toLowerCase() === color.toLowerCase()
@@ -67,7 +56,6 @@ const StockCarsPage = () => {
         : true;
       const matchYear = year ? v.year === year : true;
       return (
-        matchPrice &&
         matchStatus &&
         matchColor &&
         matchSeat &&
@@ -77,32 +65,19 @@ const StockCarsPage = () => {
     });
     setFilteredCars(result);
     setCurrentPage(1);
-  }, [cars, priceRange, status, color, seat, brand, year]);
+  }, [cars, status, color, seat, brand, year]);
 
-  // 🔹 Chạy khi component mount
+  // chạy khi component mount
   useEffect(() => {
     fetchVehicles();
   }, [fetchVehicles]);
 
-  // 🔹 Chạy lại khi filter thay đổi
+  // chạy lại khi filter thay đổi
   useEffect(() => {
     handleFilter();
   }, [handleFilter]);
 
-  // Skeleton loader
-  const renderSkeletons = Array.from({ length: 8 }, (_, index) => (
-    <Col xs={24} sm={12} md={8} lg={6} key={`skeleton-${index}`}>
-      <Card className="car-card">
-        <Skeleton.Image
-          active
-          style={{ width: "100%", height: 200, borderRadius: 12 }}
-        />
-        <Skeleton active paragraph={{ rows: 3 }} />
-      </Card>
-    </Col>
-  ));
-
-  // Render danh sách xe
+  // render danh sách xe
   const renderCars = filteredCars
     .slice((currentPage - 1) * pageSize, currentPage * pageSize)
     .map((car) => {
@@ -119,7 +94,7 @@ const StockCarsPage = () => {
             hoverable
             cover={
               <img
-                src={car.imageUrl || "https://placehold.co/400x250?text=No+Image"}
+                src={getCarImageUrl(car.imageUrl) || "https://placehold.co/400x250?text=No+Image"}
                 alt={`${car.brand} ${car.model}`}
                 className="car-img"
               />
@@ -153,14 +128,12 @@ const StockCarsPage = () => {
   return (
     <div className="stockcars-page">
 
-      {/* FILTER BAR */}
       <Card className="filter-bar" style={{ marginBottom: 24 }}>
         <Space wrap align="center" size="middle" style={{ width: "100%" }}>
           <span style={{ fontWeight: 500 }}>
             <FilterOutlined /> Bộ lọc:
           </span>
 
-          {/* Hãng xe */}
           <Select
             placeholder="Hãng xe"
             style={{ width: 140 }}
@@ -174,7 +147,6 @@ const StockCarsPage = () => {
             ))}
           </Select>
 
-          {/* Năm sản xuất */}
           <Select
             placeholder="Năm"
             style={{ width: 100 }}
@@ -190,63 +162,84 @@ const StockCarsPage = () => {
               ))}
           </Select>
 
-                  {/* Tình trạng */}
-                  <Select
-                      placeholder="Tình trạng"
-                      style={{ width: 150 }}
-                      allowClear
-                      onChange={setStatus}
-                  >
-                      <Option value="AVAILABLE">Đang hoạt động</Option>
-                      <Option value="INACTIVE">Ngừng hoạt động</Option>
-                      <Option value="MAINTENANCE">Bảo trì</Option>
-                  </Select>
+          <Select
+            placeholder="Tình trạng"
+            style={{ width: 150 }}
+            allowClear
+            onChange={setStatus}
+          >
+            <Option value="AVAILABLE">Đang hoạt động</Option>
+            <Option value="INACTIVE">Ngừng hoạt động</Option>
+            <Option value="MAINTENANCE">Bảo trì</Option>
+          </Select>
 
-                  {/* Màu xe */}
-                  <Select
-                      placeholder="Màu xe"
-                      style={{ width: 120 }}
-                      allowClear
-                      onChange={setColor}
-                  >
-                      {Array.from(new Set(cars.map((v) => v.color))).map((c) => (
-                          <Option key={c} value={c}>
-                              {c}
-                          </Option>
-                      ))}
-                  </Select>
+          <Select
+            placeholder="Màu xe"
+            style={{ width: 120 }}
+            allowClear
+            onChange={setColor}
+          >
+            {Array.from(new Set(cars.map((v) => v.color))).map((c) => (
+              <Option key={c} value={c}>
+                {c}
+              </Option>
+            ))}
+          </Select>
 
-                  {/* Số chỗ */}
-                  <Select
-                      placeholder="Số chỗ"
-                      style={{ width: 100 }}
-                      allowClear
-                      onChange={setSeat}
-                  >
-                      {Array.from(new Set(cars.map((v) => v.seat))).map((s) => (
-                          <Option key={s} value={s}>
-                              {s}
-                          </Option>
-                      ))}
-                  </Select>
+          <Select
+            placeholder="Số chỗ"
+            style={{ width: 100 }}
+            allowClear
+            onChange={setSeat}
+          >
+            {Array.from(new Set(cars.map((v) => v.seat))).map((s) => (
+              <Option key={s} value={s}>
+                {s}
+              </Option>
+            ))}
+          </Select>
 
-                  <Button
-                      onClick={() => {
-                          setPriceRange([0, 2000000000]);
-                          setStatus(null);
-                          setColor(null);
-                          setSeat(null);
-                          setBrand(null);
-                          setYear(null);
-                      }}
-                  >
-                      Reset
-                  </Button>
-              </Space>
-          </Card>
+          <Button
+            onClick={() => {
+              setStatus(null);
+              setColor(null);
+              setSeat(null);
+              setBrand(null);
+              setYear(null);
+            }}
+          >
+            Reset
+          </Button>
+        </Space>
+      </Card>
 
-      {/* GRID */}
-      <Row gutter={[24, 24]}>{loading ? renderSkeletons : renderCars}</Row>
+      <Row gutter={[24, 24]}>
+        {loading
+          ? Array.from({ length: 5 }, (_, index) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={`skeleton-${index}`}>
+              <Card className="car-card">
+                <Skeleton.Image
+                  active
+                  style={{ width: "100%", height: "180px", borderRadius: 12, marginBottom: 15 }}
+                />
+                <Skeleton active paragraph={{ rows: 2 }} />
+              </Card>
+            </Col>
+          ))
+          : filteredCars.length > 0
+            ? renderCars
+            : Array.from({ length: 5 }, (_, index) => (
+              <Col xs={24} sm={12} md={8} lg={6} key={`empty-skeleton-${index}`}>
+                <Card className="car-card">
+                  <Skeleton.Image
+                    active
+                    style={{ width: "250px", height: "180px", borderRadius: 12, marginBottom: 15 }}
+                  />
+                  <Skeleton active paragraph={{ rows: 2 }} />
+                </Card>
+              </Col>
+            ))}
+      </Row>
 
       <Pagination
         current={currentPage}

@@ -10,15 +10,18 @@ import {
   Select,
   InputNumber,
   Space,
+  Card,
   Tooltip,
   Checkbox,
   Spin,
   Descriptions,
 } from "antd";
 import { PlusOutlined, EyeOutlined, CalculatorOutlined, SearchOutlined, FileTextOutlined } from "@ant-design/icons";
+import { PieChart, Pie, Cell, Tooltip as ReTooltip, Legend, ResponsiveContainer } from "recharts";
 import voteApi from "../../../api/voteApi";
 import vehiclesApi from "../../../api/vehiclesApi";
 import feeApi from "../../../api/feeApi";
+import dayjs from "dayjs";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 
 export default function AdminVoteListPage() {
@@ -29,23 +32,33 @@ export default function AdminVoteListPage() {
   const [confirmCalculateVisible, setConfirmCalculateVisible] = useState(false);
   const [calculatingId, setCalculatingId] = useState(null);
   const [form] = Form.useForm();
-  
+
   // Detail modal states
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [votes, setVotes] = useState([]);
   const [votesLoading, setVotesLoading] = useState(false);
-  
+
   // Fee invoice modal states
   const [feeModalVisible, setFeeModalVisible] = useState(false);
   const [feeForm] = Form.useForm();
   const [feeLoading, setFeeLoading] = useState(false);
   const [emailOptions, setEmailOptions] = useState([]);
   const [loadingEmails, setLoadingEmails] = useState(false);
-  
+
   // Filter states
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState([]);
+
+  const agreeCount = votes.filter(v => v.choice === true).length;
+  const disagreeCount = votes.filter(v => v.choice === false).length;
+
+  const chartData = [
+    { name: "Đồng ý", value: agreeCount },
+    { name: "Không đồng ý", value: disagreeCount },
+  ];
+
+  const COLORS = ["#52c41a", "#ff4d4f"];
 
   // Load topics + vehicles
   useEffect(() => {
@@ -113,7 +126,7 @@ export default function AdminVoteListPage() {
 
   const confirmCalculate = async () => {
     if (!calculatingId) return;
-    
+
     try {
       await voteApi.calculateResult(calculatingId);
       message.success("Đã tính kết quả bình chọn");
@@ -130,7 +143,7 @@ export default function AdminVoteListPage() {
     setSelectedTopic(record);
     setDetailModalVisible(true);
     setVotesLoading(true);
-    
+
     try {
       const id = record.topicId ?? record.id;
       const res = await voteApi.getVotesByTopic(id);
@@ -148,28 +161,28 @@ export default function AdminVoteListPage() {
     feeForm.resetFields();
     setFeeModalVisible(true);
     setLoadingEmails(true);
-    
+
     try {
       // Gọi API để lấy danh sách ownership theo vehicleId
       console.log("===========================================");
       console.log("🔍 [CREATE FEE] Gọi API getMyGroupOwnership");
       console.log("VehicleId:", record.vehicleId);
       console.log("===========================================");
-      
+
       const res = await ownerShipsApi.getMyGroupOwnership(record.vehicleId);
-      
+
       console.log("✅ [CREATE FEE] API Response nhận được:");
       console.log("Full Response:", JSON.stringify(res, null, 2));
       console.log("Response Type:", typeof res);
       console.log("Is Array:", Array.isArray(res));
       console.log("Response Keys:", Object.keys(res || {}));
-      
+
       const data = Array.isArray(res) ? res : res?.data || [];
-      
+
       console.log("📋 [CREATE FEE] Data sau khi xử lý:");
       console.log("Data Array:", JSON.stringify(data, null, 2));
       console.log("Data Length:", data.length);
-      
+
       // Log từng item để xem cấu trúc
       if (data.length > 0) {
         console.log("\n📦 [CREATE FEE] Chi tiết từng item trong response:");
@@ -185,7 +198,7 @@ export default function AdminVoteListPage() {
       } else {
         console.log("⚠️ [CREATE FEE] Data rỗng - không có ownership nào");
       }
-      
+
       // Trích xuất userName từ danh sách ownership
       const userNames = data
         .map((item, index) => {
@@ -199,18 +212,18 @@ export default function AdminVoteListPage() {
           return userName;
         })
         .filter(userName => userName && userName.trim()); // Loại bỏ userName rỗng
-      
+
       console.log("[AdminVoteListPage] Extracted userNames:", userNames);
-      
+
       // Tạo options cho Select
       const emailList = userNames.map(userName => ({
         label: userName,
         value: userName,
       }));
-      
+
       console.log("[AdminVoteListPage] Email options list (from userName):", emailList);
       setEmailOptions(emailList);
-      
+
       // Tự động set userName đầu tiên nếu có
       const formValues = {
         vehicleId: record.vehicleId,
@@ -239,12 +252,12 @@ export default function AdminVoteListPage() {
     try {
       const values = await feeForm.validateFields();
       setFeeLoading(true);
-  
+
       const vehicleId = typeof values.vehicleId === 'string' ? parseInt(values.vehicleId, 10) : values.vehicleId;
       const emails = Array.isArray(values.email)
         ? values.email
         : [values.email.trim()];
-  
+
       // Gửi song song tất cả email bằng Promise.all
       await Promise.all(
         emails.map(email => {
@@ -258,7 +271,7 @@ export default function AdminVoteListPage() {
           return feeApi.createVariableFee(payload);
         })
       );
-  
+
       message.success(`Đã tạo hóa đơn phát sinh cho ${emails.length} người dùng!`);
       feeForm.resetFields();
       setFeeModalVisible(false);
@@ -277,14 +290,14 @@ export default function AdminVoteListPage() {
   };
 
   const voteColumns = [
-    { 
-      title: "ID", 
-      dataIndex: "voteId", 
+    {
+      title: "ID",
+      dataIndex: "voteId",
       key: "voteId",
       width: 80,
     },
-    { 
-      title: "Người dùng", 
+    {
+      title: "Người dùng",
       dataIndex: "userName",
       key: "userName",
     },
@@ -294,16 +307,32 @@ export default function AdminVoteListPage() {
       key: "choice",
       render: (v) => v ? "Đồng ý" : "Không đồng ý",
     },
-    { 
-      title: "Trọng số", 
+    {
+      title: "Trọng số",
       dataIndex: "weight",
       key: "weight",
     },
-    { 
-      title: "Thời gian bình chọn", 
+
+    {
+      title: "Thời gian",
       dataIndex: "votedAt",
       key: "votedAt",
+      render: (votedAt) => {
+        if (!votedAt) return "Không có dữ liệu";
+
+        const date = new Date(
+          votedAt[0],
+          votedAt[1] - 1, // month 0-based
+          votedAt[2],
+          votedAt[3],
+          votedAt[4],
+          votedAt[5]
+        );
+
+        return dayjs(date).format("DD/MM/YYYY HH:mm:ss");
+      },
     },
+    // các cột khác...
   ];
 
   const getStatusTag = (topic) => {
@@ -314,7 +343,7 @@ export default function AdminVoteListPage() {
       REJECTED: { color: "red", text: "Đã từ chối" },
       EXPIRED: { color: "default", text: "Hết hạn" },
     };
-    
+
     const statusInfo = statusMap[status] || { color: "default", text: status || "N/A" };
     return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
   };
@@ -480,7 +509,7 @@ export default function AdminVoteListPage() {
         const id = record.topicId ?? record.id;
         const canCalculate = record.status === "PENDING";
         const canCreateFee = record.status === "APPROVED";
-        
+
         return (
           <Space size="middle">
             <Tooltip title="Xem chi tiết">
@@ -516,7 +545,7 @@ export default function AdminVoteListPage() {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: "black" }}>
-        <h2>Danh Sách Chủ Đề Bình Chọn (Admin)</h2>
+        <h2>Danh Sách Chủ Đề Bình Chọn </h2>
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -698,23 +727,51 @@ export default function AdminVoteListPage() {
                 {selectedTopic.decisionType || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Tỷ lệ yêu cầu">
-                {selectedTopic.requiredRatio 
+                {selectedTopic.requiredRatio
                   ? `${(selectedTopic.requiredRatio * 100).toFixed(2)}%`
                   : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Giá tiền">
-                {selectedTopic.amount 
+                {selectedTopic.amount
                   ? `${selectedTopic.amount.toLocaleString('vi-VN')} VNĐ`
                   : "N/A"}
               </Descriptions.Item>
             </Descriptions>
 
+            <Card title="Tỷ lệ bình chọn" style={{ marginBottom: 24 }}>
+              {votesLoading || votes.length === 0 ? (
+                <Spin />
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ${value}`}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <ReTooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </Card>
+
+
             <div>
               <h3 style={{ marginBottom: 16 }}>Danh sách phiếu bầu</h3>
               <Spin spinning={votesLoading}>
-                <Table 
-                  rowKey="voteId" 
-                  columns={voteColumns} 
+                <Table
+                  rowKey="voteId"
+                  columns={voteColumns}
                   dataSource={votes}
                   loading={votesLoading}
                   pagination={{ pageSize: 5 }}

@@ -169,7 +169,7 @@ const ManageBookings = () => {
 
       // Thông báo thành công
       notification.success({
-        message: checkingType === "checkin" ? "Check-in thành công" : "Check-out thành công",
+        message: checkingType === "checkin" ? "Bàn Giao Xe thành công" : "Nhận Xe thành công",
         description:
           checkingType === "checkin"
             ? "Xe đã được bàn giao thành công cho người dùng."
@@ -190,7 +190,7 @@ const ManageBookings = () => {
       console.error("❌ Error during checking submit:", error);
       notification.error({
         message: "Lỗi khi thực hiện",
-        description: "Đã xảy ra lỗi khi xử lý Check-in/Check-out. Vui lòng thử lại!",
+        description: "Đã xảy ra lỗi khi xử lý Bàn Giao Xe/Nhận Xe. Vui lòng thử lại!",
         placement: "topRight",
       });
     }
@@ -325,7 +325,7 @@ const ManageBookings = () => {
                 size="small"
                 onClick={() => handleCheckInOut(record, "checkout")}
               >
-                Check-out
+                Nhận Xe
               </Button>
             )}
 
@@ -335,7 +335,7 @@ const ManageBookings = () => {
                 size="small"
                 onClick={() => handleCheckInOut(record, "checkin")}
               >
-                Check-in
+                Bàn Giao Xe
               </Button>
             )}
 
@@ -344,8 +344,8 @@ const ManageBookings = () => {
                 {hasCheckIn && hasCheckOut
                   ? "Đã hoàn thành"
                   : hasCheckIn
-                    ? "Đã check-in"
-                    : "Đã check-out"}
+                    ? "Đã bàn giao xe"
+                    : "Đã nhận xe"}
               </span>
             )}
           </Space>
@@ -445,7 +445,7 @@ const ManageBookings = () => {
 
       {/* Check-in/Check-out Modal */}
       <Modal
-        title={`${checkingType === "checkin" ? "Check-in" : "Check-out"} - ${currentBooking?.vehicleName ?? ""}`}
+        title={`${checkingType === "checkin" ? "Bàn Giao Xe" : "Nhận Xe"} - ${currentBooking?.vehicleName ?? ""}`}
         open={checkingModalVisible}
         onOk={handleCheckingSubmit}
         onCancel={() => {
@@ -455,7 +455,7 @@ const ManageBookings = () => {
           form.resetFields();
           if (sigPadRef.current) sigPadRef.current.clear();
         }}
-        okText={checkingType === "checkin" ? "Check-in" : "Check-out"}
+        okText={checkingType === "checkin" ? "Bàn Giao Xe" : "Nhận Xe"}
         cancelText="Hủy"
         width={600}
       >
@@ -474,13 +474,46 @@ const ManageBookings = () => {
             <Input placeholder={hasUserEmail ? "Email từ dữ liệu booking" : "Nhập email người dùng"} disabled={hasUserEmail} />
           </Form.Item>
 
-          <Form.Item name="odometer" label="Số km đồng hồ" rules={[{ required: true, message: "Vui lòng nhập số km!" }]}>
-            <InputNumber placeholder="Nhập số km" style={{ width: "100%" }} min={0} step={0.1} />
-          </Form.Item>
+          <Form
+            form={form}
+            layout="vertical"
+            initialValues={{
+              odometer: 0,
+              batteryPercent: 100,
+            }}
+          >
+            <Form.Item
+              name="odometer"
+              label="Số km đồng hồ"
+              rules={[{ required: true, message: "Vui lòng nhập số km!" }]}
+            >
+              <InputNumber
+                placeholder="Nhập số km"
+                style={{ width: "100%" }}
+                min={0}
+                step={0.1}
+                formatter={(value) => (value === null || value === undefined ? '' : value)}
+                parser={(value) => (value === '' ? null : parseFloat(value))}
+              />
+            </Form.Item>
 
-          <Form.Item name="batteryPercent" label="Phần trăm pin (%)" rules={[{ required: true, message: "Vui lòng nhập phần trăm pin!" }]}>
-            <InputNumber placeholder="Nhập phần trăm pin" style={{ width: "100%" }} min={0} max={100} step={0.1} />
-          </Form.Item>
+            <Form.Item
+              name="batteryPercent"
+              label="Phần trăm pin (%)"
+              rules={[{ required: true, message: "Vui lòng nhập phần trăm pin!" }]}
+            >
+              <InputNumber
+                placeholder="Nhập phần trăm pin"
+                style={{ width: "100%" }}
+                min={0}
+                max={100}
+                step={0.1}
+                formatter={(value) => (value === null || value === undefined ? '' : value)}
+                parser={(value) => (value === '' ? null : parseFloat(value))}
+              />
+            </Form.Item>
+          </Form>
+
 
           <Form.Item name="damageReported" label="Có hư hỏng" valuePropName="checked">
             <Switch />
