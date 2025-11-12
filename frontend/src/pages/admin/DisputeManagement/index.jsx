@@ -178,7 +178,7 @@ const VehicleDisputePage = () => {
                 title={`Danh sách tranh chấp của xe: ${selectedVehicle?.brand || ""} ${selectedVehicle?.model || ""}`}
                 onCancel={() => setModalVisible(false)}
                 footer={null}
-                width={850}
+                width={1000}
             >
                 <Table
                     columns={disputeColumns}

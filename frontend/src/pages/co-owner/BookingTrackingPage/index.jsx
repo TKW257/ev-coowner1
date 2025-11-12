@@ -296,7 +296,7 @@ const BookingTracking = () => {
 
       {/* Modal xác nhận */}
       <Modal
-        title="Xác nhận Staff Checking"
+        title="Xác nhận biên bản này"
         open={isConfirmModalVisible}
         onCancel={() => setIsConfirmModalVisible(false)}
         okText="Gửi"
