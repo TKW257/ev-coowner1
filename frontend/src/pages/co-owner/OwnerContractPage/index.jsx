@@ -16,6 +16,8 @@ import {
   FileTextOutlined,
   CheckCircleOutlined,
   SwapOutlined,
+  ClockCircleOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import OwnerContractApi from "../../../api/owner-contractsApi";
 import OwnerContract from "../../../components/ContractOwner";
@@ -86,6 +88,21 @@ const MyCoOwnerContracts = () => {
     }
   };
 
+    const getContractStatusTag = (contractStatus) => {
+    switch (contractStatus) {
+      case "APPROVED":
+        return <Tag color="green" icon={<CheckCircleOutlined />}>Đã duyệt</Tag>;
+      case "COMPLETED":
+        return <Tag color="cyan" icon={<CheckCircleOutlined />}>Hoàn tất</Tag>;
+      case "PENDING":
+        return <Tag color="orange" icon={<ClockCircleOutlined />}>Đang chờ</Tag>;
+      case "EXPIRED":
+        return <Tag color="red" icon={<ExclamationCircleOutlined />}>Hết hạn</Tag>;
+      default:
+        return <Tag>{contractStatus}</Tag>;
+    }
+  };
+
   const handleViewDetail = (contract) => {
     setSelectedContract(contract);
     setModalVisible(true);
@@ -94,7 +111,7 @@ const MyCoOwnerContracts = () => {
   const handleFilterChange = (value) => {
     setFilterStatus(value);
     setFilteredContracts(
-      value === "ALL" ? contracts : contracts.filter((c) => c.status === value)
+      value === "ALL" ? contracts : contracts.filter((c) => c.ownerContractStatus === value)
     );
   };
 
@@ -174,7 +191,10 @@ const MyCoOwnerContracts = () => {
                     <Text>
                       Phần trăm sở hữu: {contract.sharePercentage ?? 0}%
                     </Text>
-                    {getStatusTag(contract.contractStatus)}
+                    <Row>
+                    {getStatusTag(contract.ownerContractStatus)}
+                    {getContractStatusTag(contract.contractStatus)}
+                    </Row>
                   </Space>
                 </Col>
 

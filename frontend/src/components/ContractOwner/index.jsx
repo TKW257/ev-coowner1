@@ -1,15 +1,4 @@
-import React from "react";
-import {
-  Modal,
-  Button,
-  Divider,
-  Typography,
-  Row,
-  Col,
-  Image,
-  message,
-} from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
+import { Modal, Button, Divider, Typography, Row, Col, Image } from "antd";
 import "./style.scss";
 
 const { Title, Text, Paragraph } = Typography;
@@ -23,136 +12,154 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
     return `${d.toString().padStart(2, "0")}/${m.toString().padStart(2, "0")}/${y}`;
   };
 
-  const handleDownload = () => {
-    if (!contract.fileUrl) {
-      message.warning("Không có file hợp đồng để tải xuống.");
-      return;
-    }
-    const fileLink = `${baseURL}/${contract.fileUrl.replace(/\\/g, "/")}`;
-    const link = document.createElement("a");
-    link.href = fileLink;
-    link.download = `HopDongDongSoHuu_${contract.ownerContractId}.pdf`;
-    link.click();
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined || value === "____") return "____";
+    const numValue = typeof value === "string" ? parseFloat(value.replace(/,/g, "")) : value;
+    if (isNaN(numValue)) return "____";
+    return numValue.toLocaleString("vi-VN");
   };
 
   return (
     <Modal
       open={visible}
       onCancel={onClose}
-      width={850}
+      width={900}
       centered
       rootClassName="contract-modal"
       footer={[
-        <Button
-          key="download"
-          icon={<DownloadOutlined />}
-          onClick={handleDownload}
-        >
-          Tải xuống
+        <Button key="print" onClick={() => window.print()}>
+          In hợp đồng
         </Button>,
         <Button key="close" type="primary" onClick={onClose}>
           Đóng
         </Button>,
       ]}
       title={
-        <div className="contract-header">
-          <Text strong className="contract-national">
+        <div className="contract-header" style={{ textAlign: "center" }}>
+          <Image
+            preview={false}
+            src="/assets/vn_emblem.png"
+            width={60}
+            style={{ marginBottom: 8 }}
+          />
+          <Text strong className="contract-national" style={{ display: "block" }}>
             CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
           </Text>
-          <br />
           <Text className="contract-motto">Độc lập - Tự do - Hạnh phúc</Text>
           <Divider className="contract-divider" />
           <Title level={4} className="contract-title">
             HỢP ĐỒNG ĐỒNG SỞ HỮU XE ĐIỆN
           </Title>
+          <Text type="secondary">Số: {contract.ownerContractId || "_____/HĐDSH"}</Text>
         </div>
       }
     >
-      <Typography>
-        {/* I. THÔNG TIN CÁC BÊN */}
-        <Title level={5} className="contract-section">
-          I. THÔNG TIN CÁC BÊN
-        </Title>
+      <Typography style={{ textAlign: "justify" }}>
         <Paragraph>
-          <Text strong>BÊN A (Nền tảng CoEV):</Text> <br />
-          Đại diện: {contract.admin?.fullName || "________________"} <br />
-          Chức vụ: Quản Trị Viên <br />
-          Mã hợp đồng chính: {contract.contractId || "________________"} <br />
-          Email: {contract.admin?.email || "________________"} <br />
-          Số điện thoại: {contract.admin?.phone || "____________________"} <br />
-          CCCD: {contract.admin?.cccd || "____________________"}
+          Căn cứ Bộ luật Dân sự năm 2015 và các quy định pháp luật hiện hành;<br />
+          Căn cứ nhu cầu và thỏa thuận giữa các bên, hôm nay, chúng tôi gồm:
+        </Paragraph>
+
+        {/* Điều 1 */}
+        <Title level={5}>Điều 1. Thông tin các bên</Title>
+        <Paragraph>
+          <Text strong>Bên A (Nền tảng CoEV):</Text><br />
+          Đại diện: {contract.admin?.fullName || "________________"}<br />
+          Chức vụ: Quản Trị Viên<br />
+          Mã hợp đồng chính: {contract.contractId || "________________"}<br />
+          Email: {contract.admin?.email || "________________"}<br />
+          Số điện thoại: {contract.admin?.phone || "________________"}<br />
+          CCCD: {contract.admin?.cccd || "________________"}
         </Paragraph>
 
         <Paragraph>
-          <Text strong>BÊN B (Thành viên đồng sở hữu):</Text> <br />
-          Họ và tên: {contract.user?.fullName || "________________"} <br />
-          Email: {contract.user?.email || "________________"} <br />
-          Số điện thoại: {contract.user?.phone || "____________________"} <br />
-          CCCD: {contract.user?.cccd || "____________________"} <br />
-          Tỷ lệ cổ phần mua: {contract.sharePercentage || "____"}% <br />
+          <Text strong>Bên B (Thành viên đồng sở hữu):</Text><br />
+          Họ và tên: {contract.user?.fullName || "________________"}<br />
+          Email: {contract.user?.email || "________________"}<br />
+          Số điện thoại: {contract.user?.phone || "________________"}<br />
+          CCCD: {contract.user?.cccd || "________________"}<br />
+          Tỷ lệ cổ phần mua: {contract.sharePercentage || "____"}%<br />
           Ngày tham gia: {formatDate(contract.createdAt)}
         </Paragraph>
 
-        {/* II. THÔNG TIN HỢP ĐỒNG CON */}
-        <Title level={5} className="contract-section">
-          II. THÔNG TIN HỢP ĐỒNG CON
-        </Title>
+        {/* Điều 2 */}
+        <Title level={5}>Điều 2. Thông tin hợp đồng đồng sở hữu</Title>
         <Paragraph>
-          <Text strong>1. Thông tin hành chính của hợp đồng:</Text> <br />
-          Mã hợp đồng đồng sở hữu: {contract.ownerContractId || "__________"} <br />
-          Tham chiếu hợp đồng chính: {contract.contractId || "__________"} <br />
-          Ngày tạo: {formatDate(contract.createdAt)}
+          <Text strong>1. Thông tin hành chính:</Text><br />
+          - Mã hợp đồng đồng sở hữu: {contract.ownerContractId || "__________"}<br />
+          - Tham chiếu hợp đồng chính: {contract.contractId || "__________"}<br />
+          - Ngày tạo hợp đồng: {formatDate(contract.createdAt)}
         </Paragraph>
 
         <Paragraph>
-          <Text strong>2. Thông tin xe được đăng ký đồng sở hữu:</Text> <br />
-          Hãng xe: {contract.vehicle?.brand || "__________"} <br />
-          Mẫu xe: {contract.vehicle?.model || "__________"} <br />
-          Biển số: {contract.vehicle?.plateNumber || "__________"} <br />
-          Màu xe: {contract.vehicle?.color || "__________"} <br />
-          Số chỗ: {contract.vehicle?.seat || "____"} <br />
-          Năm sản xuất: {contract.vehicle?.year || "____"}
+          <Text strong>2. Thông tin phương tiện đồng sở hữu:</Text><br />
+          - Hãng xe: {contract.vehicle?.brand || "__________"}<br />
+          - Mẫu xe: {contract.vehicle?.model || "__________"}<br />
+          - Biển số: {contract.vehicle?.plateNumber || "__________"}<br />
+          - Màu xe: {contract.vehicle?.color || "__________"}<br />
+          - Số chỗ: {contract.vehicle?.seat || "____"}<br />
+          - Năm sản xuất: {contract.vehicle?.year || "____"}
         </Paragraph>
 
-        {/* III. QUYỀN VÀ NGHĨA VỤ */}
-        <Title level={5} className="contract-section">
-          III. QUYỀN VÀ NGHĨA VỤ CỦA CÁC BÊN
-        </Title>
+        {/* Điều 3 */}
+        <Title level={5}>Điều 3. Phí, chi phí và phân chia doanh thu</Title>
         <Paragraph>
-          <Text strong>1. Bên A (Nền tảng ECVs):</Text> <br />
-          - Cung cấp quyền sử dụng cổ phần xe cho Bên B theo phần trăm đã thỏa thuận. <br />
-          - Hỗ trợ việc chuyển nhượng, chia lợi nhuận theo chính sách của hệ thống.
-        </Paragraph>
-        <Paragraph>
-          <Text strong>2. Bên B (Đồng sở hữu):</Text> <br />
-          - Thanh toán đủ phần vốn góp tương ứng tỷ lệ cổ phần. <br />
-          - Được hưởng lợi nhuận tương ứng với tỷ lệ sở hữu sau khi trừ chi phí. <br />
-          - Chấp hành quy định về bảo dưỡng, vận hành xe theo quy định hệ thống.
-        </Paragraph>
-
-        {/* IV. CHẤM DỨT HỢP ĐỒNG */}
-        <Title level={5} className="contract-section">
-          IV. CHẤM DỨT HỢP ĐỒNG
-        </Title>
-        <Paragraph>
-          - Hợp đồng hết hiệu lực khi cổ phần được chuyển nhượng hoặc hợp đồng chính chấm dứt. <br />
-          - Hệ thống ECVs tự động lưu lại lịch sử giao dịch trong mục <i>Ownership History</i>.
+          - Phí cố định:
+          <ul style={{ marginLeft: 24 }}>
+            <li>Bảo hiểm: {formatCurrency(contract.insurance)} VNĐ</li>
+            <li>Đăng ký xe: {formatCurrency(contract.registration)} VNĐ</li>
+            <li>Bảo dưỡng định kỳ: {formatCurrency(contract.maintenance)} VNĐ</li>
+            <li>Vệ sinh xe: {formatCurrency(contract.cleaning)} VNĐ</li>
+            <li>Chi phí vận hành hàng tháng: {formatCurrency(contract.operationPerMonth)} VNĐ</li>
+          </ul>
+          - Phí biến đổi: Theo dữ liệu phát sinh thực tế.<br />
+          - Doanh thu được chia cho các bên theo tỷ lệ cổ phần sau khi trừ toàn bộ chi phí vận hành.
         </Paragraph>
 
-        {/* V. CAM KẾT */}
-        <Title level={5} className="contract-section">
-          V. CAM KẾT
-        </Title>
+        {/* Điều 4 */}
+        <Title level={5}>Điều 4. Quyền và nghĩa vụ của các bên</Title>
         <Paragraph>
-          Hai bên đồng ý với toàn bộ điều khoản và cam kết tuân thủ các quy định của hệ thống. <br />
-          Hợp đồng có hiệu lực kể từ ngày ký.
+          <Text underline>Bên A (Nền tảng CoEV):</Text><br />
+          - Quản lý, vận hành hệ thống và dữ liệu cổ phần.<br />
+          - Cung cấp quyền sử dụng cổ phần xe cho Bên B theo tỷ lệ đã thỏa thuận.<br />
+          - Hỗ trợ việc chuyển nhượng, chia lợi nhuận, và đảm bảo tính minh bạch trong hoạt động.
         </Paragraph>
 
-        <Paragraph style={{ textAlign: "right", marginTop: 24 }}>
-          <i> Ngày lập: {formatDate(contract.createdAt)} </i>
+        <Paragraph>
+          <Text underline>Bên B (Đồng sở hữu):</Text><br />
+          - Thanh toán đủ phần vốn góp tương ứng tỷ lệ cổ phần.<br />
+          - Được hưởng lợi nhuận tương ứng tỷ lệ sở hữu sau khi trừ chi phí.<br />
+          - Tuân thủ các quy định về bảo dưỡng, vận hành, và chính sách nội bộ của CoEV.
+        </Paragraph>
+
+        {/* Điều 5 */}
+        <Title level={5}>Điều 5. Chấm dứt hợp đồng</Title>
+        <Paragraph>
+          - Hợp đồng chấm dứt khi cổ phần được chuyển nhượng hoặc hợp đồng chính hết hiệu lực.<br />
+          - Trong trường hợp chấm dứt sớm, các quyền và nghĩa vụ phát sinh đến thời điểm chấm dứt vẫn được thực hiện đầy đủ.<br />
+          - Hệ thống CoEV sẽ lưu trữ toàn bộ dữ liệu giao dịch trong mục <i>Ownership History</i>.
+        </Paragraph>
+
+        {/* Điều 6 */}
+        <Title level={5}>Điều 6. Giải quyết tranh chấp</Title>
+        <Paragraph>
+          Mọi tranh chấp phát sinh trong quá trình thực hiện hợp đồng sẽ được hai bên ưu tiên giải quyết bằng thương lượng. 
+          Nếu không đạt được thỏa thuận, tranh chấp sẽ được giải quyết tại <b>Tòa án có thẩm quyền tại TP. Hồ Chí Minh</b>.
+        </Paragraph>
+
+        {/* Điều 7 */}
+        <Title level={5}>Điều 7. Hiệu lực hợp đồng</Title>
+        <Paragraph>
+          Hợp đồng có hiệu lực kể từ ngày {formatDate(contract.createdAt)} 
+          và chấm dứt khi hợp đồng chính hết hiệu lực hoặc khi các bên thống nhất chấm dứt bằng văn bản.<br />
+          Hợp đồng được lập thành 02 bản, mỗi bên giữ 01 bản, có giá trị pháp lý như nhau.
         </Paragraph>
 
         {/* Chữ ký */}
+        <Paragraph style={{ textAlign: "right", marginTop: 24 }}>
+          Lập tại: TP. Hồ Chí Minh, ngày {formatDate(contract.createdAt)}
+        </Paragraph>
+
         <Row gutter={48} style={{ marginTop: 32, textAlign: "center" }}>
           <Col span={12}>
             <Text strong>ĐẠI DIỆN BÊN A (Nền tảng CoEV)</Text>

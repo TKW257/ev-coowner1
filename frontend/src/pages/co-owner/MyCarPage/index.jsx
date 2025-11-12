@@ -165,16 +165,7 @@ const MyCars = () => {
           <p style={{ color: "#666", fontSize: "1rem", marginBottom: "24px", lineHeight: 1.6 }}>
             Hãy thêm chiếc xe đầu tiên để bắt đầu quản lý và theo dõi hành trình của bạn.
           </p>
-
-          <Button
-            type="primary"
-            size="large"
-            style={{ backgroundColor: "#52c41a", borderColor: "#52c41a", borderRadius: "10px", padding: "10px 26px", fontWeight: 500, fontSize: "1rem", transition: "all 0.3s ease" }}
-            onMouseEnter={e => { e.currentTarget.style.backgroundColor = "#73d13d"; e.currentTarget.style.borderColor = "#73d13d"; e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 6px 20px rgba(82,196,26,0.4)"; }}
-            onMouseLeave={e => { e.currentTarget.style.backgroundColor = "#52c41a"; e.currentTarget.style.borderColor = "#52c41a"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
-          >
-            <i className="ri-add-line" style={{ marginRight: "6px" }} /> Thêm xe ngay
-          </Button>
+          
         </div>
       </div>
     );
