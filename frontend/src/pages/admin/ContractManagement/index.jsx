@@ -10,7 +10,6 @@ import {
   message,
   Space,
   Tag,
-  Descriptions,
   Tooltip,
   Typography,
   Spin,
@@ -34,7 +33,7 @@ import ownerShipsApi from "../../../api/ownerShipsApi";
 import SignatureCanvas from "react-signature-canvas";
 import Contract from "../../../components/Contract";
 
-//const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const { Title } = Typography;
 
@@ -426,74 +425,12 @@ const ContractManagement = () => {
       )}
 
       {/* Modal xem chi tiết */}
-      <Modal
-        title="Chi tiết hợp đồng"
-        open={detailModalVisible}
-        onCancel={handleCloseDetailModal}
-        footer={[
-          <Button key="close" onClick={handleCloseDetailModal}>
-            Đóng
-          </Button>
-        ]}
-        width={900}
-      >
-        {selectedContract && (
-          <Descriptions bordered column={2}>
-            <Descriptions.Item label="Mã hợp đồng">
-              {selectedContract.contractId || selectedContract.id}
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              <Tag>{selectedContract.status}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="User">
-              {selectedContract.user?.fullName || selectedContract.user?.email || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Xe">
-              {selectedContract.vehicle
-                ? `${selectedContract.vehicle.brand} ${selectedContract.vehicle.model} (${selectedContract.vehicle.plateNumber})`
-                : "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Tỷ lệ bán">
-              {selectedContract.salePercentage ? `${selectedContract.salePercentage}%` : "-"}
-            </Descriptions.Item>
-            {selectedContract.insurance !== undefined && selectedContract.insurance !== null && (
-              <Descriptions.Item label="Bảo hiểm">
-                {selectedContract.insurance.toLocaleString('vi-VN')} VND
-              </Descriptions.Item>
-            )}
-            {selectedContract.registration !== undefined && selectedContract.registration !== null && (
-              <Descriptions.Item label="Đăng ký">
-                {selectedContract.registration.toLocaleString('vi-VN')} VND
-              </Descriptions.Item>
-            )}
-            {selectedContract.maintenance !== undefined && selectedContract.maintenance !== null && (
-              <Descriptions.Item label="Bảo trì">
-                {selectedContract.maintenance.toLocaleString('vi-VN')} VND
-              </Descriptions.Item>
-            )}
-            {selectedContract.cleaning !== undefined && selectedContract.cleaning !== null && (
-              <Descriptions.Item label="Vệ sinh">
-                {selectedContract.cleaning.toLocaleString('vi-VN')} VND
-              </Descriptions.Item>
-            )}
-            {selectedContract.operationPerMonth !== undefined && selectedContract.operationPerMonth !== null && (
-              <Descriptions.Item label="Chi phí vận hành/tháng">
-                {selectedContract.operationPerMonth.toLocaleString('vi-VN')} VND
-              </Descriptions.Item>
-            )}
-            {selectedContract.startDate && (
-              <Descriptions.Item label="Ngày bắt đầu">
-                {new Date(selectedContract.startDate).toLocaleDateString('vi-VN')}
-              </Descriptions.Item>
-            )}
-            {selectedContract.endDate && (
-              <Descriptions.Item label="Ngày kết thúc">
-                {new Date(selectedContract.endDate).toLocaleDateString('vi-VN')}
-              </Descriptions.Item>
-            )}
-          </Descriptions>
-        )}
-      </Modal>
+      <Contract
+        contract={selectedContract}
+        visible={detailModalVisible}
+        onClose={handleCloseDetailModal}
+        baseURL={baseURL}
+      />
 
       {/* Modal chỉnh sửa */}
       <Modal
