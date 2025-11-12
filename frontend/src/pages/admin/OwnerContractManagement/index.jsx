@@ -6,11 +6,15 @@ import {
   Form,
   Select,
   InputNumber,
+  Slider,
+  message,
   Space,
   Tooltip,
   Typography,
   Spin,
   Empty,
+  Row,
+  Col,
 } from "antd";
 import { EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import ownerContractsApi from "../../../api/owner-contractsApi";
@@ -35,6 +39,7 @@ const OwnerContractManagement = () => {
   const [selectContractModalVisible, setSelectContractModalVisible] = useState(false);
   const [selectedOwnerContract, setSelectedOwnerContract] = useState(null);
   const [selectedContractId, setSelectedContractId] = useState(null);
+  const [selectedContract, setSelectedContract] = useState(null);
   const [addUserForm] = Form.useForm();
   const [selectContractForm] = Form.useForm();
   const adminSigPadRef = useRef(null);
@@ -127,16 +132,38 @@ const OwnerContractManagement = () => {
     if (userSigPadRef.current) userSigPadRef.current.clear();
   };
 
-  const handleSelectContract = () => {
-    selectContractForm.validateFields().then(values => {
-      setSelectedContractId(values.contractId);
+  const handleSelectContract = async () => {
+    try {
+      const values = await selectContractForm.validateFields();
+      const contractId = values.contractId;
+      
+      // Lấy tất cả contracts từ API và lọc ra contract cần thiết
+      const contractsResponse = await contractApi.getAll();
+      let contractsData = [];
+      if (Array.isArray(contractsResponse)) contractsData = contractsResponse;
+      else if (contractsResponse?.data && Array.isArray(contractsResponse.data)) contractsData = contractsResponse.data;
+      else if (contractsResponse?.content && Array.isArray(contractsResponse.content)) contractsData = contractsResponse.content;
+      
+      // Lọc ra contract theo contractId
+      const contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
+      
+      if (!contractData) {
+        message.error("Không tìm thấy hợp đồng!");
+        return;
+      }
+      
+      setSelectedContractId(contractId);
+      setSelectedContract(contractData);
       setSelectContractModalVisible(false);
       setCreateContractModalVisible(true);
       addUserForm.resetFields();
       // Xóa chữ ký
       if (adminSigPadRef.current) adminSigPadRef.current.clear();
       if (userSigPadRef.current) userSigPadRef.current.clear();
-    }).catch(() => {});
+    } catch (error) {
+      console.error("Error fetching contract:", error);
+      message.error("Không thể tải thông tin hợp đồng!");
+    }
   };
 
   const handleOpenCreateContract = () => {
@@ -152,6 +179,7 @@ const OwnerContractManagement = () => {
   const handleCloseCreateContractModal = () => {
     setCreateContractModalVisible(false);
     setSelectedContractId(null);
+    setSelectedContract(null);
     addUserForm.resetFields();
     // Xóa chữ ký
     if (adminSigPadRef.current) adminSigPadRef.current.clear();
@@ -184,12 +212,58 @@ const OwnerContractManagement = () => {
         return;
       }
 
+      // Lấy contract data để lấy các trường insurance, registration, etc.
+      let contractData = selectedContract;
+      
+      // Nếu không có selectedContract, tìm trong contracts list hoặc từ selectedOwnerContract
+      if (!contractData) {
+        if (selectedContractId) {
+          contractData = contracts.find(c => (c.contractId || c.id) === selectedContractId);
+        } else if (selectedOwnerContract?.contract) {
+          contractData = selectedOwnerContract.contract;
+        }
+      }
+      
+      // Nếu vẫn không có, gọi API getAllContract và lọc ra
+      if (!contractData && contractId) {
+        try {
+          const contractsResponse = await contractApi.getAll();
+          let contractsData = [];
+          if (Array.isArray(contractsResponse)) contractsData = contractsResponse;
+          else if (contractsResponse?.data && Array.isArray(contractsResponse.data)) contractsData = contractsResponse.data;
+          else if (contractsResponse?.content && Array.isArray(contractsResponse.content)) contractsData = contractsResponse.content;
+          
+          contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
+        } catch (error) {
+          console.error("Error fetching contract:", error);
+        }
+      }
+
       // Tạo FormData
       const formData = new FormData();
       formData.append("contractId", contractId.toString());
       formData.append("userId", values.userId.toString());
       formData.append("sharePercentage", values.sharePercentage.toString());
-
+      
+      // Lấy các trường từ contract data
+      if (contractData) {
+        if (contractData.insurance !== undefined && contractData.insurance !== null) {
+          formData.append("insurance", contractData.insurance.toString());
+        }
+        if (contractData.registration !== undefined && contractData.registration !== null) {
+          formData.append("registration", contractData.registration.toString());
+        }
+        if (contractData.maintenance !== undefined && contractData.maintenance !== null) {
+          formData.append("maintenance", contractData.maintenance.toString());
+        }
+        if (contractData.cleaning !== undefined && contractData.cleaning !== null) {
+          formData.append("cleaning", contractData.cleaning.toString());
+        }
+        if (contractData.operationPerMonth !== undefined && contractData.operationPerMonth !== null) {
+          formData.append("operationPerMonth", contractData.operationPerMonth.toString());
+        }
+      }
+      
       // Lấy chữ ký admin từ Signature Canvas
       const adminSigPad = adminSigPadRef.current;
       if (adminSigPad && !adminSigPad.isEmpty()) {
@@ -279,7 +353,7 @@ const OwnerContractManagement = () => {
       },
     },
     {
-      title: "Share Percentage",
+      title: "Phần trăm chia sẻ",
       key: "sharePercentage",
       width: 150,
       render: (_, record) => {
@@ -296,9 +370,7 @@ const OwnerContractManagement = () => {
           <Tooltip title="Xem chi tiết">
             <Button type="link" icon={<EyeOutlined />} onClick={() => handleViewDetails(record)} />
           </Tooltip>
-          {/* <Tooltip title="Thêm User">
-            <Button type="link" icon={<UserAddOutlined />} onClick={() => handleAddUser(record)} />
-          </Tooltip> */}
+
         </Space>
       ),
     },
@@ -331,13 +403,144 @@ const OwnerContractManagement = () => {
       )}
 
       {/* 🔍 Modal chi tiết */}
-      {/* Contract Details Modal */}
-      <OwnerContract
-        contract={selectedOwnerContract}
-        visible={detailModalVisible}
-        onClose={handleCloseDetailModal}
-        baseURL={BASE_URL}
-      />
+      <Modal
+  title="Chi tiết Owner Contract"
+  open={detailModalVisible}
+  onCancel={handleCloseDetailModal}
+  footer={<Button onClick={handleCloseDetailModal}>Đóng</Button>}
+  width={900}
+>
+  {selectedOwnerContract && (() => {
+    const user = selectedOwnerContract.user;
+    const admin = selectedOwnerContract.admin;
+    const contract = selectedOwnerContract.contract;
+    const adminSig = buildUrl(selectedOwnerContract.adminSignature);
+    const userSig = buildUrl(selectedOwnerContract.userSignature);
+    
+    // Lấy các trường từ ownerContract hoặc contract
+    const insurance = selectedOwnerContract.insurance ?? contract?.insurance;
+    const registration = selectedOwnerContract.registration ?? contract?.registration;
+    const maintenance = selectedOwnerContract.maintenance ?? contract?.maintenance;
+    const cleaning = selectedOwnerContract.cleaning ?? contract?.cleaning;
+    const operationPerMonth = selectedOwnerContract.operationPerMonth ?? contract?.operationPerMonth;
+
+    return (
+      <Descriptions bordered column={2}>
+        <Descriptions.Item label="Mã Owner Contract">
+          {selectedOwnerContract.ownerContractId || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Mã Contract">
+          {selectedOwnerContract.contractId || selectedOwnerContract.contract_Id || contract?.contractId || contract?.id || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Ngày tạo">
+          {parseDate(selectedOwnerContract.createdAt)?.toLocaleString("vi-VN") || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Trạng thái hợp đồng">
+          {renderStatus(selectedOwnerContract.contractStatus)}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="% Sở hữu">
+          {selectedOwnerContract.sharePercentage
+            ? `${selectedOwnerContract.sharePercentage}%`
+            : "-"}
+        </Descriptions.Item>
+
+        {insurance !== undefined && insurance !== null && (
+          <Descriptions.Item label="Bảo hiểm">
+            {insurance.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        {registration !== undefined && registration !== null && (
+          <Descriptions.Item label="Đăng ký">
+            {registration.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        {maintenance !== undefined && maintenance !== null && (
+          <Descriptions.Item label="Bảo trì">
+            {maintenance.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        {cleaning !== undefined && cleaning !== null && (
+          <Descriptions.Item label="Vệ sinh">
+            {cleaning.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        {operationPerMonth !== undefined && operationPerMonth !== null && (
+          <Descriptions.Item label="Chi phí vận hành/tháng">
+            {operationPerMonth.toLocaleString('vi-VN')} VND
+          </Descriptions.Item>
+        )}
+
+        <Descriptions.Item label="Chủ xe (User)" span={2}>
+          {user
+            ? `${user.fullName || "-"} (${user.email || "Không có email"})`
+            : "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Số điện thoại (User)">
+          {user?.phone || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Trạng thái xác thực (User)">
+          {user?.verifyStatus || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Admin duyệt" span={2}>
+          {admin
+            ? `${admin.fullName || "-"} (${admin.email || "Không có email"})`
+            : "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Số điện thoại (Admin)">
+          {admin?.phone || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Trạng thái xác thực (Admin)">
+          {admin?.verifyStatus || "-"}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Chữ ký Admin">
+          {adminSig ? (
+            <img
+              src={adminSig}
+              alt="Admin Signature"
+              style={{
+                maxHeight: 100,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+              }}
+            />
+          ) : (
+            "Không có"
+          )}
+        </Descriptions.Item>
+
+        <Descriptions.Item label="Chữ ký User">
+          {userSig ? (
+            <img
+              src={userSig}
+              alt="User Signature"
+              style={{
+                maxHeight: 100,
+                border: "1px solid #ccc",
+                borderRadius: 4,
+              }}
+            />
+          ) : (
+            "Không có"
+          )}
+        </Descriptions.Item>
+      </Descriptions>
+    );
+  })()}
+</Modal>
 
 
       {/* Modal chọn Contract ID */}
@@ -382,7 +585,7 @@ const OwnerContractManagement = () => {
         onCancel={handleCloseAddUserModal}
         okText="Thêm"
         cancelText="Hủy"
-        width={700}
+        width={1000}
       >
         {selectedOwnerContract && (
           <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
@@ -396,98 +599,111 @@ const OwnerContractManagement = () => {
           </div>
         )}
         <Form form={addUserForm} layout="vertical">
-          <Form.Item
-            name="userId"
-            label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
-            rules={[{ required: true, message: "Vui lòng chọn user!" }]}
-          >
-            <Select
-              placeholder="Chọn user"
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children?.props?.children || option?.children || "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-            >
-              {users.map((user) => {
-                // Lọc bỏ user đã có trong owner contract
-                const isExistingUser = selectedOwnerContract?.user?.id === user.id ||
-                  selectedOwnerContract?.user?.userId === user.id;
-                if (isExistingUser) return null;
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="userId"
+                label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
+                rules={[{ required: true, message: "Vui lòng chọn user!" }]}
+              >
+                <Select 
+                  placeholder="Chọn user" 
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.children?.props?.children || option?.children || "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                >
+                  {users.map((user) => {
+                    // Lọc bỏ user đã có trong owner contract
+                    const isExistingUser = selectedOwnerContract?.user?.id === user.id || 
+                                          selectedOwnerContract?.user?.userId === user.id;
+                    if (isExistingUser) return null;
+                    
+                    return (
+                      <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
+                        {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
+                      </Select.Option>
+                    );
+                  })}
+                </Select>
+              </Form.Item>
+            </Col>
 
-                return (
-                  <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
-                    {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
-                  </Select.Option>
-                );
-              })}
-            </Select>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="sharePercentage"
+                label="Share Percentage (%)"
+                rules={[
+                  { required: true, message: 'Vui lòng chọn share percentage!' },
+                  { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
+                ]}
+              >
+                <Select placeholder="Chọn phần trăm chia sẻ">
+                  {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(percentage => (
+                    <Select.Option key={percentage} value={percentage}>
+                      {percentage}%
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="sharePercentage"
-            label="Share Percentage (%)"
-            rules={[
-              { required: true, message: 'Vui lòng nhập share percentage!' },
-              { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
-            ]}
-          >
-            <InputNumber
-              style={{ width: '100%' }}
-              min={0}
-              max={100}
-              placeholder="Nhập share percentage (0-100%)"
-            />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Chữ ký Admin"
+              >
+                <SignatureCanvas
+                  ref={adminSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    className: "signatureCanvas",
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+                  }}
+                  style={{ padding: 0, marginTop: 5 }}
+                >
+                  Xóa chữ ký Admin
+                </Button>
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            label="Chữ ký Admin"
-          >
-            <SignatureCanvas
-              ref={adminSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                className: "signatureCanvas",
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button
-              type="link"
-              onClick={() => {
-                if (adminSigPadRef.current) adminSigPadRef.current.clear();
-              }}
-              style={{ padding: 0, marginTop: 5 }}
-            >
-              Xóa chữ ký Admin
-            </Button>
-          </Form.Item>
-
-          <Form.Item
-            label="Chữ ký User (Co-owner)"
-          >
-            <SignatureCanvas
-              ref={userSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                className: "signatureCanvas",
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button
-              type="link"
-              onClick={() => {
-                if (userSigPadRef.current) userSigPadRef.current.clear();
-              }}
-              style={{ padding: 0, marginTop: 5 }}
-            >
-              Xóa chữ ký User
-            </Button>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                label="Chữ ký User (Co-owner)"
+              >
+                <SignatureCanvas
+                  ref={userSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    className: "signatureCanvas",
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (userSigPadRef.current) userSigPadRef.current.clear();
+                  }}
+                  style={{ padding: 0, marginTop: 5 }}
+                >
+                  Xóa chữ ký User
+                </Button>
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
 
@@ -499,7 +715,7 @@ const OwnerContractManagement = () => {
         onCancel={handleCloseCreateContractModal}
         okText="Tạo"
         cancelText="Hủy"
-        width={700}
+        width={1000}
       >
         {selectedContractId && (
           <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
@@ -507,92 +723,202 @@ const OwnerContractManagement = () => {
             <Typography.Text>{selectedContractId}</Typography.Text>
           </div>
         )}
+        
         <Form form={addUserForm} layout="vertical">
-          <Form.Item
-            name="userId"
-            label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
-            rules={[{ required: true, message: "Vui lòng chọn user!" }]}
-          >
-            <Select 
-              placeholder="Chọn user" 
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children?.props?.children || option?.children || "")
-                  .toLowerCase()
-                  .includes(input.toLowerCase())
-              }
-            >
-              {users.map((user) => (
-                <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
-                  {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
-                </Select.Option>
-              ))}
-            </Select>
+          <Form.Item shouldUpdate={(prevValues, currentValues) => prevValues.sharePercentage !== currentValues.sharePercentage}>
+            {({ getFieldValue }) => {
+              const sharePercentage = getFieldValue('sharePercentage') || 0;
+              const percentageMultiplier = sharePercentage / 100;
+              
+              return selectedContract && (
+                <div style={{ marginBottom: 16 }}>
+                  <Typography.Title level={5} style={{ marginBottom: 12 }}>
+                    Thông tin chi phí {sharePercentage > 0 ? `(${sharePercentage}% sở hữu)` : 'từ Contract'}
+                  </Typography.Title>
+                  <Descriptions bordered column={2} size="small">
+                    {selectedContract.insurance !== undefined && selectedContract.insurance !== null && (
+                      <Descriptions.Item label="Bảo hiểm">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.insurance * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.insurance.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.insurance.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                    {selectedContract.registration !== undefined && selectedContract.registration !== null && (
+                      <Descriptions.Item label="Đăng ký">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.registration * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.registration.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.registration.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                    {selectedContract.maintenance !== undefined && selectedContract.maintenance !== null && (
+                      <Descriptions.Item label="Bảo trì">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.maintenance * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.maintenance.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.maintenance.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                    {selectedContract.cleaning !== undefined && selectedContract.cleaning !== null && (
+                      <Descriptions.Item label="Vệ sinh">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.cleaning * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.cleaning.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.cleaning.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                    {selectedContract.operationPerMonth !== undefined && selectedContract.operationPerMonth !== null && (
+                      <Descriptions.Item label="Chi phí vận hành/tháng">
+                        {sharePercentage > 0 ? (
+                          <>
+                            <span style={{ color: '#1890ff', fontWeight: 'bold' }}>
+                              {(selectedContract.operationPerMonth * percentageMultiplier).toLocaleString('vi-VN')} VND
+                            </span>
+                            <span style={{ color: '#999', fontSize: '12px', marginLeft: 8 }}>
+                              (Gốc: {selectedContract.operationPerMonth.toLocaleString('vi-VN')} VND)
+                            </span>
+                          </>
+                        ) : (
+                          <span>{selectedContract.operationPerMonth.toLocaleString('vi-VN')} VND</span>
+                        )}
+                      </Descriptions.Item>
+                    )}
+                  </Descriptions>
+                </div>
+              );
+            }}
           </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="userId"
+                label="Chọn User (Co-owner) - Chỉ hiển thị user đã được APPROVED"
+                rules={[{ required: true, message: "Vui lòng chọn user!" }]}
+              >
+                <Select 
+                  placeholder="Chọn user" 
+                  showSearch
+                  filterOption={(input, option) =>
+                    (option?.children?.props?.children || option?.children || "")
+                      .toLowerCase()
+                      .includes(input.toLowerCase())
+                  }
+                >
+                  {users.map((user) => (
+                    <Select.Option key={user.id || user.userId} value={user.id || user.userId}>
+                      {user.fullName || user.full_name || "N/A"} - {user.email} {user.phone ? `(${user.phone})` : ""}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            name="sharePercentage"
-            label="Share Percentage (%)"
-            rules={[
-              { required: true, message: 'Vui lòng nhập share percentage!' },
-              { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
-            ]}
-          >
-            <InputNumber 
-              style={{ width: '100%' }} 
-              min={0} 
-              max={100} 
-              placeholder="Nhập share percentage (0-100%)"
-            />
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="sharePercentage"
+                label="Share Percentage (%)"
+                rules={[
+                  { required: true, message: 'Vui lòng chọn share percentage!' },
+                  { type: 'number', min: 0, max: 100, message: 'Share percentage phải từ 0 đến 100!' }
+                ]}
+              >
+                <Select placeholder="Chọn phần trăm chia sẻ">
+                  {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(percentage => (
+                    <Select.Option key={percentage} value={percentage}>
+                      {percentage}%
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            label="Chữ ký Admin"
-          >
-            <SignatureCanvas
-              ref={adminSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                className: "signatureCanvas",
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button
-              type="link"
-              onClick={() => {
-                if (adminSigPadRef.current) adminSigPadRef.current.clear();
-              }}
-              style={{ padding: 0, marginTop: 5 }}
-            >
-              Xóa chữ ký Admin
-            </Button>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                label="Chữ ký Admin"
+              >
+                <SignatureCanvas
+                  ref={adminSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    className: "signatureCanvas",
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (adminSigPadRef.current) adminSigPadRef.current.clear();
+                  }}
+                  style={{ padding: 0, marginTop: 5 }}
+                >
+                  Xóa chữ ký Admin
+                </Button>
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            label="Chữ ký User (Co-owner)"
-          >
-            <SignatureCanvas
-              ref={userSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                className: "signatureCanvas",
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button
-              type="link"
-              onClick={() => {
-                if (userSigPadRef.current) userSigPadRef.current.clear();
-              }}
-              style={{ padding: 0, marginTop: 5 }}
-            >
-              Xóa chữ ký User
-            </Button>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                label="Chữ ký User (Co-owner)"
+              >
+                <SignatureCanvas
+                  ref={userSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    className: "signatureCanvas",
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button
+                  type="link"
+                  onClick={() => {
+                    if (userSigPadRef.current) userSigPadRef.current.clear();
+                  }}
+                  style={{ padding: 0, marginTop: 5 }}
+                >
+                  Xóa chữ ký User
+                </Button>
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
     </div>
