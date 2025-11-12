@@ -47,7 +47,7 @@ const ExploreCars = () => {
           active
           style={{ width: "100%", height: 200, borderRadius: 12 }}
         />
-        <Skeleton active paragraph={{ rows: 3 }} />
+        <Skeleton active paragraph={{ rows: 2 }} />
       </Card>
     </Col>
   ));

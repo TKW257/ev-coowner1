@@ -1,15 +1,4 @@
-import React from "react";
-import {
-  Modal,
-  Button,
-  Divider,
-  Typography,
-  Row,
-  Col,
-  Image,
-  message,
-} from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
+import { Modal, Button, Divider, Typography, Row, Col, Image } from "antd";
 import "./style.scss";
 
 const { Title, Text, Paragraph } = Typography;
@@ -23,18 +12,6 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
     return `${d.toString().padStart(2, "0")}/${m.toString().padStart(2, "0")}/${y}`;
   };
 
-  const handleDownload = () => {
-    if (!contract.fileUrl) {
-      message.warning("Không có file hợp đồng để tải xuống.");
-      return;
-    }
-    const fileLink = `${baseURL}/${contract.fileUrl.replace(/\\/g, "/")}`;
-    const link = document.createElement("a");
-    link.href = fileLink;
-    link.download = `HopDongDongSoHuu_${contract.ownerContractId}.pdf`;
-    link.click();
-  };
-
   return (
     <Modal
       open={visible}
@@ -43,13 +20,6 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
       centered
       rootClassName="contract-modal"
       footer={[
-        <Button
-          key="download"
-          icon={<DownloadOutlined />}
-          onClick={handleDownload}
-        >
-          Tải xuống
-        </Button>,
         <Button key="close" type="primary" onClick={onClose}>
           Đóng
         </Button>,
@@ -69,7 +39,6 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
       }
     >
       <Typography>
-        {/* I. THÔNG TIN CÁC BÊN */}
         <Title level={5} className="contract-section">
           I. THÔNG TIN CÁC BÊN
         </Title>
@@ -93,28 +62,42 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
           Ngày tham gia: {formatDate(contract.createdAt)}
         </Paragraph>
 
-        {/* II. THÔNG TIN HỢP ĐỒNG CON */}
         <Title level={5} className="contract-section">
           II. THÔNG TIN HỢP ĐỒNG CON
         </Title>
         <Paragraph>
           <Text strong>1. Thông tin hành chính của hợp đồng:</Text> <br />
-          Mã hợp đồng đồng sở hữu: {contract.ownerContractId || "__________"} <br />
-          Tham chiếu hợp đồng chính: {contract.contractId || "__________"} <br />
-          Ngày tạo: {formatDate(contract.createdAt)}
+          - Mã hợp đồng đồng sở hữu: {contract.ownerContractId || "__________"} <br />
+          - Tham chiếu hợp đồng chính: {contract.contractId || "__________"} <br />
+          - Ngày tạo: {formatDate(contract.createdAt)}
         </Paragraph>
 
         <Paragraph>
           <Text strong>2. Thông tin xe được đăng ký đồng sở hữu:</Text> <br />
-          Hãng xe: {contract.vehicle?.brand || "__________"} <br />
-          Mẫu xe: {contract.vehicle?.model || "__________"} <br />
-          Biển số: {contract.vehicle?.plateNumber || "__________"} <br />
-          Màu xe: {contract.vehicle?.color || "__________"} <br />
-          Số chỗ: {contract.vehicle?.seat || "____"} <br />
-          Năm sản xuất: {contract.vehicle?.year || "____"}
+          - Hãng xe: {contract.vehicle?.brand || "__________"} <br />
+          - Mẫu xe: {contract.vehicle?.model || "__________"} <br />
+          - Biển số: {contract.vehicle?.plateNumber || "__________"} <br />
+          - Màu xe: {contract.vehicle?.color || "__________"} <br />
+          - Số chỗ: {contract.vehicle?.seat || "____"} <br />
+          - Năm sản xuất: {contract.vehicle?.year || "____"}
         </Paragraph>
 
-        {/* III. QUYỀN VÀ NGHĨA VỤ */}
+        <Paragraph>
+          <Text strong>3. Điều khoản về phí và doanh thu:</Text>
+          <br />
+          - Phí cố định:
+          <ul style={{ marginTop: 0, marginBottom: 0, paddingLeft: 20 }}>
+            <li>Bảo hiểm: {contract.insurance || "____"} VNĐ</li>
+            <li>Đăng ký: {contract.registration || "____"} VNĐ</li>
+            <li>Bảo dưỡng: {contract.maintenance || "____"} VNĐ</li>
+            <li>Vệ sinh: {contract.cleaning || "____"} VNĐ</li>
+            <li>Chi phí vận hành hàng tháng: {contract.operationPerMonth || "____"} VNĐ</li>
+          </ul>
+          - Phí biến đổi: Theo dữ liệu phát sinh thực tế.
+          <br />
+          - Doanh thu chia theo tỷ lệ cổ phần sau khi trừ phí vận hành.
+        </Paragraph>
+
         <Title level={5} className="contract-section">
           III. QUYỀN VÀ NGHĨA VỤ CỦA CÁC BÊN
         </Title>
@@ -130,7 +113,6 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
           - Chấp hành quy định về bảo dưỡng, vận hành xe theo quy định hệ thống.
         </Paragraph>
 
-        {/* IV. CHẤM DỨT HỢP ĐỒNG */}
         <Title level={5} className="contract-section">
           IV. CHẤM DỨT HỢP ĐỒNG
         </Title>
@@ -139,7 +121,6 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
           - Hệ thống ECVs tự động lưu lại lịch sử giao dịch trong mục <i>Ownership History</i>.
         </Paragraph>
 
-        {/* V. CAM KẾT */}
         <Title level={5} className="contract-section">
           V. CAM KẾT
         </Title>
@@ -152,7 +133,6 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
           <i> Ngày lập: {formatDate(contract.createdAt)} </i>
         </Paragraph>
 
-        {/* Chữ ký */}
         <Row gutter={48} style={{ marginTop: 32, textAlign: "center" }}>
           <Col span={12}>
             <Text strong>ĐẠI DIỆN BÊN A (Nền tảng CoEV)</Text>

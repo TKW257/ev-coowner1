@@ -12,7 +12,7 @@ import {
   Spin,
   Empty,
 } from "antd";
-import { EyeOutlined, UserAddOutlined, PlusOutlined } from "@ant-design/icons";
+import { EyeOutlined, PlusOutlined } from "@ant-design/icons";
 import ownerContractsApi from "../../../api/owner-contractsApi";
 import contractApi from "../../../api/contractApi";
 import userApi from "../../../api/userApi";

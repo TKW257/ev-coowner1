@@ -1,6 +1,4 @@
-import React from "react";
-import { Modal, Button, Divider, Typography, Row, Col, Image, message } from "antd";
-import { DownloadOutlined } from "@ant-design/icons";
+import { Modal, Button, Divider, Typography, Row, Col, Image } from "antd";
 import "./style.scss";
 
 const { Title, Text, Paragraph } = Typography;
@@ -14,18 +12,6 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
     return `${d.toString().padStart(2, "0")}/${m.toString().padStart(2, "0")}/${y}`;
   };
 
-  const handleDownload = () => {
-    if (!contract.fileUrl) {
-      message.warning("Không có file hợp đồng để tải xuống.");
-      return;
-    }
-    const fileLink = `${baseURL}/${contract.fileUrl.replace(/\\/g, "/")}`;
-    const link = document.createElement("a");
-    link.href = fileLink;
-    link.download = `HopDong_${contract.contractId}.pdf`;
-    link.click();
-  };
-
   return (
     <Modal
       open={visible}
@@ -34,9 +20,6 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
       centered
       rootClassName="contract-modal"
       footer={[
-        <Button key="download" icon={<DownloadOutlined />} onClick={handleDownload}>
-          Tải xuống
-        </Button>,
         <Button key="close" type="primary" onClick={onClose}>
           Đóng
         </Button>,
@@ -82,49 +65,59 @@ const VehicleContract = ({ contract, visible, onClose, baseURL }) => {
         </Title>
 
         <Paragraph>
-          <Text underline>Thông tin xe được đăng ký đồng sở hữu:</Text> <br />
-          Hãng xe: {contract.vehicle?.brand || "__________"} <br />
-          Mẫu xe: {contract.vehicle?.model || "__________"} <br />
-          Biển số: {contract.vehicle?.plateNumber || "__________"} <br />
-          Màu xe: {contract.vehicle?.color || "__________"} <br />
-          Số chỗ: {contract.vehicle?.seat || "____"} <br />
-          Năm sản xuất: {contract.vehicle?.year || "____"}
+          <Text strong>1. Thông tin xe được đăng ký đồng sở hữu:</Text> <br />
+          - Hãng xe: {contract.vehicle?.brand || "__________"} <br />
+          - Mẫu xe: {contract.vehicle?.model || "__________"} <br />
+          - Biển số: {contract.vehicle?.plateNumber || "__________"} <br />
+          - Màu xe: {contract.vehicle?.color || "__________"} <br />
+          - Số chỗ: {contract.vehicle?.seat || "____"} <br />
+          - Năm sản xuất: {contract.vehicle?.year || "____"}
         </Paragraph>
 
         <Paragraph>
-          <Text underline>Tỷ lệ cổ phần đồng sở hữu:</Text> <br />
-          Tỷ lệ chào bán: {contract.salePercentage || "____"}% <br />
-          Tỷ lệ chủ xe giữ lại: {100 - (contract.salePercentage || 0)}%
+          <Text strong>2. Tỷ lệ cổ phần đồng sở hữu:</Text> <br />
+          - Tỷ lệ chào bán: {contract.salePercentage || "____"}% <br />
+          - Tỷ lệ chủ xe giữ lại: {100 - (contract.salePercentage || 0)}%
         </Paragraph>
 
         <Paragraph>
-          <Text underline>Thời hạn hợp đồng:</Text> <br />
-          Ngày lập: {formatDate(contract.createdAt)} <br />
-          Ngày hiệu lực: {formatDate(contract.startDate)} <br />
-          Ngày kết thúc: {formatDate(contract.endDate)}
+          <Text strong>3. Thời hạn hợp đồng:</Text> <br />
+          - Ngày lập: {formatDate(contract.createdAt)} <br />
+          - Ngày hiệu lực: {formatDate(contract.startDate)} <br />
+          - Ngày kết thúc: {formatDate(contract.endDate)}
         </Paragraph>
 
         <Paragraph>
-          <Text underline>Quyền và nghĩa vụ của các bên:</Text> <br />
-          <Text strong>Bên A (Chủ xe):</Text> <br />
+          <Text strong>4. Quyền và nghĩa vụ của các bên:</Text> <br />
+          <Text underline>Bên A (Chủ xe):</Text> <br />
           - Cung cấp thông tin và giấy tờ xe chính xác. <br />
           - Cho phép hệ thống đăng tải thông tin xe để kêu gọi đồng sở hữu. <br />
           - Đảm bảo việc bảo dưỡng, sửa chữa định kỳ. <br />
           <br />
-          <Text strong>Bên B (ECVs):</Text> <br />
+          <Text underline>Bên B (ECVs):</Text> <br />
           - Hỗ trợ quản lý cổ phần, hợp đồng và thanh toán. <br />
           - Đảm bảo an toàn dữ liệu, minh bạch trong chia sẻ lợi nhuận.
         </Paragraph>
 
         <Paragraph>
-          <Text underline>Điều khoản về phí và doanh thu:</Text> <br />
-          - Phí cố định: Theo bảng phí hệ thống. <br />
-          - Phí biến đổi: Theo dữ liệu phát sinh thực tế. <br />
+          <Text strong>5. Điều khoản về phí và doanh thu:</Text>
+          <br />
+          - Phí cố định:
+          <ul style={{ marginTop: 0, marginBottom: 0, paddingLeft: 20 }}>
+            <li>Bảo hiểm: {contract.insurance || "____"} VNĐ</li>
+            <li>Đăng ký: {contract.registration || "____"} VNĐ</li>
+            <li>Bảo dưỡng: {contract.maintenance || "____"} VNĐ</li>
+            <li>Vệ sinh: {contract.cleaning || "____"} VNĐ</li>
+            <li>Chi phí vận hành hàng tháng: {contract.operationPerMonth || "____"} VNĐ</li>
+          </ul>
+          - Phí biến đổi: Theo dữ liệu phát sinh thực tế.
+          <br />
           - Doanh thu chia theo tỷ lệ cổ phần sau khi trừ phí vận hành.
         </Paragraph>
 
+
         <Paragraph>
-          <Text underline>Điều khoản chấm dứt hợp đồng:</Text> <br />
+          <Text strong>6. Điều khoản chấm dứt hợp đồng:</Text> <br />
           - Hợp đồng kết thúc khi hết hạn hoặc hai bên đồng ý. <br />
           - Bên A có quyền chấm dứt sớm nếu không vi phạm điều khoản. <br />
           - Tất cả dữ liệu cổ phần, thanh toán được lưu trữ theo quy định.
