@@ -94,8 +94,6 @@ const MyCars = () => {
     }, 300);
   };
 
-
-
   const columns = [
     {
       title: "Thành viên",

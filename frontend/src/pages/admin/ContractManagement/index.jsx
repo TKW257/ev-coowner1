@@ -710,21 +710,10 @@ const ContractManagement = () => {
             dataSource={ownershipData}
             columns={[
               {
-                title: "Thành viên",
-                key: "userName",
-                render: (_, record) => {
-                  if (record.userName) return record.userName;
-                  if (record.user?.fullName) return record.user.fullName;
-                  if (record.user?.full_name) return record.user.full_name;
-                  if (record.user?.email) return record.user.email;
-                  return "N/A";
-                },
-              },
-              {
                 title: "Email",
                 key: "email",
                 render: (_, record) => {
-                  if (record.user?.email) return record.user.email;
+                  if (record.userName) return record.userName;
                   return "-";
                 },
               },
