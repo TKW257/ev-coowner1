@@ -31,10 +31,6 @@ const ExploreCars = () => {
     fetchAllVehicles();
   }, []);
 
-  const handleViewAll = () => {
-    window.location.href = "/cars";
-  };
-
   const getCarImageUrl = (imagePath) => {
     if (!imagePath) return "";
     return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
@@ -86,12 +82,6 @@ const ExploreCars = () => {
               <Text className={`car-status ${statusClass}`}>● {statusText}</Text>
             </div>
 
-            <div className="car-actions">
-              <Button type="default">Xem chi tiết</Button>
-              <Button type="primary" style={{ marginLeft: 8 }}>
-                Góp vốn ngay
-              </Button>
-            </div>
           </div>
         </Card>
       </Col>
@@ -104,9 +94,6 @@ const ExploreCars = () => {
         <Title level={2} className="section-title">
           Các mẫu xe điện tiêu biểu
         </Title>
-        <Button type="primary" size="large" onClick={handleViewAll}>
-          View All →
-        </Button>
       </div>
 
       <Row gutter={[24, 24]} justify="center">

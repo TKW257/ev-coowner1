@@ -369,7 +369,7 @@ const ContractManagement = () => {
               />
             </Tooltip>
           )}
-          <Tooltip title={record.status === "EXPIRED" ? "Hợp đồng đã hết hạn" : "Quản lý Owner Contract"}>
+          <Tooltip title={record.status === "EXPIRED" ? "Hợp đồng đã hết hạn" : "Quản lý HĐ đồng sở hữu"}>
             <Button
               type="link"
               icon={<FileTextOutlined />}
@@ -400,7 +400,7 @@ const ContractManagement = () => {
   return (
     <div style={{ padding: '24px' }}>
       <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Title level={2} style={{ margin: 0, color: "black" }}>Quản Lý Hợp Đồng</Title>
+        <Title level={2} style={{ margin: 0, color: "black" }}>Quản Lý HĐ Phương Tiện</Title>
         <Space>
           <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateContract}>
             Tạo Hợp Đồng

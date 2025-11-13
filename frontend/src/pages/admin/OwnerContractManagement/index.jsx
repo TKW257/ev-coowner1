@@ -397,13 +397,13 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-        <Title level={2}>Quản Lý Owner Contract</Title>
+        <Title level={2}>Quản Lý HĐ Đồng Sở Hữu</Title>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleOpenCreateContract}
         >
-          Tạo Owner Contract
+          Tạo HĐ Đồng Sở Hữu
         </Button>
       </div>
 
