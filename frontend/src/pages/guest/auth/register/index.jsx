@@ -1,5 +1,5 @@
 import React from "react";
-import { Input, Button, Typography, Form, Divider, App } from "antd"; 
+import { Input, Button, Typography, Form, Divider, App } from "antd";
 import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { register } from "../../../../features/userSlice";
@@ -9,13 +9,13 @@ const { Text } = Typography;
 
 function Register() {
   const dispatch = useDispatch();
-  const { message } = App.useApp(); 
+  const { message } = App.useApp();
 
   const handleSubmit = async (values) => {
     try {
       const actionResult = await dispatch(register(values));
       const user = unwrapResult(actionResult);
-      
+
       message.success("Đăng ký tài khoản thành công 🎉");
 
       console.log("Người dùng mới:", user);
@@ -49,7 +49,10 @@ function Register() {
               name="email"
               rules={[
                 { required: true, message: "Vui lòng nhập email!" },
-                { type: "email", message: "Email không hợp lệ!" },
+                {
+                  pattern: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i,
+                  message: "Email không hợp lệ! Vui lòng nhập lại.",
+                },
               ]}
             >
               <Input placeholder="Nhập email" />
@@ -63,8 +66,30 @@ function Register() {
                 { required: true, message: "Vui lòng nhập mật khẩu!" },
                 { min: 6, message: "Mật khẩu phải có ít nhất 6 ký tự!" },
               ]}
+              hasFeedback
             >
               <Input.Password placeholder="Nhập mật khẩu" />
+            </Form.Item>
+
+            {/* Confirm Password */}
+            <Form.Item
+              label={<span className="register-label">Xác nhận mật khẩu</span>}
+              name="confirmPassword"
+              dependencies={["password"]}
+              hasFeedback
+              rules={[
+                { required: true, message: "Vui lòng xác nhận mật khẩu!" },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue("password") === value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error("Mật khẩu xác nhận không khớp!"));
+                  },
+                }),
+              ]}
+            >
+              <Input.Password placeholder="Nhập lại mật khẩu" />
             </Form.Item>
 
             <Form.Item>

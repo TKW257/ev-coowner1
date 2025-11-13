@@ -1,5 +1,6 @@
 import { Modal, Button, Divider, Typography, Row, Col, Image } from "antd";
 import "./style.scss";
+import Clogo from "../../assets/vn_emblem.png";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -38,7 +39,7 @@ const OwnerContract = ({ contract, visible, onClose, baseURL }) => {
         <div className="contract-header" style={{ textAlign: "center" }}>
           <Image
             preview={false}
-            src="/assets/vn_emblem.png"
+            src={Clogo}
             width={60}
             style={{ marginBottom: 8 }}
           />

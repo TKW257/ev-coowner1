@@ -325,8 +325,8 @@ const BookingPage = ({ onBookingSuccess }) => {
               <tr style={{ backgroundColor: "#f0f2f5", textAlign: "left" }}>
                 <th style={{ padding: "8px" }}>Ngày tranh chấp</th>
                 <th style={{ padding: "8px" }}>Thời điểm tạo đầu tiên</th>
-                <th style={{ padding: "8px" }}>Kết thúc khung giờ</th>
-                <th style={{ padding: "8px" }}>Thời lượng (giờ)</th>
+                <th style={{ padding: "8px" }}>Giới hạn đặt lịch</th>
+                <th style={{ padding: "8px" }}>Thời gian tranh chấp</th>
               </tr>
             </thead>
             <tbody>

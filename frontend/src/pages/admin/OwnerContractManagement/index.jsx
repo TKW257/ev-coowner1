@@ -7,6 +7,7 @@ import {
   Select,
   InputNumber,
   Slider,
+  message,
   Space,
   Tag,
   Descriptions,
@@ -22,6 +23,7 @@ import ownerContractsApi from "../../../api/owner-contractsApi";
 import contractApi from "../../../api/contractApi";
 import userApi from "../../../api/userApi";
 import SignatureCanvas from "react-signature-canvas";
+import OwnerContract from "../../../components/ContractOwner";
 
 const { Title } = Typography;
 
@@ -64,24 +66,24 @@ const OwnerContractManagement = () => {
     }
   };
 
-  /** Chuyển array ngày [YYYY,MM,DD] thành Date */
-  const parseDate = (dateArr) => {
-    if (!dateArr) return null;
-    if (Array.isArray(dateArr)) {
-      const [year, month, day, hour = 0, minute = 0, second = 0] = dateArr;
-      return new Date(year, month - 1, day, hour, minute, second);
-    }
-    return new Date(dateArr);
-  };
+  // /** Chuyển array ngày [YYYY,MM,DD] thành Date */
+  // const parseDate = (dateArr) => {
+  //   if (!dateArr) return null;
+  //   if (Array.isArray(dateArr)) {
+  //     const [year, month, day, hour = 0, minute = 0, second = 0] = dateArr;
+  //     return new Date(year, month - 1, day, hour, minute, second);
+  //   }
+  //   return new Date(dateArr);
+  // };
 
-  /** Xây URL ảnh đầy đủ */
-  const buildUrl = (path) => {
-    if (!path) return null;
-    const fixedPath = path.replace(/\\/g, "/");
-    return fixedPath.startsWith("http")
-      ? fixedPath
-      : `${BASE_URL}${fixedPath.startsWith("/") ? fixedPath : `/${fixedPath}`}`;
-  };
+  // /** Xây URL ảnh đầy đủ */
+  // const buildUrl = (path) => {
+  //   if (!path) return null;
+  //   const fixedPath = path.replace(/\\/g, "/");
+  //   return fixedPath.startsWith("http")
+  //     ? fixedPath
+  //     : `${BASE_URL}${fixedPath.startsWith("/") ? fixedPath : `/${fixedPath}`}`;
+  // };
 
   const fetchOwnerContracts = async () => {
     setLoading(true);
@@ -321,17 +323,17 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
     }
   };
 
-  /** Hiển thị trạng thái tiếng Việt */
-  const renderStatus = (status) => {
-    const map = {
-      PENDING: { text: "Đang chờ duyệt", color: "orange" },
-APPROVED: { text: "Đã được duyệt", color: "green" },
-      COMPLETED: { text: "Đã bán đủ cổ phần", color: "blue" },
-      EXPIRED: { text: "Hết hạn hợp đồng", color: "red" },
-    };
-    const { text, color } = map[status] || { text: status || "-", color: "default" };
-    return <Tag color={color}>{text}</Tag>;
-  };
+//   /** Hiển thị trạng thái tiếng Việt */
+//   const renderStatus = (status) => {
+//     const map = {
+//       PENDING: { text: "Đang chờ duyệt", color: "orange" },
+// APPROVED: { text: "Đã được duyệt", color: "green" },
+//       COMPLETED: { text: "Đã bán đủ cổ phần", color: "blue" },
+//       EXPIRED: { text: "Hết hạn hợp đồng", color: "red" },
+//     };
+//     const { text, color } = map[status] || { text: status || "-", color: "default" };
+//     return <Tag color={color}>{text}</Tag>;
+//   };
 
   const columns = [
     {

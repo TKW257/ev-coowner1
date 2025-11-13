@@ -213,36 +213,59 @@ const ProfileForm = () => {
 
               <Row gutter={16}>
                 <Col span={12}>
+                  {/* Số điện thoại */}
                   <Form.Item
                     label="Số điện thoại"
                     name="phone"
-                    rules={[{ required: true, message: "Vui lòng nhập SĐT" }]}
+                    rules={[
+                      { required: true, message: "Vui lòng nhập số điện thoại!" },
+                      {
+                        pattern: /^(0[3|5|7|8|9])[0-9]{8}$/,
+                        message: "Số điện thoại không hợp lệ! (VD: 0981234567)",
+                      },
+                    ]}
                   >
-                    <Input size="large" placeholder="Nhập số điện thoại" />
+                    <Input size="large" placeholder="Nhập số điện thoại (VD: 0981234567)" />
                   </Form.Item>
                 </Col>
+
                 <Col span={12}>
+                  {/* CCCD */}
                   <Form.Item
                     label="Căn cước công dân"
                     name="cccd"
-                    rules={[{ required: true, message: "Nhập CCCD" }]}
+                    rules={[
+                      { required: true, message: "Vui lòng nhập số CCCD!" },
+                      {
+                        pattern: /^[0-9]{12}$/,
+                        message: "CCCD phải gồm đúng 12 chữ số!",
+                      },
+                    ]}
                   >
-                    <Input size="large" placeholder="Nhập CCCD" />
+                    <Input size="large" placeholder="Nhập số CCCD (12 số)" />
                   </Form.Item>
                 </Col>
               </Row>
 
               <Row gutter={16}>
                 <Col span={12}>
+                  {/* GPLX */}
                   <Form.Item
                     label="Bằng lái xe"
                     name="gplx"
-                    rules={[{ required: true, message: "Nhập GPLX" }]}
+                    rules={[
+                      { required: true, message: "Vui lòng nhập số GPLX!" },
+                      {
+                        pattern: /^[A-Z0-9]{10,12}$/,
+                        message: "GPLX phải gồm 10–12 ký tự chữ và số (VD: 790123456789)",
+                      },
+                    ]}
                   >
-                    <Input size="large" placeholder="Nhập số GPLX" />
+                    <Input size="large" placeholder="Nhập số GPLX (10–12 ký tự)" />
                   </Form.Item>
                 </Col>
               </Row>
+
 
               <div style={{ textAlign: "right", marginTop: 16 }}>
                 <Button
