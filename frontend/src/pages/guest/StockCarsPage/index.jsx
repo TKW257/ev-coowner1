@@ -113,12 +113,6 @@ const StockCarsPage = () => {
                   ● {statusText}
                 </Text>
               </div>
-              <div className="car-actions">
-                <Button type="default">Xem chi tiết</Button>
-                <Button type="primary" style={{ marginLeft: 8 }}>
-                  Góp vốn ngay
-                </Button>
-              </div>
             </div>
           </Card>
         </Col>
@@ -246,7 +240,7 @@ const StockCarsPage = () => {
         total={filteredCars.length}
         pageSize={pageSize}
         onChange={(page) => setCurrentPage(page)}
-        style={{ marginTop: 24, textAlign: "center" }}
+        style={{ marginTop: 24, marginLeft: 1250, textAlign: "center" }}
       />
     </div>
   );
