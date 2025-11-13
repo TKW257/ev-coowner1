@@ -296,7 +296,7 @@ const BookingTracking = () => {
 
       {/* Modal xác nhận */}
       <Modal
-        title="Xác nhận Staff Checking"
+        title="Xác nhận biên bản này"
         open={isConfirmModalVisible}
         onCancel={() => setIsConfirmModalVisible(false)}
         okText="Gửi"
@@ -404,7 +404,7 @@ const BookingTracking = () => {
 
                 <div className="booking-actions">
                   {b.bookingStatus === "Cancelled" && (
-                    <Text type="secondary">Đơn hàng đã bị hủy</Text>
+                    <Text type="secondary">Lịch đặt đã bị hủy</Text>
                   )}
 
                   {(b.bookingStatus === "Pending" ||

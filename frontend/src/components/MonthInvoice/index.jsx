@@ -95,7 +95,6 @@ const InvoiceMonthDetail = forwardRef(({ selectedMonth }, ref) => {
         <img src={logoFull} alt="Logo công ty" style={{ height: 60, marginRight: 16 }} />
         <div>
           <h2 style={{ margin: 0, fontWeight: 600 }}>BÁO CÁO HÓA ĐƠN THÁNG {dayjs(selectedMonth.month).format("MM/YYYY")}</h2>
-          <p style={{ margin: 0, color: "#555" }}>Công ty TNHH Green Mobility</p>
         </div>
       </div>
 

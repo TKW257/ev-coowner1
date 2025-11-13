@@ -10,11 +10,12 @@ import {
   message,
   Space,
   Tag,
-  Descriptions,
   Tooltip,
   Typography,
   Spin,
   Empty,
+  Row,
+  Col,
 } from "antd";
 import {
   PlusOutlined,
@@ -22,17 +23,32 @@ import {
   EditOutlined,
   DeleteOutlined,
   FileTextOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import contractApi from "../../../api/contractApi";
 import vehiclesApi from "../../../api/vehiclesApi";
 import userApi from "../../../api/userApi";
+import ownerShipsApi from "../../../api/ownerShipsApi";
 import SignatureCanvas from "react-signature-canvas";
 import Contract from "../../../components/Contract";
 
-//const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
+const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
 
 const { Title } = Typography;
+
+const formatNumberWithCommas = (value) => {
+  if (value === undefined || value === null || value === "") return "";
+  const [integerPart, decimalPart] = value.toString().split(".");
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return decimalPart !== undefined ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+};
+
+const parseNumberFromFormatted = (value) => {
+  if (value === undefined || value === null || value === "") return value;
+  if (typeof value === "number") return value;
+  return value.replace(/,/g, "");
+};
 
 const ContractManagement = () => {
   const navigate = useNavigate();
@@ -42,9 +58,12 @@ const ContractManagement = () => {
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [ownershipModalVisible, setOwnershipModalVisible] = useState(false);
   const [selectedContract, setSelectedContract] = useState(null);
   const [editingContract, setEditingContract] = useState(null);
   const [deletingContract, setDeletingContract] = useState(null);
+  const [ownershipData, setOwnershipData] = useState([]);
+  const [ownershipLoading, setOwnershipLoading] = useState(false);
   const [vehicles, setVehicles] = useState([]);
   const [users, setUsers] = useState([]);
   const [form] = Form.useForm();
@@ -154,6 +173,21 @@ const ContractManagement = () => {
       formData.append("vehicleId", (values.vehicleId ?? "").toString());
       formData.append("userId", (values.userId ?? "").toString());
       formData.append("salePercentage", (values.salePercentage ?? 0).toString());
+      if (values.insurance !== undefined && values.insurance !== null) {
+        formData.append("insurance", values.insurance.toString());
+      }
+      if (values.registration !== undefined && values.registration !== null) {
+        formData.append("registration", values.registration.toString());
+      }
+      if (values.maintenance !== undefined && values.maintenance !== null) {
+        formData.append("maintenance", values.maintenance.toString());
+      }
+      if (values.cleaning !== undefined && values.cleaning !== null) {
+        formData.append("cleaning", values.cleaning.toString());
+      }
+      if (values.operationPerMonth !== undefined && values.operationPerMonth !== null) {
+        formData.append("operationPerMonth", values.operationPerMonth.toString());
+      }
       formData.append("startDate", values.startDate ?? "");
       if (values.endDate) formData.append("endDate", values.endDate);
       if (values.status) formData.append("status", values.status);
@@ -238,6 +272,35 @@ const ContractManagement = () => {
     }
   };
 
+  const handleViewOwnership = async (contract) => {
+    const vehicleId = contract?.vehicleId || contract?.vehicle?.vehicleId || contract?.vehicle?.id;
+    if (!vehicleId) {
+      message.error("Không tìm thấy Vehicle ID!");
+      return;
+    }
+
+    setOwnershipModalVisible(true);
+    setOwnershipLoading(true);
+    setOwnershipData([]);
+    
+    try {
+      const response = await ownerShipsApi.getMyGroupOwnership(vehicleId);
+      const data = Array.isArray(response) ? response : response?.data || [];
+      setOwnershipData(data);
+    } catch (error) {
+      console.error("Error fetching ownership:", error);
+      message.error("Không thể tải danh sách đồng sở hữu!");
+      setOwnershipData([]);
+    } finally {
+      setOwnershipLoading(false);
+    }
+  };
+
+  const handleCloseOwnershipModal = () => {
+    setOwnershipModalVisible(false);
+    setOwnershipData([]);
+  };
+
   const columns = [
     {
       title: "Mã HĐ",
@@ -306,15 +369,21 @@ const ContractManagement = () => {
               />
             </Tooltip>
           )}
-          {record.status === "APPROVED" && (
-            <Tooltip title="Quản lý Owner Contract">
-              <Button
-                type="link"
-                icon={<FileTextOutlined />}
-                onClick={() => navigate('/admin/owner-contracts')}
-              />
-            </Tooltip>
-          )}
+          <Tooltip title={record.status === "EXPIRED" ? "Hợp đồng đã hết hạn" : "Quản lý Owner Contract"}>
+            <Button
+              type="link"
+              icon={<FileTextOutlined />}
+              onClick={() => navigate('/admin/owner-contracts')}
+              disabled={record.status === "EXPIRED"}
+            />
+          </Tooltip>
+          <Tooltip title="Xem đồng sở hữu">
+            <Button
+              type="link"
+              icon={<TeamOutlined />}
+              onClick={() => handleViewOwnership(record)}
+            />
+          </Tooltip>
           <Tooltip title="Xóa">
             <Button
               type="link"
@@ -356,28 +425,12 @@ const ContractManagement = () => {
       )}
 
       {/* Modal xem chi tiết */}
-      <Modal
-        title="Chi tiết hợp đồng"
-        open={detailModalVisible}
-        onCancel={handleCloseDetailModal}
-        footer={[
-          <Button key="close" onClick={handleCloseDetailModal}>
-            Đóng
-          </Button>
-        ]}
-        width={900}
-      >
-        {selectedContract && (
-          <Descriptions bordered column={2}>
-            <Descriptions.Item label="Mã hợp đồng">
-              {selectedContract.contractId || selectedContract.id}
-            </Descriptions.Item>
-            <Descriptions.Item label="Trạng thái">
-              <Tag>{selectedContract.status}</Tag>
-            </Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
+      <Contract
+        contract={selectedContract}
+        visible={detailModalVisible}
+        onClose={handleCloseDetailModal}
+        baseURL={baseURL}
+      />
 
       {/* Modal chỉnh sửa */}
       <Modal
@@ -428,99 +481,278 @@ const ContractManagement = () => {
         onCancel={handleCloseCreateModal}
         okText="Tạo"
         cancelText="Hủy"
-        width={600}
+        width={1000}
       >
         <Form form={createForm} layout="vertical">
-          <Form.Item
-            name="vehicleId"
-            label="Chọn Xe"
-            rules={[{ required: true, message: 'Vui lòng chọn xe!' }]}
-          >
-            <Select placeholder="Chọn xe" showSearch>
-              {vehicles.map(vehicle => (
-                <Select.Option key={vehicle.vehicleId || vehicle.id} value={vehicle.vehicleId || vehicle.id}>
-                  {vehicle.brand} {vehicle.model} - {vehicle.plateNumber}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="vehicleId"
+                label="Chọn Xe"
+                rules={[{ required: true, message: 'Vui lòng chọn xe!' }]}
+              >
+                <Select placeholder="Chọn xe" showSearch>
+                  {vehicles.map(vehicle => (
+                    <Select.Option key={vehicle.vehicleId || vehicle.id} value={vehicle.vehicleId || vehicle.id}>
+                      {vehicle.brand} {vehicle.model} - {vehicle.plateNumber}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            name="userId"
-            label="Chọn Chủ Xe (Owner)"
-            rules={[{ required: true, message: 'Vui lòng chọn chủ xe!' }]}
-          >
-            <Select placeholder="Chọn chủ xe" showSearch>
-              {users
-                .filter(user => user.role === 'USER')
-                .map(user => (
-                  <Select.Option key={user.id} value={user.id}>
-                    {user.fullName || user.full_name} - {user.email}
-                  </Select.Option>
-                ))}
-            </Select>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="userId"
+                label="Chọn Chủ Xe (Owner)"
+                rules={[{ required: true, message: 'Vui lòng chọn chủ xe!' }]}
+              >
+                <Select placeholder="Chọn chủ xe" showSearch>
+                  {users
+                    .filter(user => user.role === 'USER')
+                    .map(user => (
+                      <Select.Option key={user.id} value={user.id}>
+                        {user.fullName || user.full_name} - {user.email}
+                      </Select.Option>
+                    ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="salePercentage"
-            label="Tỷ Lệ Bán (%)"
-            rules={[{ required: true, message: 'Vui lòng nhập tỷ lệ bán!' }]}
-          >
-            <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="Nhập tỷ lệ bán (0-100%)" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="salePercentage"
+                label="Tỷ Lệ Bán (%)"
+                rules={[{ required: true, message: 'Vui lòng nhập tỷ lệ bán!' }]}
+              >
+                <InputNumber style={{ width: '100%' }} min={0} max={100} placeholder="Nhập tỷ lệ bán (0-100%)" />
+              </Form.Item>
+            </Col>
 
-          <Form.Item
-            name="startDate"
-            label="Ngày Bắt Đầu"
-            rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu!' }]}
-          >
-            <Input type="date" />
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item name="status" label="Trạng Thái" initialValue="PENDING">
+                <Select>
+                  {contractStatusOptions.map(option => (
+                    <Select.Option key={option.value} value={option.value}>
+                      {option.label}
+                    </Select.Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item name="endDate" label="Ngày Kết Thúc">
-            <Input type="date" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="insurance"
+                label="Bảo hiểm"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí bảo hiểm"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
 
-          <Form.Item name="status" label="Trạng Thái" initialValue="PENDING">
-            <Select>
-              {contractStatusOptions.map(option => (
-                <Select.Option key={option.value} value={option.value}>
-                  {option.label}
-                </Select.Option>
-              ))}
-            </Select>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="registration"
+                label="Đăng ký"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí đăng ký"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item label="Chữ ký Admin">
-            <SignatureCanvas
-              ref={adminSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button type="link" onClick={() => adminSigPadRef.current?.clear()} style={{ padding: 0, marginTop: 5 }}>
-              Xóa chữ ký Admin
-            </Button>
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="maintenance"
+                label="Bảo trì"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí bảo trì"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
 
-          <Form.Item label="Chữ ký User (Chủ xe)">
-            <SignatureCanvas
-              ref={userSigPadRef}
-              penColor="black"
-              canvasProps={{
-                width: 500,
-                height: 150,
-                style: { border: "1px solid #ccc", borderRadius: "6px" },
-              }}
-            />
-            <Button type="link" onClick={() => userSigPadRef.current?.clear()} style={{ padding: 0, marginTop: 5 }}>
-              Xóa chữ ký User
-            </Button>
-          </Form.Item>
+            <Col span={12}>
+              <Form.Item
+                name="cleaning"
+                label="Vệ sinh"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí vệ sinh"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="operationPerMonth"
+                label="Chi phí vận hành/tháng"
+              >
+                <InputNumber 
+                  style={{ width: '100%' }} 
+                  min={0} 
+                  step={0.01} 
+                  placeholder="Nhập chi phí vận hành mỗi tháng"
+                  formatter={formatNumberWithCommas}
+                  parser={parseNumberFromFormatted}
+                />
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item
+                name="startDate"
+                label="Ngày Bắt Đầu"
+                rules={[{ required: true, message: 'Vui lòng chọn ngày bắt đầu!' }]}
+              >
+                <Input type="date" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="endDate" label="Ngày Kết Thúc">
+                <Input type="date" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item label="Chữ ký Admin">
+                <SignatureCanvas
+                  ref={adminSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button type="link" onClick={() => adminSigPadRef.current?.clear()} style={{ padding: 0, marginTop: 5 }}>
+                  Xóa chữ ký Admin
+                </Button>
+              </Form.Item>
+            </Col>
+
+            <Col span={12}>
+              <Form.Item label="Chữ ký User (Chủ xe)">
+                <SignatureCanvas
+                  ref={userSigPadRef}
+                  penColor="black"
+                  canvasProps={{
+                    width: 400,
+                    height: 120,
+                    style: { border: "1px solid #ccc", borderRadius: "6px", width: "100%" },
+                  }}
+                />
+                <Button type="link" onClick={() => userSigPadRef.current?.clear()} style={{ padding: 0, marginTop: 5 }}>
+                  Xóa chữ ký User
+                </Button>
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
+      </Modal>
+
+      {/* Modal xem đồng sở hữu */}
+      <Modal
+        title="Danh sách đồng sở hữu"
+        open={ownershipModalVisible}
+        onCancel={handleCloseOwnershipModal}
+        footer={[
+          <Button key="close" onClick={handleCloseOwnershipModal}>
+            Đóng
+          </Button>
+        ]}
+        width={800}
+      >
+        {ownershipLoading ? (
+          <div style={{ textAlign: "center", padding: 50 }}>
+            <Spin size="large" tip="Đang tải danh sách đồng sở hữu..." />
+          </div>
+        ) : ownershipData.length === 0 ? (
+          <Empty description="Không có đồng sở hữu nào" />
+        ) : (
+          <Table
+            rowKey={(record, index) => record.ownershipId || record.id || index}
+            dataSource={ownershipData}
+            columns={[
+              {
+                title: "Thành viên",
+                key: "userName",
+                render: (_, record) => {
+                  if (record.userName) return record.userName;
+                  if (record.user?.fullName) return record.user.fullName;
+                  if (record.user?.full_name) return record.user.full_name;
+                  if (record.user?.email) return record.user.email;
+                  return "N/A";
+                },
+              },
+              {
+                title: "Email",
+                key: "email",
+                render: (_, record) => {
+                  if (record.user?.email) return record.user.email;
+                  return "-";
+                },
+              },
+              {
+                title: "Tỷ lệ sở hữu (%)",
+                key: "totalSharePercentage",
+                render: (_, record) => {
+                  const percentage = record.totalSharePercentage || record.sharePercentage || 0;
+                  return `${percentage}%`;
+                },
+              },
+              {
+                title: "Trạng thái",
+                key: "status",
+                render: (_, record) => {
+                  const status = record.status || "N/A";
+                  const statusLower = status.toLowerCase();
+                  let color = "default";
+                  if (statusLower === "active") color = "green";
+                  else if (statusLower === "inactive") color = "default";
+                  else if (statusLower === "pending") color = "orange";
+                  return <Tag color={color}>{status}</Tag>;
+                },
+              },
+            ]}
+            pagination={{ pageSize: 10 }}
+          />
+        )}
       </Modal>
     </div>
   );
