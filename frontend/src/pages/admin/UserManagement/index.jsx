@@ -393,6 +393,8 @@ const UserManagement = () => {
                 <p><b>Họ tên:</b> {viewingUser.fullName}</p>
                 <p><b>Email:</b> {viewingUser.email}</p>
                 <p><b>Số điện thoại:</b> {viewingUser.phone || "—"}</p>
+                <p><b>CCCD:</b> {viewingUser.cccd || "—"}</p>
+                <p><b>GPLX:</b> {viewingUser.gplx || "—"}</p>
               </Col>
               <Col span={12}>
                 <p><b>Trạng thái xác minh:</b>{" "}
