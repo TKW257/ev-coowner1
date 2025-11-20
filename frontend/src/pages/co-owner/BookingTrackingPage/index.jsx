@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { App } from "antd";
+import { useRef } from "react";
 import { Steps, Card, Row, Col, Tag, Typography, Button, Space, Spin, Empty, Popconfirm, Modal } from "antd";
 import { CalendarOutlined, StopOutlined, SwapOutlined } from "@ant-design/icons";
 import bookingApi from "../../../api/bookingApi";
 import StaffCheckingReport from "../../../components/StaffCheckingReport";
-import { App } from "antd";
 import SignatureCanvas from "react-signature-canvas";
-import { useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 import "./style.scss";
 
 const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
-
 const { Title, Text } = Typography;
 const { Step } = Steps;
 
@@ -35,28 +34,12 @@ const BookingTracking = () => {
   const { message, notification } = App.useApp();
   const sigCanvas = useRef();
 
-  const statusStepIndex = {
-    Pending: 0,
-    Confirmed: 1,
-    InProgress: 2,
-    Completed: 3,
-    Cancelled: 4,
-  };
-
-  const statusColor = {
-    Pending: "orange",
-    Confirmed: "#1890ff",
-    InProgress: "#1890ff",
-    Completed: "#52c41a",
-    Cancelled: "red",
-  };
-
   const getCarImageUrl = (imagePath) => {
     if (!imagePath) return ""; // fallback
     return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
   };
 
-  const convertDateArray = (arr) => {
+  const formatDateArray = (arr) => {
     if (!Array.isArray(arr)) return arr;
     return dayjs(
       new Date(arr[0], arr[1] - 1, arr[2], arr[3] || 0, arr[4] || 0, arr[5] || 0)
@@ -67,19 +50,19 @@ const BookingTracking = () => {
     setLoading(true);
     try {
       const res = await bookingApi.getMyBooking();
-      const data = Array.isArray(res) ? res : res.data || [];
+      const data = res?.data || res;
       const normalized = data.map((b) => ({
         ...b,
         bookingStatus: b.bookingStatus?.trim(),
-        startTime: convertDateArray(b.startTime),
-        endTime: convertDateArray(b.endTime),
-        createdAt: convertDateArray(b.createdAt),
+        startTime: formatDateArray(b.startTime),
+        endTime: formatDateArray(b.endTime),
+        createdAt: formatDateArray(b.createdAt),
 
       }));
       console.log("Lịch status:", res);
       setBookings(normalized);
     } catch (error) {
-      console.error("❌ Lỗi khi tải lịch sử đặt xe:", error);
+      console.error("Lỗi khi tải lịch sử đặt xe:", error);
     } finally {
       setLoading(false);
     }
@@ -89,20 +72,22 @@ const BookingTracking = () => {
     fetchBookings();
   }, [fetchBookings]);
 
+  /* Cancel Booking */
   const handleCancelBooking = async (bookingId) => {
     try {
       setProcessingId(bookingId);
       await bookingApi.cancelBooking(bookingId);
-      message.success("✅ Hủy đặt xe thành công!");
+      message.success(" Hủy đặt xe thành công!");
       fetchBookings();
     } catch (error) {
       console.error(error);
-      message.error("❌ Hủy thất bại, thử lại sau!");
+      message.error("Hủy thất bại, thử lại sau!");
     } finally {
       setProcessingId(null);
     }
   };
 
+  /* Confirm record Check In.Out */
   const handleConfirmChecking = async () => {
     if (!staffCheckings || staffCheckings.length === 0) return;
 
@@ -110,8 +95,7 @@ const BookingTracking = () => {
     const checkingId = checking.checkingId || checking.id || checking.staffCheckingId;
     if (!checkingId) return;
 
-    // Hàm chuyển base64 sang Blob
-    const dataURLtoBlob = (dataurl) => {
+    const dataURLtoBlob = (dataurl) => {  // hàm chuyển base64 sang Blob
       const arr = dataurl.split(',');
       const mime = arr[0].match(/:(.*?);/)[1];
       const bstr = atob(arr[1]);
@@ -129,7 +113,7 @@ const BookingTracking = () => {
       formData.append("userComment", confirmComment);
 
 
-      // Kiểm tra canvas có chữ ký hay không
+      // kt sig
       if (!sigCanvas.current || sigCanvas.current.isEmpty()) {
         notification.warning({
           message: "Chưa ký xác nhận",
@@ -143,7 +127,6 @@ const BookingTracking = () => {
       const blob = dataURLtoBlob(dataUrl);
       formData.append("userSignature", blob, "signature.png");
 
-      // Gửi lên backend
       await bookingApi.confirmStaffChecking(checkingId, formData);
 
       notification.success({
@@ -153,8 +136,7 @@ const BookingTracking = () => {
           : "Bạn đã từ chối và gửi phản hồi.",
       });
 
-      // Reset modal
-      setIsConfirmModalVisible(false);
+      setIsConfirmModalVisible(false);  // reset modal
       setIsModalVisible(false);
       setConfirmComment("");
       fetchBookings();
@@ -168,7 +150,7 @@ const BookingTracking = () => {
     }
   };
 
-
+  /* Open modal Check in/out */
   const openModal = async (booking, type) => {
     setSelectedBooking(booking);
     setModalType(type);
@@ -177,23 +159,20 @@ const BookingTracking = () => {
 
     try {
       const res = await bookingApi.getStaffCheckingsByBookingId(booking.bookingId);
-      const allCheckings = Array.isArray(res)
-        ? res
-        : Array.isArray(res.data)
-          ? res.data
-          : [];
-      const filtered = allCheckings.filter(
+      const data = res?.data || res;
+      const filtered = data.filter(
         (c) => c.checkingType?.toLowerCase() === type?.toLowerCase()
       );
       console.log("staff:", res);
       setStaffCheckings(filtered.length > 0 ? filtered : []);
     } catch (err) {
-      console.error("❌ Lỗi khi gọi API:", err);
+      console.error(err);
     } finally {
       setLoadingStaffCheckings(false);
     }
   };
 
+  // pdf
   const generatePDF = async () => {
     const element = document.getElementById("pdf-content");
     if (!element) return;
@@ -206,6 +185,23 @@ const BookingTracking = () => {
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
     pdf.save(`Booking-${selectedBooking.bookingId}-${modalType}.pdf`);
+  };
+
+  /* Filter */
+  const statusStepIndex = {
+    Pending: 0,
+    Confirmed: 1,
+    InProgress: 2,
+    Completed: 3,
+    Cancelled: 4,
+  };
+
+  const statusColor = {
+    Pending: "orange",
+    Confirmed: "#1890ff",
+    InProgress: "#1890ff",
+    Completed: "#52c41a",
+    Cancelled: "red",
   };
 
   const handleStatusChange = (index) =>
@@ -222,7 +218,8 @@ const BookingTracking = () => {
 
   return (
     <div className="booking-tracking-container">
-      {/* Bộ lọc */}
+
+      {/* Filter */}
       <Card className="booking-filter-card">
         <Space className="booking-filter-space">
           <Steps
@@ -247,7 +244,7 @@ const BookingTracking = () => {
         </Space>
       </Card>
 
-      {/* Modal biên bản */}
+      {/* Modal Check in/out */}
       <Modal
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
@@ -334,7 +331,7 @@ const BookingTracking = () => {
             />
           </div>
 
-          {/* ✍️ Khu vực ký */}
+          {/* Sign zone*/}
           <div style={{ marginTop: 15 }}>
             <label>Chữ ký xác nhận:</label>
             <SignatureCanvas
@@ -371,7 +368,7 @@ const BookingTracking = () => {
           <Card key={b.bookingId} className="booking-card">
             <Row gutter={16} align="middle">
               <Col xs={24} sm={8} md={6}>
-                <img src={getCarImageUrl(b.imageUrl)} alt={b.vehicleName} className="booking-card-image"/>
+                <img src={getCarImageUrl(b.imageUrl)} alt={b.vehicleName} className="booking-card-image" />
               </Col>
 
               <Col xs={24} sm={16} md={18}>

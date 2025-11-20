@@ -68,6 +68,13 @@
   gap: 8px;
 }
 
+.booking-actions-one {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .book-btn {
   background-color: #52c41a !important;
   border-color: #52c41a !important;
@@ -85,24 +92,19 @@
   color: #fff !important;
 }
 
-/* ==============================
-   ✅ Calendar Styling (cập nhật)
-   ============================== */
-
-/* Các ô trong tháng hiện tại */
+//Calendar
 .ant-picker-cell-in-view {
   opacity: 1;
   transition: all 0.25s ease;
 }
 
-/* Các ô ngoài tháng hiện tại */
+/* ô ngoài tháng */
 .ant-picker-cell:not(.ant-picker-cell-in-view) {
   opacity: 0.3;
   pointer-events: none;
   cursor: not-allowed;
 }
 
-/* Hover trong tháng hiện tại */
 .ant-picker-cell-in-view:hover .ant-picker-cell-inner {
   background-color: rgba(82, 196, 26, 0.1);
   color: #52c41a;
@@ -111,7 +113,7 @@
   transition: all 0.25s ease;
 }
 
-/* Ngày được chọn */
+/* Chosen day */
 .ant-picker-cell-selected .ant-picker-cell-inner,
 .ant-picker-cell-range-start .ant-picker-cell-inner,
 .ant-picker-cell-range-end .ant-picker-cell-inner {
@@ -122,42 +124,33 @@
   transform: scale(1.05);
 }
 
-/* Ngày trong khoảng chọn */
+/* day in range */
 .ant-picker-cell-in-range::before {
   background-color: rgba(82, 196, 26, 0.2) !important;
 }
 
-/* Ngày hôm nay */
+/* today */
 .ant-picker-cell-today .ant-picker-cell-inner {
   border: 1px solid #52c41a !important;
   border-radius: 6px;
 }
 
-/* Cải thiện hiệu ứng click */
 .ant-picker-cell-inner {
   transition: all 0.25s ease;
 }
 
-/* ==============================
-   ✅ Giới hạn tháng/năm hiện tại
-   ============================== */
 
-/* Ẩn hiệu ứng hover và chặn click với ngày bị disable */
+/* disable ngày ngoài tháng */
 .ant-picker-cell-disabled {
   opacity: 0.3 !important;
   cursor: not-allowed !important;
   pointer-events: none !important;
 }
 
-/* Làm mờ toàn bộ ô ngoài tháng hiện tại */
+/* mờ ngày ngoài tháng */
 .ant-picker-cell:not(.ant-picker-cell-in-view) {
   opacity: 0.3 !important;
   pointer-events: none !important;
   cursor: not-allowed !important;
 }
 
-/* Chặn người dùng chuyển sang tháng khác */
-.ant-picker-header {
-  pointer-events: none;
-  opacity: 0.6;
-}

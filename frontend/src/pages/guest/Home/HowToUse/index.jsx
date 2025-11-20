@@ -1,13 +1,10 @@
 import React from "react";
 import { Row, Col, Typography, Space, Card } from "antd";
-import {
-  CarOutlined,
-  FileProtectOutlined,
-  SolutionOutlined,
-  ThunderboltOutlined,
-  LineChartOutlined,
-} from "@ant-design/icons";
+import { CarOutlined, FileProtectOutlined, SolutionOutlined, ThunderboltOutlined, LineChartOutlined } from "@ant-design/icons";
 import "./style.scss";
+import Car01 from "../../../../assets/how01.jpg";
+import Car02 from "../../../../assets/how02.jpg";
+import Car03 from "../../../../assets/how03.webp";
 
 const { Title, Paragraph } = Typography;
 
@@ -67,17 +64,17 @@ const HowToCoOwn = () => {
           <Col xs={24} md={12} className="image-section">
             <div className="image-wrapper">
               <img
-                src="https://vinfastlongbien.com/wp-content/uploads/2023/07/vinfast-vf3-mau-bac.jpg"
+                src= {Car01}
                 alt="Electric car"
                 className="ev-image main"
               />
               <img
-                src="https://media.suara.com/pictures/653x366/2023/12/01/85263-vinfast.jpg"
+                src= {Car03}
                 alt="Electric car side"
                 className="ev-image secondary"
               />
                <img
-                src="https://tse2.mm.bing.net/th/id/OIP.0sAlfje-yr5Uh5JSNVlz2QHaE_?w=1900&h=1280&rs=1&pid=ImgDetMain&o=7&rm=3"
+                src= {Car02}
                 alt="Electric car"
                 className="ev-image main"
               />

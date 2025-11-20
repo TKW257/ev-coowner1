@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, Row, Col, Typography, Button, Skeleton, Select, Pagination, Space } from "antd";
 import { ThunderboltOutlined, FilterOutlined } from "@ant-design/icons";
 import vehiclesApi from "../../../api/vehiclesApi";

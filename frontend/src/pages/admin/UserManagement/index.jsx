@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { Table, Button, Modal, Form, Input, Select, Card, Space, Tag, Tooltip, Row, message, Col, Divider } from "antd";
-import { CrownOutlined, TeamOutlined, UpCircleOutlined, EditOutlined, DeleteOutlined, UserOutlined, AuditOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import { useState, useEffect } from "react";
+import { Table, Button, Modal, Form, Input, Select, Card, Space, Tag, Tooltip, Row, Col, Divider } from "antd";
+import { CrownOutlined, TeamOutlined, UpCircleOutlined, DeleteOutlined, UserOutlined, AuditOutlined, CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import userApi from "../../../api/userApi";
 import { App } from "antd";
 
@@ -44,6 +44,7 @@ const UserManagement = () => {
     { value: "USER", label: "User" },
   ];
 
+  /* Get All Users */
   useEffect(() => {
     fetchUsers();
   }, []);
@@ -51,17 +52,18 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await userApi.getAll();
-      setUsers(Array.isArray(response) ? response : []);
+      const res = await userApi.getAll();
+      const data = res?.data || res;
+      setUsers(data);
     } catch (error) {
-      message.error("Không tải được danh sách người dùng!");
       console.error("Error fetching users:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEditUser = (user) => {
+  /* Promotion to STAFF */
+  const handlePromotion = (user) => {
     setEditingUser(user);
     setUpdateModalVisible(true);
     updateForm.setFieldsValue({
@@ -95,6 +97,7 @@ const UserManagement = () => {
     }
   };
 
+  /* Delete User */
   const handleDeleteUser = (user) => {
     setDeletingUser(user);
     setDeleteModalVisible(true);
@@ -122,11 +125,12 @@ const UserManagement = () => {
     }
   };
 
+  /* View Detail */
   const handleViewUser = (user) => {
     setViewingUser(user);
     setViewModalVisible(true);
 
-    // Xử lý hiển thị ảnh CCCD và GPLX
+    // format 
     if (user.cccdImagePath) {
       const fixedPath = user.cccdImagePath.replace(/\\/g, "/");
       setCccdPreview(`${base}${fixedPath}`);
@@ -138,7 +142,7 @@ const UserManagement = () => {
     } else setGplxPreview(null);
   };
 
-  // Xác thực USER
+  /* Verifing User */
   const handleVerify = async (approved) => {
     if (!viewingUser) return;
 
@@ -258,7 +262,7 @@ const UserManagement = () => {
             <Button
               type="link"
               icon={<UpCircleOutlined />}
-              onClick={() => handleEditUser(record)}
+              onClick={() => handlePromotion(record)}
             />
           </Tooltip>
           <Tooltip title="Xóa người dùng">
@@ -278,7 +282,7 @@ const UserManagement = () => {
     <div style={{ padding: 24 }}>
       <div style={{ marginBottom: 24 }} />
 
-      {/* --- Thống kê theo vai trò --- */}
+      {/* Filter By Role */}
       <Row gutter={16} style={{ marginBottom: 20 }}>
         <Col span={8}>
           <Card
@@ -327,7 +331,7 @@ const UserManagement = () => {
         </Col>
       </Row>
 
-      {/* --- Lọc theo trạng thái --- */}
+      {/* Result Filter */}
       <div style={{ marginBottom: 16 }}>
         <Select
           allowClear

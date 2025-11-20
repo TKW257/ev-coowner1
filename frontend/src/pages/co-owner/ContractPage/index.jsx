@@ -1,23 +1,6 @@
-import React, { useEffect, useState } from "react";
-import {
-  Card,
-  Tag,
-  Space,
-  Typography,
-  Spin,
-  Select,
-  Row,
-  Col,
-  Button,
-  Empty,
-  Image,
-} from "antd";
-import {
-  FileTextOutlined,
-  CheckCircleOutlined,
-  ClockCircleOutlined,
-  ExclamationCircleOutlined,
-} from "@ant-design/icons";
+import { useEffect, useState } from "react";
+import { Card, Tag, Space, Typography, Spin, Select, Row, Col, Button, Empty, Image } from "antd";
+import { FileTextOutlined, CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined } from "@ant-design/icons";
 import contractApi from "../../../api/contractApi";
 import Contract from "../../../components/Contract";
 

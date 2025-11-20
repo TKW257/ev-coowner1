@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Calendar, Tag, DatePicker, Typography, Button, message, Card, Spin, Alert } from "antd";
-import bookingApi from "../../../api/bookingApi";
 import { useBooking } from "../../../hooks/useBooking";
+import { App } from "antd";
+import { Calendar, Tag, DatePicker, Typography, Button, Card, Spin, Alert } from "antd";
+import bookingApi from "../../../api/bookingApi";
+import vehicleApi from "../../../api/vehiclesApi";
 import dayjs from "dayjs";
 import isBetween from "dayjs/plugin/isBetween";
 import "./style.scss";
 dayjs.extend(isBetween);
 
 const baseURL = "https://vallate-enzootically-sterling.ngrok-free.dev";
-
 const now = dayjs();
 const { RangePicker } = DatePicker;
 const { Title, Text } = Typography;
@@ -17,45 +18,51 @@ const { Title, Text } = Typography;
 const BookingPage = ({ onBookingSuccess }) => {
   const { vehicleId } = useParams();
   const [vehicle, setVehicle] = useState(null);
-  const [startDate, setStartDate] = useState(null);
-
-  const [endDate, setEndDate] = useState(null);
-  const { createBooking, loading } = useBooking(onBookingSuccess);
 
   const [bookings, setBookings] = useState([]);
   const [bookingsLoading, setBookingsLoading] = useState(false);
 
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [singleDate, setSingleDate] = useState(null);
+  const { createBooking, loading } = useBooking(onBookingSuccess);
+
   const [disputeWindows, setDisputeWindows] = useState([]);
   const [disputeLoading, setDisputeLoading] = useState(false);
+  const { message } = App.useApp();
 
   const getCarImageUrl = (imagePath) => {
     if (!imagePath) return "";
     return `${baseURL}/${imagePath.replaceAll("\\", "/")}`;
   };
 
+  const formatDateTime = (arr) => {
+    if (!arr || arr.length < 3) return "—";
+    return dayjs(
+      new Date(arr[0], arr[1] - 1, arr[2], arr[3] || 0, arr[4] || 0, arr[5] || 0)
+    ).format("DD/MM/YYYY HH:mm");
+  };
 
-  //✅ lấy data 1 xe 
+  /* Get chosen car data */
   useEffect(() => {
     const fetchVehicle = async () => {
       if (!vehicleId) return;
       try {
-        const res = await bookingApi.getBookingsByVehicle(vehicleId);
-        console.log("%c✅ Booking API response:", "color:green", res);
-        if (Array.isArray(res) && res.length > 0) {
-          setVehicle(res[0]);
-        } else {
-          setVehicle(res?.vehicle || {});
-        }
+        const res = await vehicleApi.getById(vehicleId);
+        const data = res?.data || res;
+        setVehicle(data);
+        console.log("%c Chosen car response:", "color:green", res);
+
+
       } catch (err) {
-        console.error("❌ Lỗi khi tải thông tin xe:", err);
-        message.error("Không thể tải thông tin xe!");
+        console.error(" Lỗi khi tải thông tin xe:", err);
       }
     };
     fetchVehicle();
   }, [vehicleId]);
 
 
-  // ✅  lấy status ngày của all owner 
+  /* Get status to dispay in calendar */
   useEffect(() => {
     if (!vehicleId) return;
 
@@ -63,11 +70,11 @@ const BookingPage = ({ onBookingSuccess }) => {
       setBookingsLoading(true);
       try {
         const res = await bookingApi.getVehicleSchedule(vehicleId);
-        const data = Array.isArray(res) ? res : res.data || [];
-        console.log("✅ API response:", data);
+        const data = res?.data || res;
+        console.log("Schedule response:", data);
         setBookings(data);
       } catch (err) {
-        console.error("❌ Lỗi khi tải lịch sử đặt xe:", err);
+        console.error("Lỗi khi tải lịch sử đặt xe:", err);
       } finally {
         setBookingsLoading(false);
       }
@@ -76,7 +83,7 @@ const BookingPage = ({ onBookingSuccess }) => {
     fetchBookings();
   }, [vehicleId]);
 
-  // ✅ Fetch danh sách ngày tranh chấp
+  /* Get Dispute days by Chosen Car */
   useEffect(() => {
     if (!vehicleId) return;
 
@@ -87,12 +94,11 @@ const BookingPage = ({ onBookingSuccess }) => {
         const currentMonth = dayjs().month() + 1; // month() trả 0-11
 
         const res = await bookingApi.getDisputeWindows(vehicleId, currentYear, currentMonth);
-        const data = Array.isArray(res) ? res : res.data || [];
-        console.log("%c✅ Dispute Windows:", "color:orange", data);
+        const data = res?.data || res;
         setDisputeWindows(data);
+        console.log("%c Dispute Day:", "color:orange", data);
       } catch (err) {
-        console.error("❌ Lỗi khi tải dữ liệu tranh chấp:", err);
-        message.error("Không thể tải dữ liệu tranh chấp!");
+        console.error("Lỗi khi tải dữ liệu tranh chấp:", err);
       } finally {
         setDisputeLoading(false);
       }
@@ -102,7 +108,7 @@ const BookingPage = ({ onBookingSuccess }) => {
   }, [vehicleId]);
 
 
-  // ✅ Chọn ngày
+  // Date Selection 
   const handleDateChange = (value) => {
     if (!startDate || (startDate && endDate)) {
       setStartDate(value);
@@ -115,17 +121,8 @@ const BookingPage = ({ onBookingSuccess }) => {
     }
   };
 
-  // ✅ Submit booking
+  /* Create Booking */
   const handleBooking = async () => {
-    if (!startDate || !endDate) {
-      message.warning("Vui lòng chọn ngày bắt đầu và kết thúc!");
-      return;
-    }
-
-    if (!vehicleId) {
-      message.error("Không có vehicleId hợp lệ!");
-      return;
-    }
 
     const startTime = dayjs(startDate).hour(4).minute(0).second(0);
     const endTime = dayjs(endDate).hour(23).minute(0).second(0);
@@ -140,12 +137,31 @@ const BookingPage = ({ onBookingSuccess }) => {
     await createBooking(payload);
   };
 
-  // ❌ Chặn chọn ngoài tháng hiện tại
+  /* Create Single Booking */
+  const handleSingleBooking = async () => {
+    if (!singleDate) return;
+
+    const startTime = singleDate.hour(4).minute(0).second(0);
+    const endTime = singleDate.hour(23).minute(0).second(0);
+
+    const payload = {
+      vehicleId: Number(vehicleId),
+      startTime: startTime.format("YYYY-MM-DD HH:mm:ss"),
+      endTime: endTime.format("YYYY-MM-DD HH:mm:ss"),
+    };
+
+    console.log("Booking 1 ngày:", payload);
+
+    await createBooking(payload);
+  };
+
+
+  // Block pick date (month)
   const disabledDate = (current) => {
     return !current.isSame(now, "month");
   };
 
-  // ✅ Xác định trạng thái theo ngày
+  // Identify status schedule
   const getStatusByDate = (date) => {
     const dayOnly = date.startOf("day");
 
@@ -163,9 +179,9 @@ const BookingPage = ({ onBookingSuccess }) => {
 
       const status = booking.bookingStatus?.toLowerCase();
 
-      // ✅ so sánh theo ngày (bao gồm ranh giới)
+      // compare date match
       if (dayOnly.isBetween(start, end, "day", "[]")) {
-        return status; // ngừng vòng lặp ngay khi match
+        return status; // stop if found
       }
     }
 
@@ -173,7 +189,7 @@ const BookingPage = ({ onBookingSuccess }) => {
   };
 
 
-  // ✅ Render trạng thái trong lịch
+  // Render schedule stautus
   const renderCell = (date) => {
     const status = getStatusByDate(date);
     if (!status) return null;
@@ -200,7 +216,6 @@ const BookingPage = ({ onBookingSuccess }) => {
   };
 
 
-
   if (!vehicle)
     return (
       <div style={{ textAlign: "center", padding: 40 }}>
@@ -211,7 +226,7 @@ const BookingPage = ({ onBookingSuccess }) => {
   return (
     <div style={{ padding: 24 }}>
 
-      {/* CURRENT CAR */}
+      {/* Chosen car to book */}
       <Card className="car-card">
         <div className="car-card-content">
           <img src={getCarImageUrl(vehicle.imageUrl) || "/placeholder-car.png"} alt={vehicle.model} className="car-image" />
@@ -231,31 +246,55 @@ const BookingPage = ({ onBookingSuccess }) => {
                 Chọn khoảng ngày để đặt xe. Thời gian mặc định: từ <b>4:00</b> đến{" "}
                 <b>23:00</b> của ngày kết thúc.
               </Text>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                {/* Chọn 1 ngày duy nhất */}
+                <div className="booking-actions-one">
+                  <DatePicker
+                    placeholder="Chọn 1 ngày"
+                    format="DD/MM/YYYY"
+                    value={singleDate}
+                    onChange={(value) => setSingleDate(value)}
+                    style={{ marginTop: 8 }}
+                    disabledDate={(date) => !date.isSame(now, "month")}
+                  />
 
-              <div className="booking-actions">
-                <RangePicker
-                  disabledDate={disabledDate}
-                  format="DD/MM/YYYY"
-                  value={
-                    startDate && endDate
-                      ? [startDate, endDate]
-                      : startDate
-                        ? [startDate, null]
-                        : []
-                  }
-                  onChange={(dates) => {
-                    setStartDate(dates?.[0] || null);
-                    setEndDate(dates?.[1] || null);
-                  }}
-                />
-                <Button
-                  type="primary"
-                  loading={loading}
-                  onClick={handleBooking}
-                  disabled={!startDate || !endDate}
-                >
-                  Đặt xe
-                </Button>
+                  <Button
+                    type="primary"
+                    loading={loading}
+                    onClick={handleSingleBooking}
+                    disabled={!singleDate}
+                  >
+                    Đặt 1 ngày
+                  </Button>
+                </div>
+
+                {/* Chọn range ngày  */}
+                <div className="booking-actions">
+                  <RangePicker
+                    disabledDate={disabledDate}
+                    format="DD/MM/YYYY"
+                    value={
+                      startDate && endDate
+                        ? [startDate, endDate]
+                        : startDate
+                          ? [startDate, null]
+                          : []
+                    }
+                    onChange={(dates) => {
+                      setStartDate(dates?.[0] || null);
+                      setEndDate(dates?.[1] || null);
+                    }}
+                  />
+
+                  <Button
+                    type="primary"
+                    loading={loading}
+                    onClick={handleBooking}
+                    disabled={!startDate || !endDate}
+                  >
+                    Đặt xe
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -263,7 +302,7 @@ const BookingPage = ({ onBookingSuccess }) => {
       </Card>
 
 
-      {/* ✅ Calendar hiển thị trạng thái */}
+      {/* Calendar  display  status by day */}
       <Card style={{ borderRadius: 12, marginTop: 24 }}>
         {bookingsLoading ? (
           <div style={{ textAlign: "center", padding: 50 }}>
@@ -301,7 +340,7 @@ const BookingPage = ({ onBookingSuccess }) => {
         )}
       </Card>
 
-      {/* ✅ Bảng hiển thị ngày & thời gian tranh chấp */}
+      {/* Table dispute day */}
       <Card
         style={{
           borderRadius: 12,
@@ -330,35 +369,20 @@ const BookingPage = ({ onBookingSuccess }) => {
               </tr>
             </thead>
             <tbody>
-              {disputeWindows.map((item, index) => {
-                // format dữ liệu trả về từ backend
-                const formatArrayDate = (arr) => {
-                  if (!arr || arr.length < 3) return "—";
-                  return dayjs(
-                    new Date(arr[0], arr[1] - 1, arr[2], arr[3] || 0, arr[4] || 0, arr[5] || 0)
-                  ).format("DD/MM/YYYY HH:mm");
-                };
-
-                const disputeDate = formatArrayDate(item.date);
-                const firstCreated = formatArrayDate(item.firstCreatedAt);
-                const windowEnd = formatArrayDate(item.windowEndAt);
-
-                return (
-                  <tr key={index} style={{ borderBottom: "1px solid #eee" }}>
-                    <td style={{ padding: "8px" }}>{disputeDate}</td>
-                    <td style={{ padding: "8px" }}>{firstCreated}</td>
-                    <td style={{ padding: "8px" }}>{windowEnd}</td>
-                    <td style={{ padding: "8px" }}>
-                      <Tag color="red">{item.windowHours} giờ</Tag>
-                    </td>
-                  </tr>
-                );
-              })}
+              {disputeWindows.map((item, index) => (
+                <tr key={index} style={{ borderBottom: "1px solid #eee" }}>
+                  <td style={{ padding: "8px" }}>{formatDateTime(item.date)}</td>
+                  <td style={{ padding: "8px" }}>{formatDateTime(item.firstCreatedAt)}</td>
+                  <td style={{ padding: "8px" }}>{formatDateTime(item.windowEndAt)}</td>
+                  <td style={{ padding: "8px" }}>
+                    <Tag color="red">{item.windowHours} giờ</Tag>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         )}
       </Card>
-
 
     </div>
   );
