@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Table, Modal, Button, Tag, Image, Typography } from "antd";
 import dayjs from "dayjs";
 import bookingApi from "../../../api/bookingApi";
@@ -15,7 +15,13 @@ const VehicleDisputePage = () => {
     const [disputedBookings, setDisputedBookings] = useState([]);
     const [loadingDisputes, setLoadingDisputes] = useState(false);
 
-    // Lấy danh sách xe
+    const formatDateArray = (arr) => {
+        if (!Array.isArray(arr) || arr.length < 5) return null;
+        // month - 1 vì JS tính tháng từ 0
+        return new Date(arr[0], arr[1] - 1, arr[2], arr[3], arr[4]);
+    };
+
+    /* Get Dispute Day by Car */
     useEffect(() => {
         const fetchVehicles = async () => {
             try {
@@ -34,18 +40,12 @@ const VehicleDisputePage = () => {
 
     const handleViewDisputes = async (vehicle) => {
         setSelectedVehicle(vehicle);
+        setDisputedBookings([]);
         setModalVisible(true);
         try {
             setLoadingDisputes(true);
             const res = await bookingApi.getDisputedBookingsByVehicle(vehicle.vehicleId);
             const rawData = res?.data || res;
-
-            // Hàm chuyển đổi mảng thời gian sang đối tượng Date
-            const parseDateArray = (arr) => {
-                if (!Array.isArray(arr) || arr.length < 5) return null;
-                // month - 1 vì JS tính tháng từ 0
-                return new Date(arr[0], arr[1] - 1, arr[2], arr[3], arr[4]);
-            };
 
             const formattedData = (rawData || []).map((item) => ({
                 id: item.bookingId,
@@ -54,9 +54,9 @@ const VehicleDisputePage = () => {
                 userName: item.userName,
                 userEmail: item.userEmail,
                 status: item.bookingStatus,
-                startDate: parseDateArray(item.startTime),
-                endDate: parseDateArray(item.endTime),
-                createdAt: parseDateArray(item.createdAt),
+                startDate: formatDateArray(item.startTime),
+                endDate: formatDateArray(item.endTime),
+                createdAt: formatDateArray(item.createdAt),
                 disputed: item.disputed,
                 disputeWinner: item.disputeWinner,
             }));
@@ -69,7 +69,6 @@ const VehicleDisputePage = () => {
         }
     };
 
-    // Cột table xe
     const vehicleColumns = [
         {
             title: "Hình ảnh",

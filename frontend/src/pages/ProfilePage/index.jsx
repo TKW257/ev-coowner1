@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { App } from "antd";
 import { Form, Input, Button, Upload, Row, Col, Typography, Card, Divider, Alert } from "antd";
 import { UploadOutlined, UserOutlined } from "@ant-design/icons";

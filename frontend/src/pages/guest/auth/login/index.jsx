@@ -1,10 +1,10 @@
-import React from "react";
 import { Form, Input, Button, Typography, Divider, App } from "antd"; 
 import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { useNavigate } from "react-router-dom";
 import { login } from "../../../../features/userSlice";
 import "./style.scss";
+import AuthBG from "../../../../assets/auth.jpg";
 
 const { Text } = Typography;
 
@@ -42,7 +42,8 @@ function LoginPage() {
   };
 
   return (
-    <div className="login-container">
+    <div className="login-container"
+     style={{ backgroundImage: `url(${AuthBG})` }}>
       <div className="login-right">
         <div className="login-form-box">
           <div className="login-header">

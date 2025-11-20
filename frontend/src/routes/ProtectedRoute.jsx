@@ -1,4 +1,3 @@
-import React from "react";
 import { Navigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import StorageKeys from "../constants/storage-key";
@@ -9,7 +8,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const token = localStorage.getItem(StorageKeys.TOKEN) || user?.token;
 
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/guest/login" replace />;
   }
 
   let role = null;

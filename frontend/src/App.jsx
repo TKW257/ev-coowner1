@@ -19,7 +19,6 @@ import MyCarPage from "./pages/co-owner/MyCarPage";
 import BookingPage from "./pages/co-owner/BookingPage";
 import BookingTrackingPage from "./pages/co-owner/BookingTrackingPage"
 import InvoicePage from "./pages/co-owner/InvoicePage";
-import SuccessPage from "./pages/co-owner/SucessPage";
 import VotingPage from "./pages/co-owner/VotingPage";
 import ProfilePage from "./pages/ProfilePage";
 import ContractPage from "./pages/co-owner/ContractPage";
@@ -61,9 +60,9 @@ const router = createBrowserRouter([
   {
     path: "/owner",
     element: (
-      // <ProtectedRoute allowedRoles={["USER"]}>
-      <DashboardLayout />
-      // </ProtectedRoute>
+      <ProtectedRoute allowedRoles={["USER"]}>
+        <DashboardLayout />
+      </ProtectedRoute>
     ),
     children: [
       { path: "mycar", element: <MyCarPage /> },
@@ -71,7 +70,6 @@ const router = createBrowserRouter([
       { path: "carbooking/:vehicleId", element: <BookingPage /> },
       { path: "carbooking", element: <BookingPage /> },
       { path: "invoice", element: <InvoicePage /> },
-      { path: "success", element: <SuccessPage /> },
       { path: "vote", element: <VotingPage /> },
       { path: "contract", element: <ContractPage /> },
       { path: "ownercontract", element: <OwnerContractPage /> },
@@ -82,9 +80,9 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      // <ProtectedRoute allowedRoles={["ADMIN""]}>
-      <DashboardLayout />
-      // </ProtectedRoute>
+      <ProtectedRoute allowedRoles={["ADMIN"]}>
+        <DashboardLayout />
+      </ProtectedRoute>
     ),
     children: [
       { index: true, element: <AdminDashboard /> },
@@ -109,9 +107,9 @@ const router = createBrowserRouter([
   {
     path: "/staff",
     element: (
-      // <ProtectedRoute allowedRoles={["STAFF"]}>
-      <DashboardLayout />
-      // </ProtectedRoute>
+      <ProtectedRoute allowedRoles={["STAFF"]}>
+        <DashboardLayout />
+      </ProtectedRoute>
     ),
     children: [
       { index: true, element: <AdminDashboard /> },

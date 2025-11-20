@@ -1,9 +1,9 @@
-import React from "react";
 import { Input, Button, Typography, Form, Divider, App } from "antd";
 import { useDispatch } from "react-redux";
 import { unwrapResult } from "@reduxjs/toolkit";
 import { register } from "../../../../features/userSlice";
 import "./style.scss";
+import AuthBG from "../../../../assets/auth.jpg";
 
 const { Text } = Typography;
 
@@ -21,12 +21,13 @@ function Register() {
       console.log("Người dùng mới:", user);
     } catch (error) {
       console.error("Đăng ký thất bại:", error);
-      message.error("Đăng ký thất bại. Vui lòng thử lại ❌");
+      message.error("Đăng ký thất bại. Vui lòng thử lại ");
     }
   };
 
   return (
-    <div className="register-container">
+    <div className="register-container"
+     style={{ backgroundImage: `url(${AuthBG})` }}>
       <div className="register-right">
         <div className="register-form-box">
           <div className="register-header">

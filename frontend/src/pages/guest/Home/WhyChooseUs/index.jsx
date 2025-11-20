@@ -1,4 +1,3 @@
-import React from "react";
 import { DollarOutlined, SafetyOutlined, BarChartOutlined, ToolOutlined, } from "@ant-design/icons";
 import { Typography } from "antd";
 import "./style.scss";
