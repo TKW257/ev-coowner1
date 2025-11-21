@@ -153,8 +153,31 @@ const AdminDashboard = () => {
       // Set recent bookings (last 5)
       const sortedBookings = [...bookingsData]
         .sort((a, b) => {
-          const dateA = a.createdAt ? new Date(a.createdAt) : new Date(0);
-          const dateB = b.createdAt ? new Date(b.createdAt) : new Date(0);
+          // Handle createdAt - could be string, array, or Date
+          let dateA = new Date(0);
+          let dateB = new Date(0);
+          
+          if (a.createdAt) {
+            if (Array.isArray(a.createdAt)) {
+              // Array format: [year, month, day, hour, minute, second]
+              dateA = new Date(...a.createdAt.slice(0, 6));
+            } else if (typeof a.createdAt === 'string') {
+              dateA = new Date(a.createdAt);
+            } else if (a.createdAt instanceof Date) {
+              dateA = a.createdAt;
+            }
+          }
+          
+          if (b.createdAt) {
+            if (Array.isArray(b.createdAt)) {
+              dateB = new Date(...b.createdAt.slice(0, 6));
+            } else if (typeof b.createdAt === 'string') {
+              dateB = new Date(b.createdAt);
+            } else if (b.createdAt instanceof Date) {
+              dateB = b.createdAt;
+            }
+          }
+          
           return dateB - dateA;
         })
         .slice(0, 5);
@@ -279,7 +302,23 @@ const AdminDashboard = () => {
       title: 'Ngày tạo',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date) => date ? dayjs(date).format('DD/MM/YYYY') : '-'
+      render: (date) => {
+        if (!date) return '-';
+        
+        try {
+          // Handle array format: [year, month, day, hour, minute, second]
+          if (Array.isArray(date)) {
+            const [year, month, day] = date.slice(0, 3);
+            return dayjs(new Date(year, month - 1, day)).format('DD/MM/YYYY');
+          }
+          
+          // Handle string or Date object
+          return dayjs(date).format('DD/MM/YYYY');
+        } catch (error) {
+          console.error('Error parsing date:', date, error);
+          return '-';
+        }
+      }
     }
   ];
 
