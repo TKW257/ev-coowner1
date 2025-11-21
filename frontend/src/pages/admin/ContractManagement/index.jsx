@@ -307,6 +307,11 @@ const ContractManagement = () => {
       dataIndex: "contractId",
       key: "contractId",
       width: 120,
+      sorter: (a, b) => {
+        const aId = String(a.contractId || a.id || "");
+        const bId = String(b.contractId || b.id || "");
+        return aId.localeCompare(bId, 'en', { numeric: true, sensitivity: 'base' });
+      },
       render: (id, record) => id || record?.id || "-"
     },
     {
