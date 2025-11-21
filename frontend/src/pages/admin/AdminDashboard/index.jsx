@@ -236,7 +236,7 @@ const AdminDashboard = () => {
       title: "Quản lý Hóa đơn",
       description: "Quản lý hóa đơn và thanh toán",
       icon: <FileTextOutlined style={{ fontSize: '32px' }} />,
-      path: "/admin/invoices",
+      path: "/admin/invoice",
       color: COLORS.success
     },
     {
@@ -637,7 +637,7 @@ const AdminDashboard = () => {
                   <Button 
                     type="link" 
                     icon={<EyeOutlined />}
-                    onClick={() => navigate('/admin/invoices')}
+                    onClick={() => navigate('/admin/invoice')}
                   >
                     Xem tất cả
                   </Button>
