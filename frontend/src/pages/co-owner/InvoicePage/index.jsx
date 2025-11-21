@@ -9,6 +9,16 @@ import paymentApi from "../../../api/paymentApi";
 import MonthInvoice from "../../../components/MonthInvoice";
 import './style.scss';
 
+const parseDateArray = (dateArray) => {
+  if (!dateArray || !Array.isArray(dateArray) || dateArray.length < 3) {
+    return null;
+  }
+  
+  const [year, month, day, hour = 0, minute = 0, second = 0] = dateArray;
+  // Subtract 1 from month because API uses 1-based months but JavaScript uses 0-based
+  return dayjs(new Date(year, month - 1, day, hour, minute, second));
+};
+
 
 const UserInvoiceDashboard = () => {
   const [invoiceList, setInvoiceList] = useState([]);
@@ -29,14 +39,28 @@ const UserInvoiceDashboard = () => {
         // Nếu API trả về mảng
         const list = Array.isArray(data) ? data : [data];
 
-        const mapped = list.map((item) => ({
-          sumaInvoiceId: item.sumaInvoiceId,
-          month: item.month,
-          totalAmount: item.totalAmount,
-          status: item.status,
-          userName: item.userName,
-          invoices: item.invoices || [],
-        }));
+        const mapped = list.map((item, index) => {
+          console.log(`\n📄 Invoice Item ${index + 1}:`, {
+            sumaInvoiceId: item.sumaInvoiceId,
+            month: item.month,
+            monthType: typeof item.month,
+            monthIsArray: Array.isArray(item.month),
+            totalAmount: item.totalAmount,
+            status: item.status,
+            userName: item.userName,
+            invoicesCount: item.invoices?.length || 0,
+            rawItem: item
+          });
+          
+          return {
+            sumaInvoiceId: item.sumaInvoiceId,
+            month: item.month,
+            totalAmount: item.totalAmount,
+            status: item.status,
+            userName: item.userName,
+            invoices: item.invoices || [],
+          };
+        });
 
         setInvoiceList(mapped);
       } catch (err) {
@@ -130,42 +154,56 @@ const UserInvoiceDashboard = () => {
         <Empty description="Không có hóa đơn" style={{ marginTop: 50 }} />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {filteredInvoices.map((item) => (
-            <Card key={item.sumaInvoiceId} style={{ padding: "16px 20px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 20,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ fontWeight: 600 }}>
-                  Tháng: {dayjs(item.month).format("MM/YYYY")}
-                </div>
+          {filteredInvoices.map((item) => {
+            // Get dueDate from first invoice
+            const firstInvoice = item.invoices?.[0];
+            const dueDate = firstInvoice?.dueDate;
+            const parsedDueDate = parseDateArray(dueDate);
+            const dueDateFormatted = parsedDueDate ? parsedDueDate.format("DD/MM/YYYY") : "N/A";
+            
+            return (
+              <Card key={item.sumaInvoiceId} style={{ padding: "16px 20px" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 20,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div style={{ fontWeight: 600 }}>
+                    Tháng: {dayjs(item.month).format("MM/YYYY")}
+                  </div>
 
-                <div>
-                  Tổng tiền:{" "}
-                  <span style={{ fontWeight: 600 }}>
-                    {item.totalAmount.toLocaleString("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                    })}
-                  </span>
-                </div>
+                  <div>
+                    Tổng tiền:{" "}
+                    <span style={{ fontWeight: 600 }}>
+                      {item.totalAmount.toLocaleString("vi-VN", {
+                        style: "currency",
+                        currency: "VND",
+                      })}
+                    </span>
+                  </div>
 
-                <div>
-                  {item.status === "OPEN" ? (
-                    <Tag color="red" icon={<ClockCircleOutlined />}>
-                      Chưa thanh toán
-                    </Tag>
-                  ) : (
-                    <Tag color="green" icon={<CheckCircleOutlined />}>
-                      Đã thanh toán
-                    </Tag>
-                  )}
-                </div>
+                  <div>
+                    Hạn thanh toán:{" "}
+                    <span style={{ fontWeight: 500, color: item.status === "OPEN" && parsedDueDate && parsedDueDate.isBefore(dayjs()) ? "#ff4d4f" : "#333" }}>
+                      {dueDateFormatted}
+                    </span>
+                  </div>
+
+                  <div>
+                    {item.status === "OPEN" ? (
+                      <Tag color="red" icon={<ClockCircleOutlined />}>
+                        Chưa thanh toán
+                      </Tag>
+                    ) : (
+                      <Tag color="green" icon={<CheckCircleOutlined />}>
+                        Đã thanh toán
+                      </Tag>
+                    )}
+                  </div>
 
                 <div style={{ display: "flex", gap: 10 }}>
                   <Button icon={<EyeOutlined />} type="primary" onClick={() => openMonthDetail(item)}>
@@ -185,7 +223,8 @@ const UserInvoiceDashboard = () => {
                 </div>
               </div>
             </Card>
-          ))}
+            );
+          })}
         </div>
       )}
 
