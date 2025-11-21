@@ -157,7 +157,7 @@ const Sidebar = () => {
       type: "divider",
     },
     {
-      key: "/owner/profile",
+      key: "/public/profile",
       icon: <UserOutlined />,
       label: <Link to="/public/profile">Hồ Sơ Người Dùng</Link>,
     },

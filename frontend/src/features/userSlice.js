@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import userApi from '../api/userApi';
 import StorageKeys from '../constants/storage-key';
 
-// 🧠 Async thunk: REGISTER
+// Async thunk: REGISTER
 export const register = createAsyncThunk('users/register', async (payload) => {
   const data = await userApi.register(payload);
 
@@ -15,7 +15,7 @@ export const register = createAsyncThunk('users/register', async (payload) => {
   return user;
 });
 
-// 🧠 Async thunk: LOGIN
+// Async thunk: LOGIN
 export const login = createAsyncThunk('users/login', async (payload) => {
   const data = await userApi.login(payload);
 
@@ -28,7 +28,7 @@ export const login = createAsyncThunk('users/login', async (payload) => {
   return user;
 });
 
-// 📦 Slice: Quản lý user
+// Slice: Quản lý user
 const userSlice = createSlice({
   name: 'user',
   initialState: {
@@ -40,7 +40,7 @@ const userSlice = createSlice({
       localStorage.removeItem(StorageKeys.USER);
       localStorage.removeItem(StorageKeys.TOKEN);
       state.current = {};
-      console.log("🔴 logout");
+      console.log("logout");
     },
   },
   extraReducers: (builder) => {

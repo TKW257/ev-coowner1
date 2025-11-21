@@ -282,7 +282,7 @@ const ContractManagement = () => {
     setOwnershipModalVisible(true);
     setOwnershipLoading(true);
     setOwnershipData([]);
-    
+
     try {
       const response = await ownerShipsApi.getMyGroupOwnership(vehicleId);
       const data = Array.isArray(response) ? response : response?.data || [];
@@ -555,10 +555,10 @@ const ContractManagement = () => {
                 name="insurance"
                 label="Bảo hiểm"
               >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
+                <InputNumber
+                  style={{ width: '100%' }}
+                  min={0}
+                  step={0.01}
                   placeholder="Nhập chi phí bảo hiểm"
                   formatter={formatNumberWithCommas}
                   parser={parseNumberFromFormatted}
@@ -571,10 +571,10 @@ const ContractManagement = () => {
                 name="registration"
                 label="Đăng ký"
               >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
+                <InputNumber
+                  style={{ width: '100%' }}
+                  min={0}
+                  step={0.01}
                   placeholder="Nhập chi phí đăng ký"
                   formatter={formatNumberWithCommas}
                   parser={parseNumberFromFormatted}
@@ -589,10 +589,10 @@ const ContractManagement = () => {
                 name="maintenance"
                 label="Bảo trì"
               >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
+                <InputNumber
+                  style={{ width: '100%' }}
+                  min={0}
+                  step={0.01}
                   placeholder="Nhập chi phí bảo trì"
                   formatter={formatNumberWithCommas}
                   parser={parseNumberFromFormatted}
@@ -605,10 +605,10 @@ const ContractManagement = () => {
                 name="cleaning"
                 label="Vệ sinh"
               >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
+                <InputNumber
+                  style={{ width: '100%' }}
+                  min={0}
+                  step={0.01}
                   placeholder="Nhập chi phí vệ sinh"
                   formatter={formatNumberWithCommas}
                   parser={parseNumberFromFormatted}
@@ -623,10 +623,10 @@ const ContractManagement = () => {
                 name="operationPerMonth"
                 label="Chi phí vận hành/tháng"
               >
-                <InputNumber 
-                  style={{ width: '100%' }} 
-                  min={0} 
-                  step={0.01} 
+                <InputNumber
+                  style={{ width: '100%' }}
+                  min={0}
+                  step={0.01}
                   placeholder="Nhập chi phí vận hành mỗi tháng"
                   formatter={formatNumberWithCommas}
                   parser={parseNumberFromFormatted}
@@ -717,10 +717,7 @@ const ContractManagement = () => {
               {
                 title: "Email",
                 key: "email",
-                render: (_, record) => {
-                  if (record.userName) return record.userName;
-                  return "-";
-                },
+                render: (_, record) => record.userName || "-",
               },
               {
                 title: "Tỷ lệ sở hữu (%)",
@@ -744,10 +741,11 @@ const ContractManagement = () => {
                 },
               },
             ]}
-            pagination={{ pageSize: 10 }}
+            pagination={false}
           />
         )}
       </Modal>
+
     </div>
   );
 };

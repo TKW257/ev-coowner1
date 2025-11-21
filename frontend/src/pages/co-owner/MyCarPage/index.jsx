@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Row, Col, Tag, Typography, Button, Statistic, Modal, Table, Spin, Alert } from "antd";
+import { Row, Col, Tag, Typography, Button, Statistic, Modal, Table, Spin, Alert } from "antd";
 import { ThunderboltOutlined, DollarOutlined, CalendarOutlined, DashboardOutlined, PercentageOutlined, CarOutlined, TeamOutlined, RightOutlined, LeftOutlined } from "@ant-design/icons";
 import ownerShipsApi from "../../../api/ownerShipsApi";
 import "./style.scss";
@@ -42,7 +42,7 @@ const MyCars = () => {
         const res = await ownerShipsApi.getMyVehicles();
 
         const vehiclesArray = Array.isArray(res) ? res : res.data || [];
-        console.log("🟢 Vehicles array:", vehiclesArray);
+        console.log(" Vehicles array:", vehiclesArray);
 
         const vehiclesMap = {};
         vehiclesArray.forEach((v) => {
@@ -55,7 +55,7 @@ const MyCars = () => {
           setCurrentCarId(vehiclesArray[0].vehicleId);
         }
       } catch (err) {
-        console.error("❌ Lỗi khi tải danh sách xe:", err);
+        console.error(" Lỗi khi tải danh sách xe:", err);
       } finally {
         setLoading(false);
       }
@@ -79,7 +79,7 @@ const MyCars = () => {
       const data = Array.isArray(res) ? res : res.data || [];
       setGroupData(data);
     } catch (err) {
-      console.error("❌ Lỗi khi tải nhóm sở hữu:", err);
+      console.error("Lỗi khi tải nhóm sở hữu:", err);
     } finally {
       setGroupLoading(false);
     }
@@ -438,7 +438,6 @@ const MyCars = () => {
             </div>
           ))}
 
-          {/* ✅ Thẻ Xem thêm nằm cạnh xe (chỉ hiển thị icon mũi tên) */}
           {totalCars > 4 && (
             <Col xs={24} sm={12} md={8} lg={6}>
               <div
