@@ -38,6 +38,19 @@ import ownerShipsApi from "../../../api/ownerShipsApi";
 import vehiclesApi from "../../../api/vehiclesApi";
 import MonthInvoice from "../../../components/MonthInvoice";
 
+const VARIABLE_FEE_TYPES = [
+  "Charging",
+  "Overused",
+  "OverOdometer",
+  "Damage",
+];
+
+const VARIABLE_FEE_TYPE_LABELS = {
+  Charging: "Phí sạc",
+  Overused: "Sử dụng vượt mức",
+  OverOdometer: "Vượt số KM",
+  Damage: "Hư hỏng",
+};
 
 const AdminInvoiceDashboard = () => {
   const [invoices, setInvoices] = useState([]);
@@ -328,7 +341,7 @@ const AdminInvoiceDashboard = () => {
           const payload = {
             vehicleId,
             email,
-            type: "Upgrade",
+            type: values.type,
             amount: Number(values.amount),
             description: values.description.trim(),
           };
@@ -689,6 +702,21 @@ const AdminInvoiceDashboard = () => {
               notFoundContent={loadingEmails ? "Đang tải..." : "Không có email nào"}
               style={{ width: '100%' }}
             />
+          </Form.Item>
+
+          <Form.Item
+            name="type"
+            label="Loại phí phát sinh"
+            initialValue={VARIABLE_FEE_TYPES[0]}
+            rules={[{ required: true, message: "Vui lòng chọn loại phí!" }]}
+          >
+            <Select placeholder="Chọn loại phí phát sinh">
+              {VARIABLE_FEE_TYPES.map((feeType) => (
+                <Select.Option key={feeType} value={feeType}>
+                  {VARIABLE_FEE_TYPE_LABELS[feeType] || feeType}
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
 
           <Form.Item
