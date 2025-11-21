@@ -18,8 +18,9 @@ import {
   Row,
   Col,
   Input,
+  Dropdown,
 } from "antd";
-import { EyeOutlined, UserAddOutlined, PlusOutlined, SearchOutlined, SortAscendingOutlined, SortDescendingOutlined } from "@ant-design/icons";
+import { EyeOutlined, UserAddOutlined, PlusOutlined, SearchOutlined, SortAscendingOutlined, SortDescendingOutlined, FilterOutlined } from "@ant-design/icons";
 import ownerContractsApi from "../../../api/owner-contractsApi";
 import contractApi from "../../../api/contractApi";
 import userApi from "../../../api/userApi";
@@ -49,6 +50,7 @@ const OwnerContractManagement = () => {
   
   // Filter states
   const [filteredInfo, setFilteredInfo] = useState({});
+  const [selectedContractIdFilter, setSelectedContractIdFilter] = useState(null);
   const [searchText, setSearchText] = useState({
     ownerContractId: "",
     fullName: "",
@@ -355,6 +357,7 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
 
   const handleResetFilters = () => {
     setFilteredInfo({});
+    setSelectedContractIdFilter(null);
     setSearchText({
       ownerContractId: "",
       fullName: "",
@@ -362,6 +365,54 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
       phone: "",
     });
   };
+
+  // Lấy danh sách contractId với thông tin vehicle (brand, model) từ ownerContracts
+  const getUniqueContractIdsWithVehicle = () => {
+    const contractMap = new Map();
+    ownerContracts.forEach(record => {
+      const contractId = record.contractId || 
+                        record.contract_Id || 
+                        record.contract?.contractId || 
+                        record.contract?.id;
+      if (contractId) {
+        // Lấy vehicle từ record.vehicle hoặc record.contract?.vehicle
+        const vehicle = record.vehicle || record.contract?.vehicle;
+        const brand = vehicle?.brand || "-";
+        const model = vehicle?.model || "-";
+        
+        // Nếu contractId chưa có trong map hoặc không có vehicle info, cập nhật
+        if (!contractMap.has(contractId) || (!contractMap.get(contractId).brand || contractMap.get(contractId).brand === "-")) {
+          contractMap.set(contractId, {
+            contractId,
+            brand,
+            model,
+          });
+        }
+      }
+    });
+    
+    const result = Array.from(contractMap.values());
+    // Sắp xếp theo contractId
+    return result.sort((a, b) => {
+      const aNum = Number(a.contractId);
+      const bNum = Number(b.contractId);
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return aNum - bNum;
+      }
+      return String(a.contractId).localeCompare(String(b.contractId));
+    });
+  };
+
+  // Filter ownerContracts dựa trên selectedContractIdFilter
+  const filteredOwnerContracts = selectedContractIdFilter
+    ? ownerContracts.filter(record => {
+        const contractId = record.contractId || 
+                          record.contract_Id || 
+                          record.contract?.contractId || 
+                          record.contract?.id;
+        return contractId == selectedContractIdFilter;
+      })
+    : ownerContracts;
 
   const columns = [
     {
@@ -418,7 +469,7 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
     {
       title: "Họ và Tên",
       key: "userFullName",
-      width: 200,
+      width: 180,
       filterDropdown: ({ setSelectedKeys, confirm, clearFilters }) => (
         <div style={{ padding: 8 }}>
           <Input
@@ -621,16 +672,56 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
     },
   ];
 
+  // Menu items cho Dropdown Contract ID filter
+  const contractIdMenuItems = [
+    {
+      key: "all",
+      label: "Tất cả Contract ID",
+      onClick: () => setSelectedContractIdFilter(null),
+    },
+    ...getUniqueContractIdsWithVehicle().map(item => ({
+      key: item.contractId.toString(),
+      label: `Contract ID: ${item.contractId} - ${item.brand} ${item.model}`,
+      onClick: () => setSelectedContractIdFilter(item.contractId),
+    })),
+  ];
+
+  // Lấy thông tin vehicle cho contractId đang được filter
+  const getSelectedContractInfo = () => {
+    if (!selectedContractIdFilter) return null;
+    return getUniqueContractIdsWithVehicle().find(
+      item => item.contractId == selectedContractIdFilter
+    );
+  };
+
+  const selectedContractInfo = getSelectedContractInfo();
+
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
         <Title level={2}>Quản Lý Đồng Sở Hữu</Title>
         <Space>
-          {(Object.keys(filteredInfo).length > 0 || Object.values(searchText).some(v => v)) && (
+          {(Object.keys(filteredInfo).length > 0 || Object.values(searchText).some(v => v) || selectedContractIdFilter) && (
             <Button onClick={handleResetFilters}>
               Xóa bộ lọc
             </Button>
           )}
+          <Dropdown
+            menu={{ items: contractIdMenuItems }}
+            placement="bottomLeft"
+            trigger={['click']}
+          >
+            <Button 
+              icon={<FilterOutlined />}
+              style={selectedContractIdFilter ? { borderColor: '#1890ff', color: '#1890ff' } : {}}
+            >
+              Filter by Contract ID {selectedContractInfo 
+                ? `(${selectedContractInfo.contractId} - ${selectedContractInfo.brand} ${selectedContractInfo.model})`
+                : selectedContractIdFilter 
+                ? `(${selectedContractIdFilter})`
+                : ''}
+            </Button>
+          </Dropdown>
           <Button
             type="primary"
             icon={<PlusOutlined />}
@@ -648,7 +739,7 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
       ) : (
         <Table
           rowKey={(r) => (r.ownerContractId || r.id).toString()}
-          dataSource={ownerContracts}
+          dataSource={filteredOwnerContracts}
           columns={columns}
           pagination={{ pageSize: 10 }}
           onChange={handleFilterChange}
