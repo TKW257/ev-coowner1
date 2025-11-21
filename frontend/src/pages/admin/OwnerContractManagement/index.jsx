@@ -17,8 +17,9 @@ import {
   Empty,
   Row,
   Col,
+  Input,
 } from "antd";
-import { EyeOutlined, UserAddOutlined, PlusOutlined } from "@ant-design/icons";
+import { EyeOutlined, UserAddOutlined, PlusOutlined, SearchOutlined, SortAscendingOutlined, SortDescendingOutlined } from "@ant-design/icons";
 import ownerContractsApi from "../../../api/owner-contractsApi";
 import contractApi from "../../../api/contractApi";
 import userApi from "../../../api/userApi";
@@ -45,6 +46,15 @@ const OwnerContractManagement = () => {
   const [selectContractForm] = Form.useForm();
   const adminSigPadRef = useRef(null);
   const userSigPadRef = useRef(null);
+  
+  // Filter states
+  const [filteredInfo, setFilteredInfo] = useState({});
+  const [searchText, setSearchText] = useState({
+    ownerContractId: "",
+    fullName: "",
+    email: "",
+    phone: "",
+  });
 
   useEffect(() => {
     fetchOwnerContracts();
@@ -335,18 +345,125 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
 //     return <Tag color={color}>{text}</Tag>;
 //   };
 
+  const handleFilterChange = (pagination, filters) => {
+    setFilteredInfo(filters);
+  };
+
+  const handleSearch = (key, value) => {
+    setSearchText((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleResetFilters = () => {
+    setFilteredInfo({});
+    setSearchText({
+      ownerContractId: "",
+      fullName: "",
+      email: "",
+      phone: "",
+    });
+  };
+
   const columns = [
     {
       title: "Owner Contract ID",
       dataIndex: "ownerContractId",
       key: "ownerContractId",
       width: 150,
+      filterDropdown: ({ setSelectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Tìm kiếm ID"
+            value={searchText.ownerContractId}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleSearch("ownerContractId", value);
+              setSelectedKeys(value ? [value] : []);
+            }}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Tìm
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters();
+                handleSearch("ownerContractId", "");
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered || searchText.ownerContractId ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        const id = (record.ownerContractId || record.id || "").toString();
+        return id.toLowerCase().includes(value.toLowerCase());
+      },
+      filteredValue: searchText.ownerContractId ? [searchText.ownerContractId] : null,
       render: (id, record) => id || record.id || "-",
     },
     {
       title: "Họ và Tên",
       key: "userFullName",
       width: 200,
+      filterDropdown: ({ setSelectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Tìm kiếm họ tên"
+            value={searchText.fullName}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleSearch("fullName", value);
+              setSelectedKeys(value ? [value] : []);
+            }}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Tìm
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters();
+                handleSearch("fullName", "");
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered || searchText.fullName ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        const user = record.user || record.contract?.user;
+        const fullName = (user?.fullName || user?.full_name || "").toLowerCase();
+        return fullName.includes(value.toLowerCase());
+      },
+      filteredValue: searchText.fullName ? [searchText.fullName] : null,
       render: (_, record) => {
         const user = record.user || record.contract?.user;
         return user?.fullName || user?.full_name || "-";
@@ -356,6 +473,51 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
       title: "Email",
       key: "userEmail",
       width: 200,
+      filterDropdown: ({ setSelectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Tìm kiếm email"
+            value={searchText.email}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleSearch("email", value);
+              setSelectedKeys(value ? [value] : []);
+            }}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Tìm
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters();
+                handleSearch("email", "");
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered || searchText.email ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        const user = record.user || record.contract?.user;
+        const email = (user?.email || "").toLowerCase();
+        return email.includes(value.toLowerCase());
+      },
+      filteredValue: searchText.email ? [searchText.email] : null,
       render: (_, record) => {
         const user = record.user || record.contract?.user;
         return user?.email || "-";
@@ -365,6 +527,51 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
       title: "Số Điện Thoại",
       key: "userPhone",
       width: 150,
+      filterDropdown: ({ setSelectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <Input
+            placeholder="Tìm kiếm số điện thoại"
+            value={searchText.phone}
+            onChange={(e) => {
+              const value = e.target.value;
+              handleSearch("phone", value);
+              setSelectedKeys(value ? [value] : []);
+            }}
+            onPressEnter={() => confirm()}
+            style={{ marginBottom: 8, display: "block" }}
+          />
+          <Space>
+            <Button
+              type="primary"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Tìm
+            </Button>
+            <Button
+              onClick={() => {
+                clearFilters();
+                handleSearch("phone", "");
+              }}
+              size="small"
+              style={{ width: 90 }}
+            >
+              Reset
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered || searchText.phone ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        const user = record.user || record.contract?.user;
+        const phone = (user?.phone || "").toLowerCase();
+        return phone.includes(value.toLowerCase());
+      },
+      filteredValue: searchText.phone ? [searchText.phone] : null,
       render: (_, record) => {
         const user = record.user || record.contract?.user;
         return user?.phone || "-";
@@ -374,6 +581,26 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
       title: "Phần trăm chia sẻ",
       key: "sharePercentage",
       width: 150,
+      filters: [
+        { text: "10%", value: 10 },
+        { text: "20%", value: 20 },
+        { text: "30%", value: 30 },
+        { text: "40%", value: 40 },
+        { text: "50%", value: 50 },
+        { text: "60%", value: 60 },
+        { text: "70%", value: 70 },
+        { text: "80%", value: 80 },
+        { text: "90%", value: 90 },
+        { text: "100%", value: 100 },
+      ],
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        const sharePercentage = record.sharePercentage || record.contract?.salePercentage || record.salePercentage;
+        return sharePercentage === value;
+      },
+      filteredValue: filteredInfo.sharePercentage || null,
       render: (_, record) => {
         const sharePercentage = record.sharePercentage || record.contract?.salePercentage || record.salePercentage;
         return sharePercentage ? `${sharePercentage}%` : "-";
@@ -397,14 +624,21 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
   return (
     <div style={{ padding: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-        <Title level={2}>Quản Lý HĐ Đồng Sở Hữu</Title>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleOpenCreateContract}
-        >
-          Tạo HĐ Đồng Sở Hữu
-        </Button>
+        <Title level={2}>Quản Lý Đồng Sở Hữu</Title>
+        <Space>
+          {(Object.keys(filteredInfo).length > 0 || Object.values(searchText).some(v => v)) && (
+            <Button onClick={handleResetFilters}>
+              Xóa bộ lọc
+            </Button>
+          )}
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleOpenCreateContract}
+          >
+            Tạo HĐ Đồng Sở Hữu
+          </Button>
+        </Space>
       </div>
 
       {loading ? (
@@ -417,6 +651,7 @@ contractData = contractsData.find(c => (c.contractId || c.id) === contractId);
           dataSource={ownerContracts}
           columns={columns}
           pagination={{ pageSize: 10 }}
+          onChange={handleFilterChange}
         />
       )}
 
