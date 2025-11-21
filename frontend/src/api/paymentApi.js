@@ -1,4 +1,3 @@
-// src/api/paymentApi.js
 import axiosClient from "./axiosClient";
 
 const paymentApi = {

@@ -26,6 +26,7 @@ import {
   DownloadOutlined,
   PlusOutlined,
   FileAddOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import html2canvas from "html2canvas";
@@ -59,6 +60,12 @@ const AdminInvoiceDashboard = () => {
   const [emailOptions, setEmailOptions] = useState([]);
   const [loadingEmails, setLoadingEmails] = useState(false);
   const [vehicles, setVehicles] = useState([]);
+
+  // === Filter states ===
+  const [searchText, setSearchText] = useState({
+    sumaInvoiceId: "",
+    status: [],
+  });
 
   // Dịch trạng thái sang tiếng Việt
   const getStatusLabel = (status) => {
@@ -388,9 +395,24 @@ const AdminInvoiceDashboard = () => {
     }
   };
 
+  // === Filter handlers ===
+  const handleSearch = (key, value) => {
+    setSearchText((prev) => ({ ...prev, [key]: value }));
+  };
+
   // === Table columns ===
   const columns = [
-    { title: "Mã HĐ", dataIndex: "sumaInvoiceId", render: (id) => `#SUMA-${id}` },
+    {
+      title: "Mã HĐ",
+      dataIndex: "sumaInvoiceId",
+      key: "sumaInvoiceId",
+      sorter: (a, b) => {
+        const aId = String(a.sumaInvoiceId || "");
+        const bId = String(b.sumaInvoiceId || "");
+        return aId.localeCompare(bId, 'en', { numeric: true, sensitivity: 'base' });
+      },
+      render: (id) => `#SUMA-${id}`,
+    },
     { title: "Người dùng", dataIndex: "userName" },
     { title: "Tháng", dataIndex: "invoiceMonth" },
     {
@@ -401,6 +423,64 @@ const AdminInvoiceDashboard = () => {
     {
       title: "Trạng thái",
       dataIndex: "status",
+      key: "status",
+      filterDropdown: ({ setSelectedKeys, confirm, clearFilters }) => (
+        <div style={{ padding: 8 }}>
+          <div style={{ marginBottom: 8 }}>
+            <Checkbox.Group
+              options={[
+                { label: "Đang mở", value: "OPEN" },
+                { label: "Đã thanh toán", value: "SETTLED" },
+                { label: "Quá hạn", value: "OVERDUE" },
+              ]}
+              value={searchText.status}
+              onChange={(values) => {
+                setSearchText((prev) => ({ ...prev, status: values }));
+                setSelectedKeys(values);
+              }}
+            />
+          </div>
+          <Space style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+            <Button
+              size="small"
+              onClick={() => {
+                clearFilters();
+                handleSearch("status", []);
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => confirm()}
+              icon={<SearchOutlined />}
+            >
+              Tìm
+            </Button>
+          </Space>
+        </div>
+      ),
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered || searchText.status?.length > 0 ? "#1890ff" : undefined }} />
+      ),
+      onFilter: (value, record) => {
+        // Tính toán trạng thái thực tế của record (có thể là OVERDUE nếu OPEN và quá hạn)
+        const isOverdue = record.status === "OPEN" && record.dueDate && dayjs(record.dueDate).isBefore(dayjs(), 'day');
+        const isPaid = record.status === "SETTLED" || record.status === "PAID";
+        
+        // Xử lý filter theo giá trị được chọn
+        if (value === "OVERDUE") {
+          return isOverdue;
+        } else if (value === "SETTLED") {
+          return isPaid && !isOverdue;
+        } else if (value === "OPEN") {
+          return record.status === "OPEN" && !isOverdue;
+        }
+        
+        return false;
+      },
+      filteredValue: searchText.status?.length > 0 ? searchText.status : null,
       render: (status, record) => {
         const isOverdue = status === "OPEN" && dayjs(record.dueDate).isBefore(dayjs());
         let color = "orange";
@@ -483,7 +563,12 @@ const AdminInvoiceDashboard = () => {
         ) : invoices.length === 0 ? (
           <Empty description="Không có hóa đơn nào" />
         ) : (
-          <Table columns={columns} dataSource={invoices} rowKey="sumaInvoiceId" pagination={{ pageSize: 6 }} />
+          <Table
+            columns={columns}
+            dataSource={invoices}
+            rowKey="sumaInvoiceId"
+            pagination={{ pageSize: 6 }}
+          />
         )}
       </Card>
 
