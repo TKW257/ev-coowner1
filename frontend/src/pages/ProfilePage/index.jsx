@@ -62,30 +62,24 @@ const ProfileForm = () => {
     fetchProfile();
   }, [form]);
 
-  //Update profile
   const handleUpdate = async (values) => {
     try {
       setLoading(true);
 
       const formData = new FormData();
-      // 🧩 Thêm thông tin cá nhân
       formData.append("fullName", values.fullName || "");
       formData.append("phone", values.phone || "");
       formData.append("cccd", values.cccd || "");
       formData.append("gplx", values.gplx || "");
 
-      // 🧩 Xử lý ảnh CCCD
       if (cccdFile) formData.append("cccdFile", cccdFile);
       else if (cccdOldUrl) formData.append("cccdUrl", cccdOldUrl);
 
-      // 🧩 Xử lý ảnh GPLX
       if (gplxFile) formData.append("gplxFile", gplxFile);
       else if (gplxOldUrl) formData.append("gplxUrl", gplxOldUrl);
 
-      // 🧩 Gửi API
       await userApi.uploadDocuments(values.id, formData);
 
-      // ✅ Thông báo thành công
       notification.success({
         message: "🎉 Cập nhật thành công",
         description: "Thông tin cá nhân và tài liệu của bạn đã được cập nhật.",
@@ -94,7 +88,6 @@ const ProfileForm = () => {
     } catch (err) {
       console.error("Upload tài liệu thất bại:", err);
 
-      // ❌ Thông báo lỗi
       notification.error({
         message: "❌ Cập nhật thất bại",
         description: "Không thể tải lên thông tin hoặc tài liệu. Vui lòng thử lại sau.",
@@ -138,7 +131,6 @@ const ProfileForm = () => {
         gap: "24px",
       }}
     >
-      {/* --- CARD 1: Thông tin cá nhân --- */}
       <Card
         style={{
           width: "100%",
@@ -288,7 +280,6 @@ const ProfileForm = () => {
         </Row>
       </Card>
 
-      {/* --- CARD 2: Upload CCCD & GPLX --- */}
       <Card
         style={{
           width: "100%",
@@ -302,12 +293,11 @@ const ProfileForm = () => {
           Upload Hình Ảnh CCCD & GPLX
         </Title>
 
-        {/* ✅ Alert (có alert type) — hiển thị trạng thái + note trên 1 dòng */}
         {verifyStatus && (
           <Row style={{ marginBottom: 24 }}>
             <Col span={24}>
               <Alert
-                type={getAlertType(verifyStatus)} // dùng hàm map type bạn đã có
+                type={getAlertType(verifyStatus)} 
                 showIcon
                 style={{ borderRadius: 8, padding: 12 }}
                 message={
@@ -321,7 +311,7 @@ const ProfileForm = () => {
                       flexWrap: "nowrap",
                     }}
                   >
-                    {/* Left: status */}
+
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <strong>Trạng thái xác minh:</strong>
                       <span
@@ -342,7 +332,6 @@ const ProfileForm = () => {
                     </div>
 
 
-                    {/* Right: note (nằm cùng hàng) */}
                     <div style={{ marginLeft: 16, textAlign: "right", flex: 1 }}>
                       <strong>Ghi chú:</strong>{" "}
                       <span style={{ color: "#595959", marginLeft: 8 }}>
@@ -356,7 +345,6 @@ const ProfileForm = () => {
           </Row>
         )}
 
-        {/* Hai cột upload */}
         <Row gutter={32}>
           <Col span={12} style={{ textAlign: "center" }}>
             <div

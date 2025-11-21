@@ -34,9 +34,9 @@ function LoginPage() {
     } catch (error) {
       console.error("Đăng nhập thất bại:", error);
       if (error?.message) {
-        message.error(error.message);
-      } else {
         message.error("Email hoặc mật khẩu không đúng ❌");
+      } else {
+        message.error(error.message);
       }
     }
   };
