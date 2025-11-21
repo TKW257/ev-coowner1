@@ -4,6 +4,16 @@ import { UserOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import logoFull from "../../assets/logo_main.png";
 
+const parseDateArray = (dateArray) => {
+  if (!dateArray || !Array.isArray(dateArray) || dateArray.length < 3) {
+    return null;
+  }
+  
+  const [year, month, day, hour = 0, minute = 0, second = 0] = dateArray;
+  // Subtract 1 from month because API uses 1-based months but JavaScript uses 0-based
+  return dayjs(new Date(year, month - 1, day, hour, minute, second));
+};
+
 
 const InvoiceMonthDetail = forwardRef(({ selectedMonth }, ref) => {
   if (!selectedMonth) return null;
@@ -33,12 +43,18 @@ const InvoiceMonthDetail = forwardRef(({ selectedMonth }, ref) => {
     {
       title: "Ngày lập",
       dataIndex: "issuedDate",
-      render: (d) => d?.length ? dayjs(new Date(...d.slice(0, 6))).format("DD/MM/YYYY") : "N/A",
+      render: (d) => {
+        const parsedDate = parseDateArray(d);
+        return parsedDate ? parsedDate.format("DD/MM/YYYY") : "N/A";
+      },
     },
     {
       title: "Hạn thanh toán",
       dataIndex: "dueDate",
-      render: (d) => d?.length ? dayjs(new Date(...d.slice(0, 6))).format("DD/MM/YYYY") : "N/A",
+      render: (d) => {
+        const parsedDate = parseDateArray(d);
+        return parsedDate ? parsedDate.format("DD/MM/YYYY") : "N/A";
+      },
     },
   ];
 
